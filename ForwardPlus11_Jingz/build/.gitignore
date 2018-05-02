@@ -1,1 +1,5 @@
 /Desktop_2015/
+/.vs/
+*.VC.db
+*.VC.VC.opendb
+*.vcxproj.user
