@@ -214,10 +214,10 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
     // the safer PathCchCombine/PathCchCombineEx functions are not available in Win7,
     // so just use PathCombine
     PathCombine( m_wsWorkingDir, wsWorkingDir, L"..\\bin" );
-    swprintf_s( m_wsUnicodeWorkingDir, L"%s%s", L"\\\\?\\", m_wsWorkingDir );
+    swprintf_s( m_wsUnicodeWorkingDir, L"%s%s", L"", m_wsWorkingDir );//"\\\\?\\" jingz 这段字符是怎么回事
 
     PathCombine( m_wsShaderSourceDir, m_wsWorkingDir, L"..\\src\\Shaders" );
-    swprintf_s( m_wsUnicodeShaderSourceDir, L"%s%s", L"\\\\?\\", m_wsShaderSourceDir );
+    swprintf_s( m_wsUnicodeShaderSourceDir, L"%s%s", L"", m_wsShaderSourceDir );//"\\\\?\\"
 
     PathCombine( m_wsAmdSdkDir, m_wsWorkingDir, L"..\\..\\AMD_SDK" );
 
@@ -1085,7 +1085,7 @@ void ShaderCache::RenderProgress( CDXUTTextHelper* g_pTxtHelper, int iFontHeight
 //--------------------------------------------------------------------------------------
 // boolean method to determine if the shaders are ready
 //--------------------------------------------------------------------------------------
-bool ShaderCache::ShadersReady()
+bool ShaderCache::ShadersReady(bool bWithoutPrintedProgress)
 {
     if (TryEnterCriticalSection( &m_CompileShaders_CriticalSection ))
     {
@@ -1094,7 +1094,7 @@ bool ShaderCache::ShadersReady()
 
         if (dwRet == WAIT_OBJECT_0)
         {
-            if (m_bPrintedProgress)
+            if (m_bPrintedProgress|| bWithoutPrintedProgress)
             {
                 if (!m_bShadersCreated)
                 {

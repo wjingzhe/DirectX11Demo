@@ -283,7 +283,7 @@ namespace AMD
         void RenderISAInfo( CDXUTTextHelper* g_pTxtHelper, int iFontHeight, DirectX::XMVECTOR FontColor, const Shader *i_pShaderCmp = NULL, wchar_t *o_wsGPRInfo = NULL );
 
         // User can enquire to see if shaders are ready
-        bool ShadersReady();
+        bool ShadersReady(bool bWithoutPrintedProgress = false);
 
         // DXUT framework hook method (flags the shaders as needing creating)
         void OnDestroyDevice();
