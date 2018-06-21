@@ -3,8 +3,12 @@
 //
 // Shortcut macros and functions for using DX objects
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -25,15 +29,17 @@ CDXUTTimer* WINAPI DXUTGetGlobalTimer()
 
 
 //--------------------------------------------------------------------------------------
-CDXUTTimer::CDXUTTimer() noexcept :
-    m_bTimerStopped(true),
-    m_llQPFTicksPerSec{},
-    m_llStopTime{},
-    m_llLastElapsedTime{},
-    m_llBaseTime{}
+CDXUTTimer::CDXUTTimer()
 {
+    m_bTimerStopped = true;
+    m_llQPFTicksPerSec = 0;
+
+    m_llStopTime = 0;
+    m_llLastElapsedTime = 0;
+    m_llBaseTime = 0;
+
     // Use QueryPerformanceFrequency to get the frequency of the counter
-    LARGE_INTEGER qwTicksPerSec = {};
+    LARGE_INTEGER qwTicksPerSec = { 0 };
     QueryPerformanceFrequency( &qwTicksPerSec );
     m_llQPFTicksPerSec = qwTicksPerSec.QuadPart;
 }
@@ -55,7 +61,7 @@ void CDXUTTimer::Reset()
 void CDXUTTimer::Start()
 {
     // Get the current time
-    LARGE_INTEGER qwTime = {};
+    LARGE_INTEGER qwTime = { 0 };
     QueryPerformanceCounter( &qwTime );
 
     if( m_bTimerStopped )
@@ -71,7 +77,7 @@ void CDXUTTimer::Stop()
 {
     if( !m_bTimerStopped )
     {
-        LARGE_INTEGER qwTime = {};
+        LARGE_INTEGER qwTime = { 0 };
         QueryPerformanceCounter( &qwTime );
         m_llStopTime = qwTime.QuadPart;
         m_llLastElapsedTime = qwTime.QuadPart;
@@ -90,7 +96,7 @@ void CDXUTTimer::Advance()
 //--------------------------------------------------------------------------------------
 double CDXUTTimer::GetAbsoluteTime() const
 {
-    LARGE_INTEGER qwTime = {};
+    LARGE_INTEGER qwTime = { 0 };
     QueryPerformanceCounter( &qwTime );
 
     double fTime = qwTime.QuadPart / ( double )m_llQPFTicksPerSec;
@@ -207,7 +213,7 @@ void CDXUTTimer::LimitThreadAffinityToCurrentProc()
 _Use_decl_annotations_
 LPCWSTR WINAPI DXUTDXGIFormatToString( DXGI_FORMAT format, bool bWithPrefix )
 {
-    const WCHAR* pstr = nullptr;
+    WCHAR* pstr = nullptr;
     switch( format )
     {
         DXUTDXGIFMTSTR(DXGI_FORMAT_R32G32B32A32_TYPELESS)
@@ -870,8 +876,9 @@ void WINAPI DXUTGetDesktopResolution( UINT AdapterOrdinal, UINT* pWidth, UINT* p
 {
     auto DeviceSettings = DXUTGetDeviceSettings();
 
-    WCHAR strDeviceName[256] = {};
-    DEVMODE devMode = {};
+    WCHAR strDeviceName[256] = {0};
+    DEVMODE devMode;
+    ZeroMemory( &devMode, sizeof( DEVMODE ) );
     devMode.dmSize = sizeof( DEVMODE );
 
     auto pd3dEnum = DXUTGetD3D11Enumeration();

@@ -1,8 +1,12 @@
 //--------------------------------------------------------------------------------------
 // File: DXUTcamera.cpp
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -17,12 +21,13 @@ using namespace DirectX;
 //======================================================================================
 
 //--------------------------------------------------------------------------------------
-CD3DArcBall::CD3DArcBall() noexcept :
-    m_Offset{ 0, 0 },
-    m_vDownPt( 0, 0, 0 ),
-    m_vCurrentPt( 0, 0, 0 )
+CD3DArcBall::CD3DArcBall()
 {
     Reset();
+
+    m_vDownPt = XMFLOAT3( 0, 0, 0 );
+    m_vCurrentPt = XMFLOAT3( 0, 0, 0 );
+    m_Offset.x = m_Offset.y = 0;
 
     RECT rc;
     GetClientRect( GetForegroundWindow(), &rc );
@@ -178,33 +183,15 @@ LRESULT CD3DArcBall::HandleMessages( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 //--------------------------------------------------------------------------------------
 // Constructor
 //--------------------------------------------------------------------------------------
-CBaseCamera::CBaseCamera() noexcept :
-    m_mView{},
-    m_mProj{},
-    m_GamePad{},
-    m_vGamePadLeftThumb(0,0,0),
-    m_vGamePadRightThumb(0,0,0),
-    m_GamePadLastActive{},
+CBaseCamera::CBaseCamera() :
     m_cKeysDown(0),
-    m_aKeys{},
-    m_vKeyboardDirection(0,0,0),
-    m_ptLastMousePosition{ 0, 0 },
     m_nCurrentButtonMask(0),
     m_nMouseWheelDelta(0),
-    m_vMouseDelta(0, 0),
     m_fFramesToSmoothMouseData(2.0f),
-    m_vDefaultEye(0, 0, 0),
-    m_vDefaultLookAt(0, 0, 0),
-    m_vEye(0, 0, 0),
-    m_vLookAt(0, 0, 0),
     m_fCameraYawAngle(0.0f),
     m_fCameraPitchAngle(0.0f),
-    m_rcDrag{},
-    m_vVelocity(0, 0, 0),
-    m_vVelocityDrag(0, 0, 0),
     m_fDragTimer(0.0f),
     m_fTotalDragTimeToZero(0.25),
-    m_vRotVelocity(0, 0),
     m_fRotationScaler(0.01f),
     m_fMoveScaler(5.0f),
     m_bMouseLButtonDown(false),
@@ -215,10 +202,11 @@ CBaseCamera::CBaseCamera() noexcept :
     m_bEnablePositionMovement(true),
     m_bEnableYAxisMovement(true),
     m_bClipToBoundary(false),
-    m_bResetCursorAfterMove(false),
-    m_vMinBoundary(-1, -1, -1),
-    m_vMaxBoundary(1, 1, 1)
+    m_bResetCursorAfterMove(false)
 {
+    ZeroMemory( m_aKeys, sizeof( BYTE ) * CAM_MAX_KEYS );
+    ZeroMemory( m_GamePad, sizeof( DXUT_GAMEPAD ) * DXUT_MAX_CONTROLLERS );
+
     // Setup the view matrix
     SetViewParams( g_XMZero, g_XMIdentityR2 );
 
@@ -228,6 +216,14 @@ CBaseCamera::CBaseCamera() noexcept :
     GetCursorPos( &m_ptLastMousePosition );
     
     SetRect( &m_rcDrag, LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX );
+    m_vVelocity = XMFLOAT3( 0, 0, 0 );
+    m_vVelocityDrag = XMFLOAT3( 0, 0, 0 );
+    m_vRotVelocity = XMFLOAT2( 0, 0 );
+
+    m_vMouseDelta = XMFLOAT2( 0, 0 );
+
+    m_vMinBoundary = XMFLOAT3( -1, -1, -1 );
+    m_vMaxBoundary = XMFLOAT3( 1, 1, 1 );
 }
 
 
@@ -260,6 +256,35 @@ void CBaseCamera::SetViewParams( FXMVECTOR vEyePt, FXMVECTOR vLookatPt )
     m_fCameraPitchAngle = -atan2f( zBasis.y, fLen );
 }
 
+//--------------------------------------------------------------------------------------
+// Client can call this to change the position and direction of camera
+//--------------------------------------------------------------------------------------
+_Use_decl_annotations_
+void CBaseCamera::SetViewParams( FXMVECTOR vEyePt, FXMVECTOR vLookatPt, FXMVECTOR vUp )
+{
+    XMStoreFloat3( &m_vEye, vEyePt );
+    XMStoreFloat3( &m_vDefaultEye, vEyePt );
+    XMStoreFloat3( &m_vUp, vUp );
+
+    XMStoreFloat3( &m_vLookAt, vLookatPt );
+    XMStoreFloat3( &m_vDefaultLookAt , vLookatPt );
+
+    // Calc the view matrix
+    XMMATRIX mView = XMMatrixLookAtLH( vEyePt, vLookatPt, vUp );
+    XMStoreFloat4x4( &m_mView, mView );
+
+    XMMATRIX mInvView = XMMatrixInverse( nullptr, mView );
+
+    // The axis basis vectors and camera position are stored inside the 
+    // position matrix in the 4 rows of the camera's world matrix.
+    // To figure out the yaw/pitch of the camera, we just need the Z basis vector
+    XMFLOAT3 zBasis;
+    XMStoreFloat3( &zBasis, mInvView.r[2] );
+
+    m_fCameraYawAngle = atan2f( zBasis.x, zBasis.z );
+    float fLen = sqrtf( zBasis.z * zBasis.z + zBasis.x * zBasis.x );
+    m_fCameraPitchAngle = -atan2f( zBasis.y, fLen );
+}
 
 //--------------------------------------------------------------------------------------
 // Calculates the projection matrix based on input params
@@ -681,8 +706,7 @@ void CBaseCamera::Reset()
 // CFirstPersonCamera
 //======================================================================================
 
-CFirstPersonCamera::CFirstPersonCamera() noexcept :
-    m_mCameraWorld{},
+CFirstPersonCamera::CFirstPersonCamera() :
     m_nActiveButtonMask( 0x07 ),
     m_bRotateWithoutButtonDown(false)
 {
@@ -797,7 +821,7 @@ void CFirstPersonCamera::SetRotateButtons( bool bLeft, bool bMiddle, bool bRight
 // CModelViewerCamera
 //======================================================================================
 
-CModelViewerCamera::CModelViewerCamera() noexcept :
+CModelViewerCamera::CModelViewerCamera() :
     m_nRotateModelButtonMask(MOUSE_LEFT_BUTTON),
     m_nZoomButtonMask(MOUSE_WHEEL),
     m_nRotateCameraButtonMask(MOUSE_RIGHT_BUTTON),
@@ -1075,7 +1099,7 @@ LRESULT CModelViewerCamera::HandleMessages( HWND hWnd, UINT uMsg, WPARAM wParam,
 // CDXUTDirectionWidget
 //======================================================================================
 
-CDXUTDirectionWidget::CDXUTDirectionWidget() noexcept :
+CDXUTDirectionWidget::CDXUTDirectionWidget() :
     m_fRadius(1.0f),
     m_nRotateMask(MOUSE_RIGHT_BUTTON)
 {

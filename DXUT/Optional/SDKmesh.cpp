@@ -6,8 +6,12 @@
 // applications should avoid this file format in favor of a destination format that 
 // meets the specific needs of the application.
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -234,6 +238,7 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
                                         bool bCopyStatic,
                                         SDKMESH_CALLBACKS11* pLoaderCallbacks11 )
 {
+    HRESULT hr = E_FAIL;
     XMFLOAT3 lower; 
     XMFLOAT3 upper; 
     
@@ -289,7 +294,8 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
     // error condition
     if( m_pMeshHeader->Version != SDKMESH_FILE_VERSION )
     {
-        return E_NOINTERFACE;
+        hr = E_NOINTERFACE;
+        goto Error;
     }
 
     // Setup buffer data pointer
@@ -302,7 +308,8 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
     m_ppVertices = new (std::nothrow) BYTE*[m_pMeshHeader->NumVertexBuffers];
     if ( !m_ppVertices )
     {
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
     for( UINT i = 0; i < m_pMeshHeader->NumVertexBuffers; i++ )
     {
@@ -319,7 +326,8 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
     m_ppIndices = new (std::nothrow) BYTE*[m_pMeshHeader->NumIndexBuffers];
     if ( !m_ppIndices )
     {
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
 
     for( UINT i = 0; i < m_pMeshHeader->NumIndexBuffers; i++ )
@@ -341,20 +349,23 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
     m_pBindPoseFrameMatrices = new (std::nothrow) XMFLOAT4X4[ m_pMeshHeader->NumFrames ];
     if( !m_pBindPoseFrameMatrices )
     {
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
 
     // Create a place to store our transformed frame matrices
     m_pTransformedFrameMatrices = new (std::nothrow) XMFLOAT4X4[ m_pMeshHeader->NumFrames ];
     if( !m_pTransformedFrameMatrices )
     {
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
 
     m_pWorldPoseFrameMatrices = new (std::nothrow) XMFLOAT4X4[ m_pMeshHeader->NumFrames ];
     if( !m_pWorldPoseFrameMatrices )
     {
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
 
     SDKMESH_SUBSET* pSubset = nullptr;
@@ -450,7 +461,11 @@ HRESULT CDXUTSDKMesh::CreateFromMemory( ID3D11Device* pDev11,
     }
     // Update 
         
-    return S_OK;
+
+
+    hr = S_OK;
+Error:
+    return hr;
 }
 
 
@@ -700,33 +715,22 @@ void CDXUTSDKMesh::RenderFrame( UINT iFrame,
 }
 
 //--------------------------------------------------------------------------------------
-CDXUTSDKMesh::CDXUTSDKMesh() noexcept :
-    m_NumOutstandingResources(0),
-    m_bLoading(false),
-    m_hFile(0),
-    m_hFileMappingObject(0),
-    m_pDev11(nullptr),
-    m_pDevContext11(nullptr),
-    m_pStaticMeshData(nullptr),
-    m_pHeapData(nullptr),
-    m_pAnimationData(nullptr),
-    m_ppVertices(nullptr),
-    m_ppIndices(nullptr),
-    m_strPathW{},
-    m_strPath{},
-    m_pMeshHeader(nullptr),
-    m_pVertexBufferArray(nullptr),
-    m_pIndexBufferArray(nullptr),
-    m_pMeshArray(nullptr),
-    m_pSubsetArray(nullptr),
-    m_pFrameArray(nullptr),
-    m_pMaterialArray(nullptr),
-    m_pAdjacencyIndexBufferArray(nullptr),
-    m_pAnimationHeader(nullptr),
-    m_pAnimationFrameData(nullptr),
-    m_pBindPoseFrameMatrices(nullptr),
-    m_pTransformedFrameMatrices(nullptr),
-    m_pWorldPoseFrameMatrices(nullptr)
+CDXUTSDKMesh::CDXUTSDKMesh() : m_NumOutstandingResources( 0 ),
+                               m_bLoading( false ),
+                               m_hFile( 0 ),
+                               m_hFileMappingObject( 0 ),
+                               m_pMeshHeader( nullptr ),
+                               m_pStaticMeshData( nullptr ),
+                               m_pHeapData( nullptr ),
+                               m_pAdjacencyIndexBufferArray( nullptr ),
+                               m_pAnimationData( nullptr ),
+                               m_pAnimationHeader( nullptr ),
+                               m_ppVertices( nullptr ),
+                               m_ppIndices( nullptr ),
+                               m_pBindPoseFrameMatrices( nullptr ),
+                               m_pTransformedFrameMatrices( nullptr ),
+                               m_pWorldPoseFrameMatrices( nullptr ),
+                               m_pDev11( nullptr )
 {
 }
 
@@ -773,33 +777,23 @@ HRESULT CDXUTSDKMesh::LoadAnimation( _In_z_ const WCHAR* szFileName )
     // Header
     SDKANIMATION_FILE_HEADER fileheader;
     if( !ReadFile( hFile, &fileheader, sizeof( SDKANIMATION_FILE_HEADER ), &dwBytesRead, nullptr ) )
-    {
-        CloseHandle(hFile);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
+        goto Error;
 
     //allocate
     m_pAnimationData = new (std::nothrow) BYTE[ ( size_t )( sizeof( SDKANIMATION_FILE_HEADER ) + fileheader.AnimationDataSize ) ];
     if( !m_pAnimationData )
     {
-        CloseHandle(hFile);
-        return E_OUTOFMEMORY;
+        hr = E_OUTOFMEMORY;
+        goto Error;
     }
 
     // read it all in
     liMove.QuadPart = 0;
     if( !SetFilePointerEx( hFile, liMove, nullptr, FILE_BEGIN ) )
-    {
-        CloseHandle(hFile);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
+        goto Error;
     if( !ReadFile( hFile, m_pAnimationData, ( DWORD )( sizeof( SDKANIMATION_FILE_HEADER ) +
                                                        fileheader.AnimationDataSize ), &dwBytesRead, nullptr ) )
-    {
-        CloseHandle(hFile);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
+        goto Error;
 
     // pointer fixup
     m_pAnimationHeader = ( SDKANIMATION_FILE_HEADER* )m_pAnimationData;
@@ -818,7 +812,10 @@ HRESULT CDXUTSDKMesh::LoadAnimation( _In_z_ const WCHAR* szFileName )
         }
     }
 
-    return S_OK;
+    hr = S_OK;
+Error:
+    CloseHandle( hFile );
+    return hr;
 }
 
 //--------------------------------------------------------------------------------------
@@ -1295,8 +1292,7 @@ UINT CDXUTSDKMesh::GetAnimationKeyFromTime( _In_ double fTime ) const
 
     UINT iTick = ( UINT )( m_pAnimationHeader->AnimationFPS * fTime );
 
-    iTick = iTick % ( m_pAnimationHeader->NumAnimationKeys - 1 );
-    iTick ++;
+    iTick = iTick % ( m_pAnimationHeader->NumAnimationKeys );
 
     return iTick;
 }

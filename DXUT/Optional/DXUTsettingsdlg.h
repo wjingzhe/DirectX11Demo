@@ -1,8 +1,12 @@
 //--------------------------------------------------------------------------------------
 // File: DXUTSettingsDlg.h
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -47,7 +51,15 @@
 #define DXUTSETTINGSDLG_STATIC_MODE_CHANGE_TIMEOUT      60
 #define DXUTSETTINGSDLG_WINDOWED_GROUP                  0x0100
 
+#ifdef USE_DIRECT3D11_3
 #define TOTAL_FEATURE_LEVELS                            9
+#else
+#ifdef USE_DIRECT3D11_1
+#define TOTAL_FEATURE_LEVELS                            7
+#else
+#define TOTAL_FEATURE_LEVELS                            6
+#endif
+#endif
 
 //--------------------------------------------------------------------------------------
 // Dialog for selection of device settings 
@@ -57,7 +69,7 @@
 class CD3DSettingsDlg
 {
 public:
-    CD3DSettingsDlg() noexcept;
+    CD3DSettingsDlg();
     ~CD3DSettingsDlg();
 
     void Init( _In_ CDXUTDialogResourceManager* pManager );

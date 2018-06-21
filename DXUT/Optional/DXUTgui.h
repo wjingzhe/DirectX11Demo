@@ -1,8 +1,12 @@
 //--------------------------------------------------------------------------------------
 // File: DXUTgui.h
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -130,7 +134,7 @@ class CDXUTDialog
     friend class CDXUTDialogResourceManager;
 
 public:
-    CDXUTDialog() noexcept;
+    CDXUTDialog();
     ~CDXUTDialog();
 
     // Need to call this now
@@ -384,7 +388,7 @@ struct DXUTSpriteVertex
 class CDXUTDialogResourceManager
 {
 public:
-    CDXUTDialogResourceManager() noexcept;
+    CDXUTDialogResourceManager();
     ~CDXUTDialogResourceManager();
 
     bool MsgProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
@@ -468,7 +472,7 @@ protected:
 class CDXUTControl
 {
 public:
-    CDXUTControl( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTControl( _In_opt_ CDXUTDialog* pDialog = nullptr );
     virtual ~CDXUTControl();
 
     virtual HRESULT OnInit() { return S_OK; }
@@ -589,7 +593,7 @@ struct DXUTElementHolder
 class CDXUTStatic : public CDXUTControl
 {
 public:
-    CDXUTStatic( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTStatic( _In_opt_ CDXUTDialog* pDialog = nullptr );
 
     virtual void Render( _In_ float fElapsedTime ) override;
     virtual bool ContainsPoint( _In_ const POINT& pt ) override
@@ -613,7 +617,7 @@ protected:
 class CDXUTButton : public CDXUTStatic
 {
 public:
-    CDXUTButton( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTButton( _In_opt_ CDXUTDialog* pDialog = nullptr );
 
     virtual bool HandleKeyboard( _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
     virtual bool HandleMouse( _In_ UINT uMsg, _In_ const POINT& pt, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
@@ -645,7 +649,7 @@ protected:
 class CDXUTCheckBox : public CDXUTButton
 {
 public:
-    CDXUTCheckBox( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTCheckBox( _In_opt_ CDXUTDialog* pDialog = nullptr );
 
     virtual bool HandleKeyboard( _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
     virtual bool HandleMouse( _In_ UINT uMsg, _In_ const POINT& pt, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
@@ -678,7 +682,7 @@ protected:
 class CDXUTRadioButton : public CDXUTCheckBox
 {
 public:
-    CDXUTRadioButton( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTRadioButton( _In_opt_ CDXUTDialog* pDialog = nullptr );
 
     virtual bool HandleKeyboard( _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
     virtual bool HandleMouse( _In_ UINT uMsg, _In_ const POINT& pt, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
@@ -704,7 +708,7 @@ protected:
 class CDXUTScrollBar : public CDXUTControl
 {
 public:
-    CDXUTScrollBar( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTScrollBar( _In_opt_ CDXUTDialog* pDialog = nullptr );
     virtual ~CDXUTScrollBar();
 
     virtual bool HandleKeyboard( _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
@@ -783,7 +787,7 @@ struct DXUTListBoxItem
 class CDXUTListBox : public CDXUTControl
 {
 public:
-    CDXUTListBox( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTListBox( _In_opt_ CDXUTDialog* pDialog = nullptr );
     virtual ~CDXUTListBox();
 
     virtual HRESULT OnInit() override
@@ -865,7 +869,7 @@ struct DXUTComboBoxItem
 class CDXUTComboBox : public CDXUTButton
 {
 public:
-    CDXUTComboBox( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTComboBox( _In_opt_ CDXUTDialog* pDialog = nullptr );
     virtual ~CDXUTComboBox();
 
     virtual void SetTextColor( _In_ DWORD Color ) override;
@@ -941,7 +945,7 @@ protected:
 class CDXUTSlider : public CDXUTControl
 {
 public:
-    CDXUTSlider( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTSlider( _In_opt_ CDXUTDialog* pDialog = nullptr );
 
     virtual bool ContainsPoint( _In_ const POINT& pt ) override;
     virtual bool CanHaveFocus() override
@@ -989,7 +993,7 @@ protected:
 class CUniBuffer
 {
 public:
-    CUniBuffer( _In_ int nInitialSize = 1 ) noexcept;
+    CUniBuffer( _In_ int nInitialSize = 1 );
     ~CUniBuffer();
 
     size_t GetBufferSize() const { return m_nBufferSize; }
@@ -1044,7 +1048,7 @@ private:
 class CDXUTEditBox : public CDXUTControl
 {
 public:
-    CDXUTEditBox( _In_opt_ CDXUTDialog* pDialog = nullptr ) noexcept;
+    CDXUTEditBox( _In_opt_ CDXUTDialog* pDialog = nullptr );
     virtual ~CDXUTEditBox();
 
     virtual bool HandleKeyboard( _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;

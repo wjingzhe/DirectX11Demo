@@ -3,8 +3,12 @@
 //
 // Enumerates D3D adapters, devices, modes, etc.
 //
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -35,20 +39,12 @@ void WINAPI DXUTDestroyD3D11Enumeration()
     SAFE_DELETE( g_pDXUTD3D11Enumeration );
 }
 
-class DXUTMemoryHelperD3D11Enum
-{
-public:
-DXUTMemoryHelperD3D11Enum() noexcept { DXUTCreateD3D11Enumeration(); }
-~DXUTMemoryHelperD3D11Enum() { DXUTDestroyD3D11Enumeration(); }
-};
-
-
 //--------------------------------------------------------------------------------------
 _Use_decl_annotations_
 CD3D11Enumeration* WINAPI DXUTGetD3D11Enumeration( bool bForceEnumerate, bool bEnumerateAllAdapterFormats, D3D_FEATURE_LEVEL forceFL )
 {
-    // Using an static class with accessor function to allow control of the construction order
-    static DXUTMemoryHelperD3D11Enum d3d11enumMemory;
+    // This is a no-op if the CD3D11Enumeration object has already been created
+    DXUTCreateD3D11Enumeration();
     if( g_pDXUTD3D11Enumeration && ( !g_pDXUTD3D11Enumeration->HasEnumerated() || bForceEnumerate ) )
     {
         g_pDXUTD3D11Enumeration->SetEnumerateAllAdapterFormats( bEnumerateAllAdapterFormats );
@@ -65,7 +61,7 @@ CD3D11Enumeration* WINAPI DXUTGetD3D11Enumeration( bool bForceEnumerate, bool bE
 
 
 //--------------------------------------------------------------------------------------
-CD3D11Enumeration::CD3D11Enumeration() noexcept :
+CD3D11Enumeration::CD3D11Enumeration() :
     m_bHasEnumerated(false),
     m_IsD3D11DeviceAcceptableFunc(nullptr),
     m_pIsD3D11DeviceAcceptableFuncUserContext(nullptr),
@@ -120,6 +116,7 @@ HRESULT CD3D11Enumeration::Enumerate( LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE IsD3
         if( FAILED( hr ) ) // DXGIERR_NOT_FOUND is expected when the end of the list is hit
             break;
 
+#ifdef USE_DIRECT3D11_1
         IDXGIAdapter2* pAdapter2 = nullptr;
         if ( SUCCEEDED( pAdapter->QueryInterface( __uuidof(IDXGIAdapter2), ( LPVOID* )&pAdapter2 ) ) )
         {
@@ -135,6 +132,7 @@ HRESULT CD3D11Enumeration::Enumerate( LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE IsD3
                 continue;
             }
         }
+#endif
 
         auto pAdapterInfo = new (std::nothrow) CD3D11EnumAdapterInfo;
         if( !pAdapterInfo )
@@ -232,10 +230,13 @@ HRESULT CD3D11Enumeration::Enumerate( LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE IsD3
     {
         static const D3D_FEATURE_LEVEL fLvlWarp[] =
         {
-#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
+#ifdef USE_DIRECT3D11_3
             D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0,
 #endif
-            D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1
+#ifdef USE_DIRECT3D11_1
+            D3D_FEATURE_LEVEL_11_1,
+#endif
+            D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1
         };
 
         ID3D11Device* pDevice = nullptr;
@@ -243,7 +244,7 @@ HRESULT CD3D11Enumeration::Enumerate( LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE IsD3
                                              D3D11_SDK_VERSION, &pDevice, &m_warpFL, nullptr );
         if ( hr == E_INVALIDARG )
         {
-#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
+#ifdef USE_DIRECT3D11_3
             // DirectX 11.1 runtime will not recognize FL 12.x, so try without it
             hr = DXUT_Dynamic_D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, 0, 0, &fLvlWarp[2], _countof(fLvlWarp) - 2,
                                                 D3D11_SDK_VERSION, &pDevice, &m_warpFL, nullptr);
@@ -254,9 +255,11 @@ HRESULT CD3D11Enumeration::Enumerate( LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE IsD3
                                                     D3D11_SDK_VERSION, &pDevice, &m_warpFL, nullptr);
             }
 #else
+#ifdef USE_DIRECT3D11_1
             // DirectX 11.0 runtime will not recognize FL 11.1, so try without it
             hr = DXUT_Dynamic_D3D11CreateDevice( nullptr, D3D_DRIVER_TYPE_WARP, 0, 0, &fLvlWarp[1], _countof(fLvlWarp) - 1,
                                                  D3D11_SDK_VERSION, &pDevice, &m_warpFL, nullptr );
+#endif
 #endif
         }
 
@@ -492,11 +495,13 @@ HRESULT CD3D11Enumeration::EnumerateDevices( _In_ CD3D11EnumAdapterInfo* pAdapte
 
         static const D3D_FEATURE_LEVEL FeatureLevels[] =
         {
-#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
+#ifdef USE_DIRECT3D11_3
             D3D_FEATURE_LEVEL_12_1,
             D3D_FEATURE_LEVEL_12_0,
 #endif
+#ifdef USE_DIRECT3D11_1
             D3D_FEATURE_LEVEL_11_1,
+#endif
             D3D_FEATURE_LEVEL_11_0,
             D3D_FEATURE_LEVEL_10_1,
             D3D_FEATURE_LEVEL_10_0,
@@ -522,7 +527,7 @@ HRESULT CD3D11Enumeration::EnumerateDevices( _In_ CD3D11EnumAdapterInfo* pAdapte
 
         if ( hr == E_INVALIDARG )
         {
-#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
+#ifdef USE_DIRECT3D11_3
             // DirectX 11.1 runtime will not recognize FL 12.x, so try without it
             hr = DXUT_Dynamic_D3D11CreateDevice((devTypeArray[iDeviceType] == D3D_DRIVER_TYPE_HARDWARE) ? pAdapterInfo->m_pAdapter : nullptr,
                                                 (devTypeArray[iDeviceType] == D3D_DRIVER_TYPE_HARDWARE) ? D3D_DRIVER_TYPE_UNKNOWN : devTypeArray[iDeviceType],
@@ -542,6 +547,7 @@ HRESULT CD3D11Enumeration::EnumerateDevices( _In_ CD3D11EnumAdapterInfo* pAdapte
                                                     &pd3dDeviceContext);
             }
 #else
+#ifdef USE_DIRECT3D11_1
             // DirectX 11.0 runtime will not recognize FL 11.1, so try without it
             hr = DXUT_Dynamic_D3D11CreateDevice( (devTypeArray[iDeviceType] == D3D_DRIVER_TYPE_HARDWARE) ? pAdapterInfo->m_pAdapter : nullptr,
                                                  (devTypeArray[iDeviceType] == D3D_DRIVER_TYPE_HARDWARE) ? D3D_DRIVER_TYPE_UNKNOWN : devTypeArray[iDeviceType],
@@ -549,6 +555,7 @@ HRESULT CD3D11Enumeration::EnumerateDevices( _In_ CD3D11EnumAdapterInfo* pAdapte
                                                  &FeatureLevels[1], NumFeatureLevels - 1,
                                                  D3D11_SDK_VERSION, &pd3dDevice, &pDeviceInfo->MaxLevel,
                                                  &pd3dDeviceContext );
+#endif
 #endif
         }
 
