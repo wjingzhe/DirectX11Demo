@@ -1,12 +1,8 @@
 //--------------------------------------------------------------------------------------
 // File: DXUTguiIME.cpp
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -114,12 +110,13 @@ void CDXUTIMEEditBox::InitDefaultElements( _In_ CDXUTDialog* pDialog )
 
 
 //--------------------------------------------------------------------------------------
-CDXUTIMEEditBox::CDXUTIMEEditBox( _In_opt_ CDXUTDialog* pDialog )
+CDXUTIMEEditBox::CDXUTIMEEditBox( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_nIndicatorWidth(0),
+    m_rcIndicator{}
 {
     m_Type = DXUT_CONTROL_IMEEDITBOX;
     m_pDialog = pDialog;
 
-    m_nIndicatorWidth = 0;
     m_ReadingColor = D3DCOLOR_ARGB( 188, 255, 255, 255 );
     m_ReadingWinColor = D3DCOLOR_ARGB( 128, 0, 0, 0 );
     m_ReadingSelColor = D3DCOLOR_ARGB( 255, 255, 0, 0 );
@@ -911,7 +908,7 @@ void CDXUTIMEEditBox::RenderIndicator( _In_ float fElapsedTime )
         0, 0, 0, 0
     };
     // If IME system is off, draw English indicator.
-    WCHAR* pwszIndicator = ImeUi_IsEnabled() ? ImeUi_GetIndicatior() : L"En";
+    const WCHAR* pwszIndicator = ImeUi_IsEnabled() ? ImeUi_GetIndicatior() : L"En";
 
     m_pDialog->CalcTextRect( pwszIndicator, pElement, &rcCalc );
     m_pDialog->DrawText( pwszIndicator, pElement, &rc );

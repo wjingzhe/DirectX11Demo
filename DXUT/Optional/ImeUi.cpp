@@ -1,12 +1,8 @@
 //--------------------------------------------------------------------------------------
 // File: ImeUi.cpp
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -128,14 +124,15 @@ FAR*                            LPINPUTCONTEXT2;
 class CDisableCicero
 {
 public:
-            CDisableCicero() : m_ptim( nullptr ),
-                               m_bComInit( false )
-            {
-            }
-            ~CDisableCicero()
-            {
-                Uninitialize();
-            }
+    CDisableCicero() noexcept :
+        m_ptim( nullptr ),
+        m_bComInit( false )
+    {}
+    ~CDisableCicero()
+    {
+        Uninitialize();
+    }
+
     void    Initialize()
     {
         if( m_bComInit )
@@ -296,7 +293,7 @@ static double                   lastSwirl;
 
 static HKL                      g_hklCurrent = 0;
 static UINT                     g_uCodePage = 0;
-static LPTSTR g_aszIndicator[] =
+static LPCTSTR g_aszIndicator[] =
 {
     TEXT( "A" ),
         L"\x7B80",
@@ -304,7 +301,7 @@ static LPTSTR g_aszIndicator[] =
         L"\xac00",
         L"\x3042",
 };
-static LPTSTR                   g_pszIndicatior = g_aszIndicator[0];
+static LPCTSTR                  g_pszIndicatior = g_aszIndicator[0];
 
 static void GetReadingString( _In_ HWND hWnd );
 static DWORD GetImeId( _In_ UINT uIndex = 0 );
@@ -352,7 +349,7 @@ protected:
                            public ITfCompartmentEventSink
     {
     public:
-        CUIElementSink();
+        CUIElementSink() noexcept;
         virtual ~CUIElementSink();
 
         // IUnknown
@@ -397,9 +394,7 @@ protected:
     static CUIElementSink* m_TsfSink;
     static int m_nCandidateRefCount;	// Some IME shows multiple candidate lists but the Library doesn't support multiple candidate list. 
     // So track open / close events to make sure the candidate list opened last is shown.
-                CTsfUiLessMode()
-                {
-                }	// this class can't be instanciated
+    CTsfUiLessMode() = default; // this class can't be instanciated
 
 public:
     static BOOL SetupSinks();
@@ -2218,7 +2213,7 @@ void ImeUi_FinalizeString( _In_ bool bSend )
     if( g_bUILessMode )
     {
         // For some reason ImmNotifyIME doesn't work on DaYi and Array CHT IMEs. Cancel composition string by setting zero-length string.
-        ImmSetCompositionString( himc, SCS_SETSTR, TEXT( "" ), sizeof( TCHAR ), TEXT( "" ), sizeof( TCHAR ) );
+        ImmSetCompositionString( himc, SCS_SETSTR, const_cast<wchar_t*>(L""), sizeof(wchar_t), const_cast<char*>(""), sizeof(wchar_t) );
     }
     // the following line is necessary as Korean IME doesn't close cand list when comp string is cancelled.
     _ImmNotifyIME( himc, NI_CLOSECANDIDATE, 0, 0 );	
@@ -2680,9 +2675,8 @@ void CTsfUiLessMode::ReleaseSinks()
     }	
 }
 
-CTsfUiLessMode::CUIElementSink::CUIElementSink()
+CTsfUiLessMode::CUIElementSink::CUIElementSink() noexcept : _cRef(1)
 {
-    _cRef = 1;
 }
 
 
@@ -3191,7 +3185,7 @@ WORD ImeUi_GetLanguage()
     return GETLANG();
 };
 
-PTSTR ImeUi_GetIndicatior()
+PCTSTR ImeUi_GetIndicatior()
 {
     return g_pszIndicatior;
 };

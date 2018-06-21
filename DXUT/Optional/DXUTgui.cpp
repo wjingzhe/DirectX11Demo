@@ -1,12 +1,8 @@
 //--------------------------------------------------------------------------------------
 // File: DXUTgui.cpp
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -292,7 +288,7 @@ void DrawText11DXUT( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3d11Device
         }
 
         // Add 6 sprite vertices
-        DXUTSpriteVertex SpriteVertex;
+        DXUTSpriteVertex SpriteVertex = {};
         float fRectRight = fRectLeft + fGlyphSizeX;
         float fRectBottom = fRectTop - fGlyphSizeY;
         float fTexLeft = ( strText[i] - 32 ) * fCharTexSizeX;
@@ -405,34 +401,34 @@ void EndText11( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3d11DeviceConte
 // CDXUTDialog class
 //======================================================================================
 
-CDXUTDialog::CDXUTDialog() :
+CDXUTDialog::CDXUTDialog() noexcept :
+    m_bNonUserEvents(false),
+    m_bKeyboardInput(false),
+    m_bMouseInput(true),
+    m_nDefaultControlID(0xffff),
+    m_fTimeLastRefresh(0),
+    m_pControlMouseOver(nullptr),
+    m_bVisible(true),
+    m_bCaption(false),
+    m_bMinimized(false),
+    m_bDrag(false),
+    m_wszCaption{},
     m_x( 0 ),
     m_y( 0 ),
     m_width( 0 ),
     m_height( 0 ),
+    m_nCaptionHeight(18),
+    m_colorTopLeft(0),
+    m_colorTopRight(0),
+    m_colorBottomLeft(0),
+    m_colorBottomRight(0),
     m_pManager( nullptr ),
-    m_bVisible( true ),
-    m_bCaption( false ),
-    m_bMinimized( false ),
-    m_bDrag( false ),
-    m_nCaptionHeight( 18 ),
-    m_colorTopLeft( 0 ),
-    m_colorTopRight( 0 ),
-    m_colorBottomLeft( 0 ),
-    m_colorBottomRight( 0 ),
     m_pCallbackEvent( nullptr ),
     m_pCallbackEventUserContext( nullptr ),
-    m_fTimeLastRefresh( 0 ),
-    m_pControlMouseOver( nullptr ),
-    m_nDefaultControlID( 0xffff ),
-    m_bNonUserEvents( false ),
-    m_bKeyboardInput( false ),
-    m_bMouseInput( true )
+    m_CapElement{},
+    m_pNextDialog(this),
+    m_pPrevDialog(this)
 {
-    m_wszCaption[0] = L'\0';
-
-    m_pNextDialog = this;
-    m_pPrevDialog = this;
 }
 
 
@@ -1651,7 +1647,7 @@ HRESULT CDXUTDialog::DrawSprite( CDXUTElement* pElement, const RECT* prcDest, fl
     float fTexBottom = rcTexture.bottom / fTexHeight;
 
     // Add 6 sprite vertices
-    DXUTSpriteVertex SpriteVertex;
+    DXUTSpriteVertex SpriteVertex = {};
 
     // tri1
     SpriteVertex.vPos = XMFLOAT3( fRectLeft, fRectTop, fDepth );
@@ -2242,7 +2238,7 @@ void CDXUTDialog::InitDefaultElements()
 //======================================================================================
 
 //--------------------------------------------------------------------------------------
-CDXUTDialogResourceManager::CDXUTDialogResourceManager() :
+CDXUTDialogResourceManager::CDXUTDialogResourceManager() noexcept :
     m_pVSRenderUI11(nullptr),
     m_pPSRenderUI11(nullptr),
     m_pPSRenderUIUntex11(nullptr),
@@ -2251,13 +2247,20 @@ CDXUTDialogResourceManager::CDXUTDialogResourceManager() :
     m_pBlendStateUI11(nullptr),
     m_pSamplerStateUI11(nullptr),
     m_pDepthStencilStateStored11(nullptr),
+    m_StencilRefStored11(0),
     m_pRasterizerStateStored11(nullptr),
     m_pBlendStateStored11(nullptr),
+    m_BlendFactorStored11{},
+    m_SampleMaskStored11(0),
     m_pSamplerStateStored11(nullptr),
     m_pInputLayout11(nullptr),
     m_pVBScreenQuad11(nullptr),
     m_pSpriteBuffer11(nullptr),
-    m_SpriteBufferBytes11(0)
+    m_SpriteBufferBytes11(0),
+    m_nBackBufferWidth(0),
+    m_nBackBufferHeight(0),
+    m_pd3d11Device(nullptr),
+    m_pd3d11DeviceContext(nullptr)
 {
 }
 
@@ -2321,8 +2324,7 @@ HRESULT CDXUTDialogResourceManager::OnD3D11CreateDevice( ID3D11Device* pd3dDevic
     DXUT_SetDebugName( m_pPSRenderUIUntex11, "CDXUTDialogResourceManager" );
     
     // States
-    D3D11_DEPTH_STENCIL_DESC DSDesc;
-    ZeroMemory( &DSDesc, sizeof( D3D11_DEPTH_STENCIL_DESC ) );
+    D3D11_DEPTH_STENCIL_DESC DSDesc = {};
     DSDesc.DepthEnable = FALSE;
     DSDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     DSDesc.DepthFunc = D3D11_COMPARISON_LESS;
@@ -2344,9 +2346,7 @@ HRESULT CDXUTDialogResourceManager::OnD3D11CreateDevice( ID3D11Device* pd3dDevic
     V_RETURN( pd3dDevice->CreateRasterizerState( &RSDesc, &m_pRasterizerStateUI11 ) );
     DXUT_SetDebugName( m_pRasterizerStateUI11, "CDXUTDialogResourceManager" );
 
-    D3D11_BLEND_DESC BSDesc;
-    ZeroMemory( &BSDesc, sizeof( D3D11_BLEND_DESC ) );
-    
+    D3D11_BLEND_DESC BSDesc = {};
     BSDesc.RenderTarget[0].BlendEnable = TRUE;
     BSDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
     BSDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
@@ -2359,8 +2359,7 @@ HRESULT CDXUTDialogResourceManager::OnD3D11CreateDevice( ID3D11Device* pd3dDevic
     V_RETURN( pd3dDevice->CreateBlendState( &BSDesc, &m_pBlendStateUI11 ) );
     DXUT_SetDebugName( m_pBlendStateUI11, "CDXUTDialogResourceManager" );
 
-    D3D11_SAMPLER_DESC SSDesc;
-    ZeroMemory( &SSDesc, sizeof( D3D11_SAMPLER_DESC ) );
+    D3D11_SAMPLER_DESC SSDesc = {};
     SSDesc.Filter = D3D11_FILTER_ANISOTROPIC   ;
     SSDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     SSDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -2555,54 +2554,51 @@ void CDXUTDialogResourceManager::EndSprites11( ID3D11Device* pd3dDevice, ID3D11D
 
     // ensure our buffer size can hold our sprites
     UINT SpriteDataBytes = static_cast<UINT>( m_SpriteVertices.size() * sizeof( DXUTSpriteVertex ) );
-    if( SpriteDataBytes )
+    if( m_SpriteBufferBytes11 < SpriteDataBytes )
     {
-        if( m_SpriteBufferBytes11 < SpriteDataBytes )
+        SAFE_RELEASE( m_pSpriteBuffer11 );
+        m_SpriteBufferBytes11 = SpriteDataBytes;
+
+        D3D11_BUFFER_DESC BufferDesc;
+        BufferDesc.ByteWidth = m_SpriteBufferBytes11;
+        BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        BufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        BufferDesc.MiscFlags = 0;
+
+        if ( FAILED(pd3dDevice->CreateBuffer(&BufferDesc, nullptr, &m_pSpriteBuffer11)) )
         {
-            SAFE_RELEASE( m_pSpriteBuffer11 );
-            m_SpriteBufferBytes11 = SpriteDataBytes;
-
-            D3D11_BUFFER_DESC BufferDesc;
-            BufferDesc.ByteWidth = m_SpriteBufferBytes11;
-            BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-            BufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-            BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-            BufferDesc.MiscFlags = 0;
-
-            if ( FAILED(pd3dDevice->CreateBuffer(&BufferDesc, nullptr, &m_pSpriteBuffer11)) )
-            {
-                m_pSpriteBuffer11 = nullptr;
-                m_SpriteBufferBytes11 = 0;
-                return;
-            }
-            DXUT_SetDebugName( m_pSpriteBuffer11, "CDXUTDialogResourceManager" );
+            m_pSpriteBuffer11 = nullptr;
+            m_SpriteBufferBytes11 = 0;
+            return;
         }
-
-        // Copy the sprites over
-        D3D11_BOX destRegion;
-        destRegion.left = 0;
-        destRegion.right = SpriteDataBytes;
-        destRegion.top = 0;
-        destRegion.bottom = 1;
-        destRegion.front = 0;
-        destRegion.back = 1;
-        D3D11_MAPPED_SUBRESOURCE MappedResource;
-        if ( S_OK == pd3dImmediateContext->Map( m_pSpriteBuffer11, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource ) )
-        { 
-            memcpy( MappedResource.pData, (const void*)&m_SpriteVertices[0], SpriteDataBytes );
-            pd3dImmediateContext->Unmap(m_pSpriteBuffer11, 0);
-        }
-
-        // Draw
-        UINT Stride = sizeof( DXUTSpriteVertex );
-        UINT Offset = 0;
-        pd3dImmediateContext->IASetVertexBuffers( 0, 1, &m_pSpriteBuffer11, &Stride, &Offset );
-        pd3dImmediateContext->IASetInputLayout( m_pInputLayout11 );
-        pd3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-        pd3dImmediateContext->Draw( static_cast<UINT>( m_SpriteVertices.size() ), 0 );
-
-        m_SpriteVertices.clear();
+        DXUT_SetDebugName( m_pSpriteBuffer11, "CDXUTDialogResourceManager" );
     }
+
+    // Copy the sprites over
+    D3D11_BOX destRegion;
+    destRegion.left = 0;
+    destRegion.right = SpriteDataBytes;
+    destRegion.top = 0;
+    destRegion.bottom = 1;
+    destRegion.front = 0;
+    destRegion.back = 1;
+    D3D11_MAPPED_SUBRESOURCE MappedResource;
+    if ( S_OK == pd3dImmediateContext->Map( m_pSpriteBuffer11, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource ) )
+    { 
+        memcpy( MappedResource.pData, (const void*)&m_SpriteVertices[0], SpriteDataBytes );
+        pd3dImmediateContext->Unmap(m_pSpriteBuffer11, 0);
+    }
+
+    // Draw
+    UINT Stride = sizeof( DXUTSpriteVertex );
+    UINT Offset = 0;
+    pd3dImmediateContext->IASetVertexBuffers( 0, 1, &m_pSpriteBuffer11, &Stride, &Offset );
+    pd3dImmediateContext->IASetInputLayout( m_pInputLayout11 );
+    pd3dImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+    pd3dImmediateContext->Draw( static_cast<UINT>( m_SpriteVertices.size() ), 0 );
+
+    m_SpriteVertices.clear();
 }
 
 
@@ -2838,7 +2834,7 @@ HRESULT CDXUTDialogResourceManager::CreateTexture11( _In_ UINT iTexture )
 // CDXUTControl class
 //======================================================================================
 
-CDXUTControl::CDXUTControl( _In_opt_ CDXUTDialog* pDialog )
+CDXUTControl::CDXUTControl( _In_opt_ CDXUTDialog* pDialog ) noexcept
 {
     m_Type = DXUT_CONTROL_BUTTON;
     m_pDialog = pDialog;
@@ -2935,7 +2931,7 @@ void CDXUTControl::UpdateRects()
 //======================================================================================
 
 //--------------------------------------------------------------------------------------
-CDXUTStatic::CDXUTStatic( _In_opt_ CDXUTDialog* pDialog )
+CDXUTStatic::CDXUTStatic( _In_opt_ CDXUTDialog* pDialog ) noexcept
 {
     m_Type = DXUT_CONTROL_STATIC;
     m_pDialog = pDialog;
@@ -3006,7 +3002,7 @@ HRESULT CDXUTStatic::SetText( _In_z_ LPCWSTR strText )
 // CDXUTButton class
 //======================================================================================
 
-CDXUTButton::CDXUTButton( _In_opt_ CDXUTDialog* pDialog )
+CDXUTButton::CDXUTButton( _In_opt_ CDXUTDialog* pDialog ) noexcept
 {
     m_Type = DXUT_CONTROL_BUTTON;
     m_pDialog = pDialog;
@@ -3180,12 +3176,13 @@ void CDXUTButton::Render( _In_ float fElapsedTime )
 // CDXUTCheckBox class
 //======================================================================================
 
-CDXUTCheckBox::CDXUTCheckBox( _In_opt_ CDXUTDialog* pDialog )
+CDXUTCheckBox::CDXUTCheckBox( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_bChecked(false),
+    m_rcButton{},
+    m_rcText{}
 {
     m_Type = DXUT_CONTROL_CHECKBOX;
     m_pDialog = pDialog;
-
-    m_bChecked = false;
 }
 
 
@@ -3353,7 +3350,8 @@ void CDXUTCheckBox::Render( _In_ float fElapsedTime )
 // CDXUTRadioButton class
 //======================================================================================
 
-CDXUTRadioButton::CDXUTRadioButton( _In_opt_ CDXUTDialog* pDialog )
+CDXUTRadioButton::CDXUTRadioButton( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_nButtonGroup(0)
 {
     m_Type = DXUT_CONTROL_RADIOBUTTON;
     m_pDialog = pDialog;
@@ -3476,17 +3474,20 @@ void CDXUTRadioButton::SetCheckedInternal( bool bChecked, bool bClearGroup, bool
 // CDXUTComboBox class
 //======================================================================================
 
-CDXUTComboBox::CDXUTComboBox( _In_opt_ CDXUTDialog* pDialog ) : m_ScrollBar( pDialog )
+CDXUTComboBox::CDXUTComboBox( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_iSelected(-1),
+    m_iFocused(-1),
+    m_nDropHeight(100),
+    m_ScrollBar( pDialog ),
+    m_nSBWidth(16),
+    m_bOpened(false),
+    m_rcText{},
+    m_rcButton{},
+    m_rcDropdown{},
+    m_rcDropdownText{}
 {
     m_Type = DXUT_CONTROL_COMBOBOX;
-    m_pDialog = pDialog;
-
-    m_nDropHeight = 100;
-
-    m_nSBWidth = 16;
-    m_bOpened = false;
-    m_iSelected = -1;
-    m_iFocused = -1;
+    m_pDialog = pDialog; 
 }
 
 
@@ -4173,16 +4174,18 @@ HRESULT CDXUTComboBox::SetSelectedByData( _In_ void* pData )
 // CDXUTSlider class
 //======================================================================================
 
-CDXUTSlider::CDXUTSlider( _In_opt_ CDXUTDialog* pDialog )
+CDXUTSlider::CDXUTSlider( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_nValue(50),
+    m_nMin(0),
+    m_nMax(100),
+    m_nDragX(0),
+    m_nDragOffset(0),
+    m_nButtonX(0),
+    m_bPressed(false),
+    m_rcButton{}
 {
     m_Type = DXUT_CONTROL_SLIDER;
     m_pDialog = pDialog;
-
-    m_nMin = 0;
-    m_nMax = 100;
-    m_nValue = 50;
-
-    m_bPressed = false;
 }
 
 
@@ -4447,24 +4450,23 @@ void CDXUTSlider::Render( _In_ float fElapsedTime )
 // CDXUTScrollBar class
 //======================================================================================
 
-CDXUTScrollBar::CDXUTScrollBar( _In_opt_ CDXUTDialog* pDialog )
+CDXUTScrollBar::CDXUTScrollBar( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_bShowThumb(true),
+    m_bDrag(false),
+    m_rcUpButton{},
+    m_rcDownButton{},
+    m_rcTrack{},
+    m_rcThumb{},
+    m_nPosition(0),
+    m_nPageSize(1),
+    m_nStart(0),
+    m_nEnd(1),
+    m_LastMouse{ 0, 0 },
+    m_Arrow(CLEAR),
+    m_dArrowTS(0.0)
 {
     m_Type = DXUT_CONTROL_SCROLLBAR;
     m_pDialog = pDialog;
-
-    m_bShowThumb = true;
-    m_bDrag = false;
-
-    SetRect( &m_rcUpButton, 0, 0, 0, 0 );
-    SetRect( &m_rcDownButton, 0, 0, 0, 0 );
-    SetRect( &m_rcTrack, 0, 0, 0, 0 );
-    SetRect( &m_rcThumb, 0, 0, 0, 0 );
-    m_nPosition = 0;
-    m_nPageSize = 1;
-    m_nStart = 0;
-    m_nEnd = 1;
-    m_Arrow = CLEAR;
-    m_dArrowTS = 0.0;
 }
 
 
@@ -4827,19 +4829,21 @@ void CDXUTScrollBar::Cap()  // Clips position at boundaries. Ensures it stays wi
 // CDXUTListBox class
 //======================================================================================
 
-CDXUTListBox::CDXUTListBox( _In_opt_ CDXUTDialog* pDialog ) : m_ScrollBar( pDialog )
+CDXUTListBox::CDXUTListBox( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_rcText{},
+    m_rcSelection{},
+    m_ScrollBar(pDialog),
+    m_nSBWidth(16),
+    m_nBorder(6),
+    m_nMargin(5),
+    m_nTextHeight(0),
+    m_dwStyle(0),
+    m_nSelected(-1),
+    m_nSelStart(0),
+    m_bDrag(false)
 {
     m_Type = DXUT_CONTROL_LISTBOX;
     m_pDialog = pDialog;
-
-    m_dwStyle = 0;
-    m_nSBWidth = 16;
-    m_nSelected = -1;
-    m_nSelStart = 0;
-    m_bDrag = false;
-    m_nBorder = 6;
-    m_nMargin = 5;
-    m_nTextHeight = 0;
 }
 
 
@@ -5471,27 +5475,29 @@ bool CDXUTEditBox::s_bHideCaret;   // If true, we don't render the caret.
 #define EDITBOX_SCROLLEXTENT 4
 
 //--------------------------------------------------------------------------------------
-CDXUTEditBox::CDXUTEditBox( _In_opt_ CDXUTDialog* pDialog )
+CDXUTEditBox::CDXUTEditBox( _In_opt_ CDXUTDialog* pDialog ) noexcept :
+    m_nBorder(5),
+    m_nSpacing(4),
+    m_rcText{},
+    m_rcRender{},
+    m_bCaretOn(true),
+    m_nCaret(0),
+    m_bInsertMode(true),
+    m_nSelStart(0),
+    m_nFirstVisible(0),
+    m_bMouseDrag(false)
 {
     m_Type = DXUT_CONTROL_EDITBOX;
     m_pDialog = pDialog;
 
-    m_nBorder = 5;  // Default border width
-    m_nSpacing = 4;  // Default spacing
-
-    m_bCaretOn = true;
-    m_dfBlink = GetCaretBlinkTime() * 0.001f;
+    m_dfBlink = double(GetCaretBlinkTime()) * 0.001;
     m_dfLastBlink = DXUTGetGlobalTimer()->GetAbsoluteTime();
     s_bHideCaret = false;
-    m_nFirstVisible = 0;
+
     m_TextColor = D3DCOLOR_ARGB( 255, 16, 16, 16 );
     m_SelTextColor = D3DCOLOR_ARGB( 255, 255, 255, 255 );
     m_SelBkColor = D3DCOLOR_ARGB( 255, 40, 50, 92 );
     m_CaretColor = D3DCOLOR_ARGB( 255, 0, 0, 0 );
-    m_nCaret = m_nSelStart = 0;
-    m_bInsertMode = true;
-
-    m_bMouseDrag = false;
 }
 
 
@@ -6262,10 +6268,8 @@ HRESULT CUniBuffer::Analyse()
     if( m_Analysis )
         (void)ScriptStringFree( &m_Analysis );
 
-    SCRIPT_CONTROL ScriptControl; // For uniscribe
-    SCRIPT_STATE ScriptState;   // For uniscribe
-    ZeroMemory( &ScriptControl, sizeof( ScriptControl ) );
-    ZeroMemory( &ScriptState, sizeof( ScriptState ) );
+    SCRIPT_CONTROL ScriptControl = {}; // For uniscribe
+    SCRIPT_STATE ScriptState = {};   // For uniscribe
 
 #pragma warning(push)
 #pragma warning(disable : 4616 6309 6387 )
@@ -6298,7 +6302,7 @@ HRESULT CUniBuffer::Analyse()
 
 
 //--------------------------------------------------------------------------------------
-CUniBuffer::CUniBuffer( _In_ int nInitialSize )
+CUniBuffer::CUniBuffer( _In_ int nInitialSize ) noexcept
 {
     m_nBufferSize = 0;
     m_pwszBuffer = nullptr;

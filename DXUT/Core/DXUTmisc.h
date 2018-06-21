@@ -3,12 +3,8 @@
 //
 // Helper functions for Direct3D programming.
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -81,7 +77,7 @@ HRESULT DXUTSnapD3D11Screenshot( _In_z_ LPCWSTR szFileName, _In_ bool usedds = t
 class CDXUTTimer
 {
 public:
-    CDXUTTimer();
+    CDXUTTimer() noexcept;
 
     void            Reset(); // resets the timer
     void            Start(); // starts the timer
@@ -100,7 +96,6 @@ public:
 protected:
     LARGE_INTEGER   GetAdjustedCurrentTime() const;
 
-    bool m_bUsingQPF;
     bool m_bTimerStopped;
     LONGLONG m_llQPFTicksPerSec;
 

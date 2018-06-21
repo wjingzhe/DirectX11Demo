@@ -6,12 +6,8 @@
 //
 // http://msdn.microsoft.com/en-us/library/ee418650.aspx
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -207,9 +203,9 @@ public:
 private:
     // Values derived from the buffer size template parameter
     //
-    const static BYTE c_cbBufferSizeLog2 = __min( cbBufferSizeLog2, 31 );
-    const static DWORD c_cbBufferSize = ( 1 << c_cbBufferSizeLog2 );
-    const static DWORD c_sizeMask = c_cbBufferSize - 1;
+    static const BYTE c_cbBufferSizeLog2 = __min( cbBufferSizeLog2, 31 );
+    static const DWORD c_cbBufferSize = ( 1 << c_cbBufferSizeLog2 );
+    static const DWORD c_sizeMask = c_cbBufferSize - 1;
 
     // Leave these private and undefined to prevent their use
     DXUTLockFreePipe( const DXUTLockFreePipe& );

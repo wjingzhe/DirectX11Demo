@@ -3,12 +3,8 @@
 //
 // Dialog for selection of device settings 
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -40,9 +36,13 @@ CD3DSettingsDlg* WINAPI DXUTGetD3DSettingsDialog()
 
 
 //--------------------------------------------------------------------------------------
-CD3DSettingsDlg::CD3DSettingsDlg() :
+CD3DSettingsDlg::CD3DSettingsDlg() noexcept :
+    m_pActiveDialog(nullptr),
+    m_Dialog{},
+    m_nRevertModeTimeout(0),
+    m_nIDEvent(0),
     m_bActive( false ),
-    m_pActiveDialog( nullptr )
+    m_Levels{}
 {
     m_Levels[0] = D3D_FEATURE_LEVEL_9_1;
     m_Levels[1] = D3D_FEATURE_LEVEL_9_2;
@@ -50,12 +50,13 @@ CD3DSettingsDlg::CD3DSettingsDlg() :
     m_Levels[3] = D3D_FEATURE_LEVEL_10_0;
     m_Levels[4] = D3D_FEATURE_LEVEL_10_1;
     m_Levels[5] = D3D_FEATURE_LEVEL_11_0;
-#ifdef USE_DIRECT3D11_1
     m_Levels[6] = D3D_FEATURE_LEVEL_11_1;
-#endif
-#ifdef USE_DIRECT3D11_3
+#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
     m_Levels[7] = D3D_FEATURE_LEVEL_12_0;
     m_Levels[8] = D3D_FEATURE_LEVEL_12_1;
+#else
+    m_Levels[7] = static_cast<D3D_FEATURE_LEVEL>(0xc000);
+    m_Levels[8] = static_cast<D3D_FEATURE_LEVEL>(0xc100);
 #endif
 }
 
@@ -1269,15 +1270,13 @@ void CD3DSettingsDlg::AddD3D11FeatureLevel( _In_ D3D_FEATURE_LEVEL fl)
                 pComboBox->AddItem( L"D3D_FEATURE_LEVEL_11_0", ULongToPtr( D3D_FEATURE_LEVEL_11_0 ) ); 
         }
         break;
-#ifdef USE_DIRECT3D11_1
     case D3D_FEATURE_LEVEL_11_1: 
         {
             if( !pComboBox->ContainsItem( L"D3D_FEATURE_LEVEL_11_1" ) )
                 pComboBox->AddItem( L"D3D_FEATURE_LEVEL_11_1", ULongToPtr( D3D_FEATURE_LEVEL_11_1 ) ); 
         }
         break;
-#endif
-#ifdef USE_DIRECT3D11_3
+#if defined(USE_DIRECT3D11_3) || defined(USE_DIRECT3D11_4) 
         case D3D_FEATURE_LEVEL_12_0:
         {
             if (!pComboBox->ContainsItem(L"D3D_FEATURE_LEVEL_12_0"))
@@ -1509,9 +1508,9 @@ HRESULT CD3DSettingsDlg::UpdateD3D11RefreshRates()
     bool bWindowed = IsWindowed();
     if( bWindowed )
     {
-        DXGI_RATIONAL default;
-        default.Denominator = default.Numerator = 0;
-        AddD3D11RefreshRate( default );
+        DXGI_RATIONAL def;
+        def.Denominator = def.Numerator = 0;
+        AddD3D11RefreshRate(def);
     }
     else
     {

@@ -3,12 +3,8 @@
 //
 // Helper functions for Direct3D programming.
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -18,7 +14,7 @@
 class CD3DArcBall
 {
 public:
-    CD3DArcBall();
+    CD3DArcBall() noexcept;
 
     // Functions to change behavior
     void Reset();
@@ -143,7 +139,7 @@ enum D3DUtil_CameraKeys
 class CBaseCamera
 {
 public:
-    CBaseCamera();
+    CBaseCamera() noexcept;
 
     // Call these from client and use Get*Matrix() to read new matrices
     virtual LRESULT HandleMessages( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
@@ -152,7 +148,6 @@ public:
     // Functions to change camera matrices
     virtual void Reset();
     virtual void SetViewParams( _In_ DirectX::FXMVECTOR vEyePt, _In_ DirectX::FXMVECTOR vLookatPt );
-    virtual void SetViewParams( _In_ DirectX::FXMVECTOR vEyePt, _In_ DirectX::FXMVECTOR vLookatPt, _In_ DirectX::FXMVECTOR vUp );
     virtual void SetProjParams( _In_ float fFOV, _In_ float fAspect, _In_ float fNearPlane, _In_ float fFarPlane );
 
     // Functions to change behavior
@@ -186,8 +181,6 @@ public:
     DirectX::XMVECTOR GetLookAtPt() const { return DirectX::XMLoadFloat3( &m_vLookAt ); }
     float GetNearClip() const { return m_fNearPlane; }
     float GetFarClip() const { return m_fFarPlane; }
-    float GetFOV() const { return m_fFOV; }
-    float GetAspect() const { return m_fAspect;  ; }
 
     bool IsBeingDragged() const { return ( m_bMouseLButtonDown || m_bMouseMButtonDown || m_bMouseRButtonDown ); }
     bool IsMouseLButtonDown() const { return m_bMouseLButtonDown; }
@@ -236,7 +229,6 @@ protected:
     DirectX::XMFLOAT3 m_vDefaultLookAt;     // Default LookAt position
     DirectX::XMFLOAT3 m_vEye;               // Camera eye position
     DirectX::XMFLOAT3 m_vLookAt;            // LookAt position
-    DirectX::XMFLOAT3 m_vUp;                // Up position
     float m_fCameraYawAngle;                // Yaw angle of camera
     float m_fCameraPitchAngle;              // Pitch angle of camera
 
@@ -279,7 +271,7 @@ protected:
 class CFirstPersonCamera : public CBaseCamera
 {
 public:
-    CFirstPersonCamera();
+    CFirstPersonCamera() noexcept;
 
     // Call these from client and use Get*Matrix() to read new matrices
     virtual void FrameMove( _In_ float fElapsedTime ) override;
@@ -309,7 +301,7 @@ protected:
 class CModelViewerCamera : public CBaseCamera
 {
 public:
-    CModelViewerCamera();
+    CModelViewerCamera() noexcept;
 
     // Call these from client and use Get*Matrix() to read new matrices
     virtual LRESULT HandleMessages( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam ) override;
@@ -388,7 +380,7 @@ protected:
 class CDXUTDirectionWidget
 {
 public:
-    CDXUTDirectionWidget();
+    CDXUTDirectionWidget() noexcept;
 
     LRESULT HandleMessages( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 

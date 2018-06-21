@@ -1,12 +1,8 @@
 //--------------------------------------------------------------------------------------
 // File: DXUT.h
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -20,35 +16,23 @@
 #define STRICT
 #endif
 
-// If app hasn't choosen, set to work with Windows 7 and beyond
+// If app hasn't choosen, set to work with Windows Vista and beyond
 #ifndef WINVER
-#define WINVER         0x0601
+#define WINVER         0x0600
 #endif
 #ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0601
+#define _WIN32_WINDOWS 0x0600
 #endif
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT   0x0601
+#define _WIN32_WINNT   0x0600
+#endif
+
+#if defined(USE_DIRECT3D11_4) && !defined(USE_DIRECT3D11_3)
+#define USE_DIRECT3D11_3
 #endif
 
 #if (_WIN32_WINNT >= 0x0A00) && !defined(USE_DIRECT3D11_3)
 #define USE_DIRECT3D11_3
-#endif
-
-#if (_WIN32_WINNT >= 0x0603) && !defined(USE_DIRECT3D11_2)
-#define USE_DIRECT3D11_2
-#endif
-
-#if defined(USE_DIRECT3D11_3) && !defined(USE_DIRECT3D11_2)
-#define USE_DIRECT3D11_2
-#endif
-
-#if (_WIN32_WINNT >= 0x0602) && !defined(USE_DIRECT3D11_1)
-#define USE_DIRECT3D11_1
-#endif
-
-#if defined(USE_DIRECT3D11_2) && !defined(USE_DIRECT3D11_1)
-#define USE_DIRECT3D11_1
 #endif
 
 // #define DXUT_AUTOLIB to automatically include the libs needed for DXUT 
@@ -86,19 +70,16 @@
 // Direct3D11 includes
 #include <d3dcommon.h>
 #include <dxgi.h>
-#include <d3d11.h>
-#include <d3dcompiler.h>
-
-#ifdef USE_DIRECT3D11_1
 #include <d3d11_1.h>
-#endif
-
-#ifdef USE_DIRECT3D11_2
 #include <d3d11_2.h>
-#endif
+#include <d3dcompiler.h>
 
 #ifdef USE_DIRECT3D11_3
 #include <d3d11_3.h>
+#endif
+
+#ifdef USE_DIRECT3D11_4
+#include <d3d11_4.h>
 #endif
 
 // DirectXMath includes
@@ -106,11 +87,7 @@
 #include <DirectXColors.h>
 
 // WIC includes
-// VS 2010's stdint.h conflicts with intsafe.h
-#pragma warning(push)
-#pragma warning(disable : 4005)
 #include <wincodec.h>
-#pragma warning(pop)
 
 // XInput includes
 #include <xinput.h>
@@ -154,7 +131,7 @@
     ((DWORD)((((a)&0xff)<<24)|(((r)&0xff)<<16)|(((g)&0xff)<<8)|((b)&0xff)))
 #endif
 
-#define DXUT_VERSION 1111
+#define DXUT_VERSION 1120
 
 //--------------------------------------------------------------------------------------
 // Structs
@@ -216,7 +193,6 @@ class CD3D11EnumDeviceInfo;
 // Direct3D 11 callbacks
 typedef bool    (CALLBACK *LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE)( _In_ const CD3D11EnumAdapterInfo *AdapterInfo, _In_ UINT Output, _In_ const CD3D11EnumDeviceInfo *DeviceInfo,
                                                                    _In_ DXGI_FORMAT BackBufferFormat, _In_ bool bWindowed, _In_opt_ void* pUserContext );
-typedef void    (CALLBACK *LPDXUTCALLBACKD3D11BEFOREDEVICECREATED)( _In_opt_ void* pUserContext );
 typedef HRESULT (CALLBACK *LPDXUTCALLBACKD3D11DEVICECREATED)( _In_ ID3D11Device* pd3dDevice, _In_ const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, _In_opt_ void* pUserContext );
 typedef HRESULT (CALLBACK *LPDXUTCALLBACKD3D11SWAPCHAINRESIZED)( _In_ ID3D11Device* pd3dDevice, _In_ IDXGISwapChain *pSwapChain, _In_ const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, _In_opt_ void* pUserContext );
 typedef void    (CALLBACK *LPDXUTCALLBACKD3D11FRAMERENDER)( _In_ ID3D11Device* pd3dDevice, _In_ ID3D11DeviceContext* pd3dImmediateContext, _In_ double fTime, _In_ float fElapsedTime, _In_opt_ void* pUserContext );
@@ -233,7 +209,6 @@ void WINAPI DXUTSetCallbackDeviceRemoved( _In_ LPDXUTCALLBACKDEVICEREMOVED pCall
 
 // Direct3D 11 callbacks
 void WINAPI DXUTSetCallbackD3D11DeviceAcceptable( _In_ LPDXUTCALLBACKISD3D11DEVICEACCEPTABLE pCallback, _In_opt_ void* pUserContext = nullptr );
-void WINAPI DXUTSetCallbackD3D11BeforeDeviceCreated( _In_ LPDXUTCALLBACKD3D11BEFOREDEVICECREATED pCallback, _In_opt_ void* pUserContext = nullptr );
 void WINAPI DXUTSetCallbackD3D11DeviceCreated( _In_ LPDXUTCALLBACKD3D11DEVICECREATED pCallback, _In_opt_ void* pUserContext = nullptr );
 void WINAPI DXUTSetCallbackD3D11SwapChainResized( _In_ LPDXUTCALLBACKD3D11SWAPCHAINRESIZED pCallback, _In_opt_ void* pUserContext = nullptr );
 void WINAPI DXUTSetCallbackD3D11FrameRender( _In_ LPDXUTCALLBACKD3D11FRAMERENDER pCallback, _In_opt_ void* pUserContext = nullptr );
@@ -305,19 +280,20 @@ ID3D11DepthStencilView*  WINAPI DXUTGetD3D11DepthStencilView();
 ID3D11Device*            WINAPI DXUTGetD3D11Device();
 ID3D11DeviceContext*     WINAPI DXUTGetD3D11DeviceContext();
 
-#ifdef USE_DIRECT3D11_1
 ID3D11Device1*           WINAPI DXUTGetD3D11Device1();
 ID3D11DeviceContext1*	 WINAPI DXUTGetD3D11DeviceContext1();
-#endif
 
-#ifdef USE_DIRECT3D11_2
 ID3D11Device2*           WINAPI DXUTGetD3D11Device2();
 ID3D11DeviceContext2*	 WINAPI DXUTGetD3D11DeviceContext2();
-#endif
 
 #ifdef USE_DIRECT3D11_3
 ID3D11Device3*           WINAPI DXUTGetD3D11Device3();
 ID3D11DeviceContext3*	 WINAPI DXUTGetD3D11DeviceContext3();
+#endif
+
+#ifdef USE_DIRECT3D11_4
+ID3D11Device4*           WINAPI DXUTGetD3D11Device4();
+ID3D11DeviceContext4*	 WINAPI DXUTGetD3D11DeviceContext4();
 #endif
 
 // General

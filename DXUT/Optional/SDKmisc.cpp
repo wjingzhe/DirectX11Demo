@@ -3,12 +3,8 @@
 //
 // Various helper functionality that is shared between SDK samples
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -27,20 +23,22 @@ using namespace DirectX;
 //--------------------------------------------------------------------------------------
 // Global/Static Members
 //--------------------------------------------------------------------------------------
-static CDXUTResourceCache* s_dxut_sdk_misc_global_resource_cache = nullptr;
 CDXUTResourceCache& WINAPI DXUTGetGlobalResourceCache()
 {
     // Using an accessor function gives control of the construction order
-    if ( !s_dxut_sdk_misc_global_resource_cache )
+    static CDXUTResourceCache* s_cache = nullptr;
+    if ( !s_cache )
     {
-        s_dxut_sdk_misc_global_resource_cache = new CDXUTResourceCache;
+#if defined(DEBUG) || defined(_DEBUG)
+        int flag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
+        _CrtSetDbgFlag( flag & ~_CRTDBG_ALLOC_MEM_DF );
+#endif
+        s_cache = new CDXUTResourceCache;
+#if defined(DEBUG) || defined(_DEBUG)
+        _CrtSetDbgFlag( flag );
+#endif
     }
-    return *s_dxut_sdk_misc_global_resource_cache;
-}
-
-HRESULT WINAPI DXUTDestroyGlobalResourceCache()
-{
-    return CDXUTResourceCache::OnDestroyDevice();
+    return *s_cache;
 }
 
 
@@ -169,7 +167,7 @@ INT_PTR CALLBACK DisplaySwitchToREFWarningProc( HWND hDlg, UINT message, WPARAM 
             SendMessage( GetDlgItem( hDlg, 0x100 ), STM_SETIMAGE, IMAGE_ICON, ( LPARAM )LoadIcon( 0, IDI_QUESTION ) );
             WCHAR sz[512];
             swprintf_s( sz, 512,
-                             L"This program needs to use the Direct3D %Iu reference device.  This device implements the entire Direct3D %Iu feature set, but runs very slowly.  Do you wish to continue?", lParam, lParam );
+                             L"This program needs to use the Direct3D %zu reference device.  This device implements the entire Direct3D %zu feature set, but runs very slowly.  Do you wish to continue?", lParam, lParam );
             SetDlgItemText( hDlg, 0x101, sz );
             SetDlgItemText( hDlg, IDYES, L"&Yes" );
             SetDlgItemText( hDlg, IDNO, L"&No" );
@@ -469,9 +467,9 @@ namespace
 
 struct handle_closer { void operator()(HANDLE h) { if (h) CloseHandle(h); } };
 
-typedef public std::unique_ptr<void, handle_closer> ScopedHandle;
+typedef std::unique_ptr<void, handle_closer> ScopedHandle;
 
-inline HANDLE safe_handle( HANDLE h ) { return (h == INVALID_HANDLE_VALUE) ? 0 : h; }
+inline HANDLE safe_handle( HANDLE h ) { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
 
 class CIncludeHandler : public ID3DInclude
     // Not as robust as D3D_COMPILE_STANDARD_FILE_INCLUDE, but it works in most cases
@@ -627,7 +625,7 @@ HRESULT WINAPI DXUTCompileFromFile( LPCWSTR pFileName,
     if ( !hFile )
         return HRESULT_FROM_WIN32( GetLastError() );
 
-    LARGE_INTEGER FileSize = { 0 };
+    LARGE_INTEGER FileSize = {};
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
     FILE_STANDARD_INFO fileInfo;
@@ -812,13 +810,7 @@ XMMATRIX WINAPI DXUTGetCubeMapViewMatrix( _In_ DWORD dwFace )
 
 CDXUTResourceCache::~CDXUTResourceCache()
 {
-    // Release all resources
-    for( size_t j = 0; j < m_TextureCache.size(); ++j )
-    {
-        SAFE_RELEASE( m_TextureCache[ j ].pSRV11 );
-    }
-    m_TextureCache.clear();
-    m_TextureCache.shrink_to_fit();
+    OnDestroyDevice();
 }
 
 //--------------------------------------------------------------------------------------
@@ -895,7 +887,13 @@ HRESULT CDXUTResourceCache::CreateTextureFromFile( ID3D11Device* pDevice, ID3D11
 //--------------------------------------------------------------------------------------
 HRESULT CDXUTResourceCache::OnDestroyDevice()
 {
-    SAFE_DELETE( s_dxut_sdk_misc_global_resource_cache );
+    // Release all resources
+    for( size_t j = 0; j < m_TextureCache.size(); ++j )
+    {
+        SAFE_RELEASE( m_TextureCache[ j ].pSRV11 );
+    }
+    m_TextureCache.clear();
+    m_TextureCache.shrink_to_fit();
 
     return S_OK;
 }
@@ -906,9 +904,16 @@ HRESULT CDXUTResourceCache::OnDestroyDevice()
 //======================================================================================
 
 _Use_decl_annotations_
-CDXUTTextHelper::CDXUTTextHelper( ID3D11Device* pd3d11Device, ID3D11DeviceContext* pd3d11DeviceContext, CDXUTDialogResourceManager* pManager, int nLineHeight )
+CDXUTTextHelper::CDXUTTextHelper( ID3D11Device* pd3d11Device, ID3D11DeviceContext* pd3d11DeviceContext, CDXUTDialogResourceManager* pManager, int nLineHeight ) :
+    m_clr(0, 0, 0, 0),
+    m_pt{ 0, 0 },
+    m_nLineHeight{},
+    m_pd3d11Device(nullptr),
+    m_pd3d11DeviceContext(nullptr),
+    m_pManager(nullptr)
 {
     Init( nLineHeight );
+
     m_pd3d11Device = pd3d11Device;
     m_pd3d11DeviceContext = pd3d11DeviceContext;
     m_pManager = pManager;

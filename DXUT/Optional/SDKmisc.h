@@ -3,12 +3,8 @@
 //
 // Various helper functionality that is shared between SDK samples
 //
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
 // Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=320437
 //--------------------------------------------------------------------------------------
@@ -25,7 +21,9 @@ struct DXUTCache_Texture
     bool    bSRGB;
     ID3D11ShaderResourceView* pSRV11;
 
-    DXUTCache_Texture() :
+    DXUTCache_Texture() noexcept :
+        wszSource{},
+        bSRGB(false),
         pSRV11(nullptr)
     {
     }
@@ -42,7 +40,7 @@ public:
     HRESULT CreateTextureFromFile( _In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext *pContext, _In_z_ LPCSTR pSrcFile,
                                    _Outptr_ ID3D11ShaderResourceView** ppOutputRV, _In_ bool bSRGB=false );
 public:
-    static HRESULT OnDestroyDevice();
+    HRESULT OnDestroyDevice();
 
 protected:
     friend CDXUTResourceCache& WINAPI DXUTGetGlobalResourceCache();
@@ -50,13 +48,12 @@ protected:
     friend HRESULT WINAPI   DXUTReset3DEnvironment();
     friend void WINAPI      DXUTCleanup3DEnvironment( bool bReleaseSettings );
 
-    CDXUTResourceCache() { }
+    CDXUTResourceCache() = default;
 
     std::vector<DXUTCache_Texture> m_TextureCache;
 };
    
 CDXUTResourceCache& WINAPI DXUTGetGlobalResourceCache();
-HRESULT             WINAPI DXUTDestroyGlobalResourceCache();
 
 
 //--------------------------------------------------------------------------------------
