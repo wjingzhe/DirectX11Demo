@@ -42,5 +42,5 @@ VS_OUTPUT_SCENE BaseGeometryVS(VS_INPUT_SCENE vin)
 
 float4 BaseGeometryPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 {
-	return float4(1, 0, 0, 1.0);
+	return float4(1.0f, 1.0f, 0.0f, 1.0f);
 }
