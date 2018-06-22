@@ -154,8 +154,8 @@ void TriangleRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * p
 	pD3dImmediateContext->OMSetDepthStencilState(pDepthStencilStateStored11, uStencilRefStored11);
 	//RS 
 
-	pBlendStateStored11 = nullptr;
-	pDepthStencilStateStored11 = nullptr;
+	SAFE_RELEASE(pBlendStateStored11);
+	SAFE_RELEASE(pDepthStencilStateStored11);
 
 	pD3dImmediateContext->Flush();
 }
