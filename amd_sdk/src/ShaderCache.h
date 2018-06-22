@@ -155,7 +155,7 @@ namespace AMD
 
             wchar_t                     m_wsRawFileName[m_uFILENAME_MAX_LENGTH];
             wchar_t                     m_wsHashedFileName[m_uFILENAME_MAX_LENGTH];
-            wchar_t                     m_wsObjectFile[m_uFILENAME_MAX_LENGTH];
+            wchar_t                     m_wsCompiledObjectFile[m_uFILENAME_MAX_LENGTH];
             wchar_t                     m_wsErrorFile[m_uFILENAME_MAX_LENGTH];
             wchar_t                     m_wsAssemblyFile[m_uFILENAME_MAX_LENGTH];
             wchar_t                     m_wsAssemblyFileWithHashedFilename[m_uFILENAME_MAX_LENGTH];
@@ -171,8 +171,8 @@ namespace AMD
 
 
 
-            bool                        m_bGPRsUpToDate;
             bool                        m_bBeingProcessed;
+			//bool						m_pCompiled
             bool                        m_bShaderUpToDate;
             BYTE*                       m_pHash;
             long                        m_uHashLength;
@@ -221,13 +221,11 @@ namespace AMD
         const bool  ShowShaderErrors( void ) const;
         const int   ShaderErrorDisplayType( void ) const;
         const bool  RecompileTouchedShaders( void ) const;
-        const bool  GenerateISAGPRPressure( void ) const;
-        const bool  ShowISAGPRPressure( void ) const;
+
         void        SetMaximumCoresForShaderCompiler( const int ki_MaxCores = MAXCORES_NO_LIMIT );
         void        SetRecompileTouchedShadersFlag( const bool i_bRecompileWhenTouched );
         void        SetShowShaderErrorsFlag( const bool i_kbShowShaderErrors );
-        void        SetGenerateShaderISAFlag( const bool i_kbGenerateShaderISA );
-        void        SetShowShaderISAFlag( const bool i_kbShowShaderISA );
+
 
 
         // Renders runtime shader compiler errors from dynamically recompiled shaders
@@ -280,19 +278,12 @@ namespace AMD
 
         // Check methodss
         BOOL CheckFXC();
-        BOOL CheckSCDEV();
-        BOOL CheckShaderFile( Shader* pShader );
-        BOOL CheckObjectFile( Shader* pShader );
+        BOOL CheckShaderSourceFileExist( Shader* pShader );
+        BOOL CheckCompiledObjectFileExsist( Shader* pShader );//jingz
         BOOL CheckErrorFile( Shader* pShader, bool& io_bHasShaderCompilerError );
         BOOL IsAnError( FILE* pFile );
 
-        // Methods to run SCDev to generate ISA
-        bool GenerateISAForAllShaders();
-        bool GenerateShaderISA( Shader *pShader, const bool i_kbParseGPRPressure = true );
-        void DeleteISAFiles();
-        void DeleteISAFile( Shader *pShader );
-        bool GetShaderGPRUsageFromISA( Shader *pShader, unsigned int& io_uNumVGPR, unsigned int& io_uNumSGPR ) const;
-        bool GenerateShaderGPRUsageFromISAForAllShaders( const bool ik_bGenerateISAOnFailure = true );
+
 
         // Prints the error message to debug output
         void PrintShaderErrors( FILE* pFile );
@@ -335,11 +326,11 @@ namespace AMD
         bool                    m_bPrintedProgress;
         std::list<Shader*>      m_ShaderSourceList;
         std::list<Shader*>      m_ShaderList;
-        std::list<Shader*>      m_PreprocessList;
+        std::list<Shader*>      m_NeedToPreprocessList;
         std::list<Shader*>      m_HashList;
-        std::list<Shader*>      m_CompileList;
+        std::list<Shader*>      m_NeedToCompileList;
         std::list<Shader*>      m_CompileCheckList;
-        std::list<Shader*>      m_CreateList;
+        std::list<Shader*>      m_CreateShaderDirectlyList;//without Compiling,just create from the compiled object files or some other cache files
         std::set<Shader*>       m_ErrorList;
 
 
@@ -384,8 +375,7 @@ namespace AMD
         bool                    m_bRecompileTouchedShaders;
         bool                    m_bShowShaderErrors;
         bool                    m_bHasShaderErrorsToDisplay;
-        bool                    m_bGenerateShaderISA;
-        bool                    m_bShowShaderISA;
+
         bool                    m_bForceDebugShaders;
         bool                    m_bCreateHashDigest;
 
