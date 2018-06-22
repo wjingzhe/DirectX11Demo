@@ -72,13 +72,6 @@ ShaderCache::Shader::Shader()
     m_bShaderUpToDate = false;
     m_bGPRsUpToDate = false;
 
-#if AMD_SDK_INTERNAL_BUILD
-    m_eISATarget = DEFAULT_ISA_TARGET;
-    m_ISA_VGPRs = m_previous_ISA_VGPRs = 0;
-    m_ISA_SGPRs = m_previous_ISA_SGPRs = 0;
-    m_ISA_GPRPoolSize = m_previous_ISA_GPRPoolSize = 0;
-    m_ISA_ALUPacking = m_previous_ISA_ALUPacking = 0.0;
-#endif
 
     memset( m_wsTarget, '\0', sizeof( wchar_t[m_uTARGET_MAX_LENGTH] ) );
     memset( m_wsEntryPoint, '\0', sizeof( wchar_t[m_uENTRY_POINT_MAX_LENGTH] ) );
@@ -192,14 +185,7 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
     m_CreateList.clear();
     m_ErrorList.clear();
 
-#if AMD_SDK_INTERNAL_BUILD
-    m_ISATargetList.clear();
-    m_ISATargetList.reserve( NUM_ISA_TARGETS );
-    for (int i = 0; i < NUM_ISA_TARGETS; i++)
-    {
-        m_ISATargetList.push_back( new std::vector<Shader*>() );
-    }
-#endif
+
 
     BOOL bRet;
 
@@ -231,14 +217,7 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
         assert( false );
     }
 
-#if AMD_SDK_INTERNAL_BUILD
-    swprintf_s( m_wsSCDEVWorkingDir, L"%s%s", wsShadersDir, L"\\ScDev" );
-    bRet = CreateDirectoryW( m_wsSCDEVWorkingDir, NULL );
-    if (bRet == ERROR_PATH_NOT_FOUND)
-    {
-        assert( false );
-    }
-#endif
+
 
     wchar_t wsCacheDir[m_uPATHNAME_MAX_LENGTH];
     swprintf_s( wsCacheDir, L"%s%s", wsShadersDir, L"\\Cache" );
@@ -355,42 +334,21 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
     m_watchHandle = NULL;
     m_waitPoolHandle = NULL;
 
-#if AMD_SDK_INTERNAL_BUILD
-    m_eTargetISA = DEFAULT_ISA_TARGET;
-#endif
+
 
     m_bCreateHashDigest = true;
-#if !AMD_SDK_PREBUILT_RELEASE_EXE
+
     m_bRecompileTouchedShaders = (i_keAutoRecompileTouchedShadersType == SHADER_AUTO_RECOMPILE_ENABLED);
     m_ErrorDisplayType = i_keErrorDisplayType;
-#else
-    // the pre-built release executable ignores the passed-in construction parameters and just uses default settings
-    m_bRecompileTouchedShaders = false;
-    m_ErrorDisplayType = ERROR_DISPLAY_IN_DEBUG_OUTPUT_AND_BREAK;
-#endif
     m_bShowShaderErrors = (i_keErrorDisplayType == ERROR_DISPLAY_ON_SCREEN);
-#if AMD_SDK_INTERNAL_BUILD
-#if AMD_SDK_PREBUILT_RELEASE_EXE
-#error The pre-built release exe exists specifically to release (i.e. it's external)
-#endif
-    m_bGenerateShaderISA = (i_keGenerateShaderISAType == GENERATE_ISA_ENABLED);
-#else
+
     m_bGenerateShaderISA = false;
-#endif
 
     m_bHasShaderErrorsToDisplay = false;
     m_shaderErrorRenderedCount = 0;
 
     swprintf_s( m_wsLastShaderError, L"*** 0 Shader Errors ***\n" );
 
-#if AMD_SDK_INTERNAL_BUILD
-    if (i_keShaderCompilerExeType == SHADER_COMPILER_EXE_LOCAL)
-    {
-        swprintf_s( m_wsFxcExePath, L"%s%s", m_wsAmdSdkDir, FXC_PATH_STRING_LOCAL );
-        swprintf_s( m_wsDevExePath, L"%s%s", m_wsAmdSdkDir, DEV_PATH_STRING_LOCAL );
-    }
-    else
-#endif
     {
         // search for fxc in the win8.1 sdk. If not found, then try the 8.0 sdk.
         wchar_t wsProgramFilesDir[MAX_PATH];
@@ -421,22 +379,14 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
         if (!CheckSCDEV())
         {
             m_bGenerateShaderISA = false;
-
-#if !AMD_SDK_PREBUILT_RELEASE_EXE
-            // For SHADER_COMPILER_EXE_INSTALLED, Dev.exe is assumed to be in location specified in AMD_SCDEV_DIR environment variable
-            // For SHADER_COMPILER_EXE_LOCAL, Dev.exe is assumed to be in AMD_SDK\src\Shaders
             DebugBreak();
-#endif
+
         }
     }
 
     if (!CheckFXC())
     {
-#if !AMD_SDK_PREBUILT_RELEASE_EXE
-        // For SHADER_COMPILER_EXE_INSTALLED, fxc.exe is assumed to be in the default Win8 SDK install location
-        // For SHADER_COMPILER_EXE_LOCAL, fxc.exe is assumed to be in AMD_SDK\src\Shaders
         DebugBreak();
-#endif
     }
 
     m_bShowShaderISA = m_bGenerateShaderISA;
@@ -474,14 +424,7 @@ ShaderCache::~ShaderCache()
         delete pShader;
     }
 
-#if AMD_SDK_INTERNAL_BUILD
-    for (std::vector< std::vector<Shader*> * >::iterator it = m_ISATargetList.begin(); it != m_ISATargetList.end(); it++)
-    {
-        std::vector<Shader*> * pVector = *it;
-        pVector->clear();
-        delete pVector;
-    }
-#endif
+
 
     m_ShaderSourceList.clear();
     m_ShaderList.clear();
@@ -546,36 +489,35 @@ bool ShaderCache::CloneShaders( void )
 {
     bool bRVal = true;
 
-#if AMD_SDK_INTERNAL_BUILD
-    for (std::list<Shader*>::iterator it = m_ShaderSourceList.begin(); it != m_ShaderSourceList.end(); it++)
-    {
-        Shader* pShaderSource = *it;
+    //for (std::list<Shader*>::iterator it = m_ShaderSourceList.begin(); it != m_ShaderSourceList.end(); it++)
+    //{
+    //    Shader* pShaderSource = *it;
 
-        // check if you already have a shader for for this ISA Target
-        if (std::find( m_ISATargetList[m_eTargetISA]->begin(), m_ISATargetList[m_eTargetISA]->end(), pShaderSource ) == m_ISATargetList[m_eTargetISA]->end())
-        {
-            // if not, make one
-            bRVal &= AddShader( NULL,
-                pShaderSource->m_eShaderType,
-                pShaderSource->m_wsTarget,
-                pShaderSource->m_wsEntryPoint,
-                pShaderSource->m_wsSourceFile,
-                pShaderSource->m_uNumMacros,
-                pShaderSource->m_pMacros,
-                pShaderSource->m_ppInputLayout,
-                pShaderSource->m_pInputLayoutDesc,
-                pShaderSource->m_uNumDescElements,
-                pShaderSource->m_wsCanonicalName,
-                pShaderSource->m_ISA_VGPRs,
-                pShaderSource->m_ISA_SGPRs,
-                false
-                );
+    //    // check if you already have a shader for for this ISA Target
+    //    if (std::find( m_ISATargetList[m_eTargetISA]->begin(), m_ISATargetList[m_eTargetISA]->end(), pShaderSource ) == m_ISATargetList[m_eTargetISA]->end())
+    //    {
+    //        // if not, make one
+    //        bRVal &= AddShader( NULL,
+    //            pShaderSource->m_eShaderType,
+    //            pShaderSource->m_wsTarget,
+    //            pShaderSource->m_wsEntryPoint,
+    //            pShaderSource->m_wsSourceFile,
+    //            pShaderSource->m_uNumMacros,
+    //            pShaderSource->m_pMacros,
+    //            pShaderSource->m_ppInputLayout,
+    //            pShaderSource->m_pInputLayoutDesc,
+    //            pShaderSource->m_uNumDescElements,
+    //            pShaderSource->m_wsCanonicalName,
+    //            pShaderSource->m_ISA_VGPRs,
+    //            pShaderSource->m_ISA_SGPRs,
+    //            false
+    //            );
 
-            // and mark in the list that you now have one for this ISA Target
-            m_ISATargetList[m_eTargetISA]->push_back( pShaderSource );
-        }
-    }
-#endif
+    //        // and mark in the list that you now have one for this ISA Target
+    //        m_ISATargetList[m_eTargetISA]->push_back( pShaderSource );
+    //    }
+    //}
+
 
     return bRVal;
 }
@@ -633,11 +575,9 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
     const bool i_kbIsApplicationShader
     )
 {
-#if AMD_SDK_INTERNAL_BUILD
-    assert( (NULL != ppShader) || (!i_kbIsApplicationShader) );
-#else
+
     assert( NULL != ppShader && i_kbIsApplicationShader);
-#endif
+
     assert( (ShaderType >= SHADER_TYPE_VERTEX) && (ShaderType <= SHADER_TYPE_COMPUTE) );
     assert( (NULL != pwsTarget) && (wcslen( pwsTarget ) <= m_uTARGET_MAX_LENGTH) );
     assert( (NULL != pwsEntryPoint) && (wcslen( pwsEntryPoint ) <= m_uENTRY_POINT_MAX_LENGTH) );
@@ -661,10 +601,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
         {
             wcscpy_s( pShaderSource->m_wsCanonicalName, m_uFILENAME_MAX_LENGTH, pwsCanonicalName );
         }
-#if AMD_SDK_INTERNAL_BUILD
-        pShaderSource->m_ISA_VGPRs = i_iMaxVGPR;
-        pShaderSource->m_ISA_SGPRs = i_iMaxSGPR;
-#endif
+
 
         if (pShaderSource->m_uNumMacros > 0)
         {
@@ -692,9 +629,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
         }
 
         m_ShaderSourceList.push_back( pShaderSource );
-#if AMD_SDK_INTERNAL_BUILD
-        m_ISATargetList[m_eTargetISA]->push_back( pShaderSource );
-#endif
+
     }
 
     Shader* pShader = new Shader();
@@ -704,9 +639,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
     }
 
     pShader->m_eShaderType = ShaderType;
-#if AMD_SDK_INTERNAL_BUILD
-    pShader->m_eISATarget = m_eTargetISA;
-#endif
+
 
     if (pShader->m_eShaderType == SHADER_TYPE_VERTEX)
     {
@@ -798,24 +731,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
     wcscat_s( pShader->m_wsAssemblyFileWithHashedFilename, m_uFILENAME_MAX_LENGTH, pShader->m_wsHashedFileName );
     wcscat_s( pShader->m_wsAssemblyFileWithHashedFilename, m_uFILENAME_MAX_LENGTH, L".asm" );
 
-#if AMD_SDK_INTERNAL_BUILD
-    // ISA File now also uses hashed filename
-    wcscat_s( pShader->m_wsISAFile, m_uFILENAME_MAX_LENGTH, pShader->m_wsHashedFileName );
-    wcscat_s( pShader->m_wsISAFile, m_uFILENAME_MAX_LENGTH, L".asm." );
-    wcscat_s( pShader->m_wsISAFile, m_uFILENAME_MAX_LENGTH, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-    wcscat_s( pShader->m_wsISAFile, m_uFILENAME_MAX_LENGTH, L".dump.isa" );
 
-    wcscat_s( pShader->m_wsObjectFile_with_ISA, m_uFILENAME_MAX_LENGTH, pShader->m_wsObjectFile );
-    wcscat_s( pShader->m_wsPreprocessFile_with_ISA, m_uFILENAME_MAX_LENGTH, pShader->m_wsPreprocessFile );
-
-    if (m_bGenerateShaderISA)
-    {
-        wcscat_s( pShader->m_wsObjectFile_with_ISA, m_uFILENAME_MAX_LENGTH, L"." );
-        wcscat_s( pShader->m_wsObjectFile_with_ISA, m_uFILENAME_MAX_LENGTH, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-        wcscat_s( pShader->m_wsPreprocessFile_with_ISA, m_uFILENAME_MAX_LENGTH, L"." );
-        wcscat_s( pShader->m_wsPreprocessFile_with_ISA, m_uFILENAME_MAX_LENGTH, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-    }
-#endif
 
     // Compilation flags based on build profile
     wchar_t wsCompilationFlags[m_uFILENAME_MAX_LENGTH];
@@ -868,34 +784,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
     wcscat_s( pShader->m_wsCommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" " );
     InsertInputFilenameIntoCommandLine( pShader->m_wsCommandLine, pShader->m_wsSourceFile );
 
-#if AMD_SDK_INTERNAL_BUILD
-    // ISA SCDev Command line
-    wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" -q " );
-    wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" -ns " );
 
-    wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" -" );
-    wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, AmdTargetInfo[m_eTargetISA].m_Name );
-    wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" " );
-
-    if (i_iMaxVGPR > 0)
-    {
-        wchar_t wsValue[64];
-        _itow_s( i_iMaxVGPR, wsValue, 10 );
-        wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" -vgprs " );
-        wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, wsValue );
-    }
-    if (i_iMaxSGPR > 0)
-    {
-        wchar_t wsValue[64];
-        _itow_s( i_iMaxSGPR, wsValue, 10 );
-        wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" -sgprs " );
-        wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, wsValue );
-    }
-    //  wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" " );
-    //  wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L"\"" );
-    //  wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, pShader->m_wsAssemblyFile );
-    //  wcscat_s( pShader->m_wsISACommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L"\"" );
-#endif
 
     // Preprocess command line
     wcscat_s( pShader->m_wsPreprocessCommandLine, m_uCOMMAND_LINE_MAX_LENGTH, L" /E " );
@@ -947,14 +836,9 @@ HRESULT ShaderCache::GenerateShaders( CREATE_TYPE CreateType, const bool i_kbRec
 
     if (dwRet == WAIT_OBJECT_0)
     {
-#if !AMD_SDK_PREBUILT_RELEASE_EXE
+
         m_CreateType = CreateType;
-#else
-        // ignore the CreateType parameter for the pre-built release,
-        // because the point of the pre-built is that it doesn't require
-        // the DXSDK, Win8 SDK, etc.
-        m_CreateType = CREATE_TYPE_USE_CACHED;
-#endif
+
         m_bShadersCreated = false;
         m_bPrintedProgress = false;
 
@@ -1225,13 +1109,7 @@ void ShaderCache::SetShowShaderISAFlag( const bool i_kbShowShaderISA )
     m_bShowShaderISA = i_kbShowShaderISA;
 }
 
-#if AMD_SDK_INTERNAL_BUILD
-void ShaderCache::SetTargetISA( const ISA_TARGET i_eTargetISA )
-{
-    m_eTargetISA = i_eTargetISA;
-    assert( (i_eTargetISA >= FIRST_ISA_TARGET) && (i_eTargetISA < NUM_ISA_TARGETS) );
-}
-#endif
+
 
 //--------------------------------------------------------------------------------------
 // private methods:
@@ -1339,132 +1217,6 @@ bool ShaderCache::GenerateShaderISA( Shader *pShader, const bool i_kbParseGPRPre
         return bSuccess;
     }
 
-#if AMD_SDK_INTERNAL_BUILD
-    //EnterCriticalSection( &m_GenISA_CriticalSection );
-
-    {
-        pShader->m_wsCompileStatus = L"ISA Compiler: Phase 1";
-
-        wchar_t wsASM[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsASM, L"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, m_wsUnicodeWorkingDir );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\\" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, pShader->m_wsAssemblyFileWithHashedFilename );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-
-        wchar_t wsISACL[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsISACL, L"%s %s", pShader->m_wsISACommandLine, wsASM );
-
-        wchar_t wsShaderSCDEVWorkingDir[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsShaderSCDEVWorkingDir, L"%s\\%s", m_wsSCDEVWorkingDir, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-#if defined(DEBUG) || defined(_DEBUG)
-        const bool bRet1 = CreateDirectoryW( wsShaderSCDEVWorkingDir, NULL ) != ERROR_PATH_NOT_FOUND; assert( bRet1 );
-#else
-        CreateDirectoryW( wsShaderSCDEVWorkingDir, NULL );
-#endif
-        //swprintf_s( wsShaderSCDEVWorkingDir, L"%s\\%s\\%s", m_wsSCDEVWorkingDir, AmdTargetInfo[ pShader->m_eISATarget ].m_Name, pShader->m_wsRawFileName );
-        swprintf_s( wsShaderSCDEVWorkingDir, L"%s\\%s\\%s", m_wsSCDEVWorkingDir, AmdTargetInfo[pShader->m_eISATarget].m_Name, pShader->m_wsHashedFileName );
-#if defined(DEBUG) || defined(_DEBUG)
-        const bool bRet2 = CreateDirectoryW( wsShaderSCDEVWorkingDir, NULL ) != ERROR_PATH_NOT_FOUND; assert( bRet2 );
-#else
-        CreateDirectoryW( wsShaderSCDEVWorkingDir, NULL );
-#endif
-
-        SHELLEXECUTEINFO shExecInfo;
-        memset( &shExecInfo, 0, sizeof( SHELLEXECUTEINFO ) );
-        shExecInfo.cbSize = sizeof( SHELLEXECUTEINFO );
-        shExecInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_UNICODE;
-        shExecInfo.hwnd = NULL;
-        shExecInfo.lpFile = m_wsDevExePath;
-        shExecInfo.nShow = SW_HIDE;
-        shExecInfo.hInstApp = NULL;
-        shExecInfo.lpParameters = wsISACL;
-        shExecInfo.lpDirectory = wsShaderSCDEVWorkingDir;
-        bSuccess = ShellExecuteEx( &shExecInfo ) ? true : false;
-        assert( bSuccess );
-    }
-
-    if (bSuccess)
-    {
-        pShader->m_wsCompileStatus = L"ISA Compiler: Phase 1 ... done!";
-    }
-    else
-    {
-        pShader->m_wsCompileStatus = L"ISA Compiler: Phase 1 ... failed!";
-    }
-
-    if (bSuccess)
-    {
-        pShader->m_wsCompileStatus = L"ISA Compiler: Phase 2";
-
-        wchar_t wsEXE[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsEXE, L"%s%s", m_wsAmdSdkDir, L"\\src\\Shaders\\MoveSCDevOutput.bat" );
-
-        wchar_t wsASM[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsASM, L"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        //wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, pShader->m_wsRawFileName );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, pShader->m_wsHashedFileName );
-        //wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L".asm" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L" " );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, m_wsBatchWorkingDir );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L" " );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L" " );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, pShader->m_wsHashedFileName );
-        wcscat_s( wsASM, m_uFILENAME_MAX_LENGTH, L"\"" );
-
-        SHELLEXECUTEINFO shExecInfo;
-        memset( &shExecInfo, 0, sizeof( SHELLEXECUTEINFO ) );
-        shExecInfo.cbSize = sizeof( SHELLEXECUTEINFO );
-        shExecInfo.fMask = (i_kbParseGPRPressure) ? (SEE_MASK_NOASYNC | SEE_MASK_UNICODE) : SEE_MASK_ASYNCOK; // Optimization: Async if we don't plan to read this immediately
-        shExecInfo.hwnd = NULL;
-        shExecInfo.lpFile = wsEXE;
-        shExecInfo.nShow = SW_HIDE;
-        shExecInfo.hInstApp = NULL;
-        shExecInfo.lpParameters = wsASM;
-        bSuccess = ShellExecuteEx( &shExecInfo ) ? true : false;
-        assert( bSuccess );
-
-        if (bSuccess)
-        {
-            pShader->m_wsCompileStatus = L"ISA Compiler: Finished";
-        }
-        else
-        {
-            pShader->m_wsCompileStatus = L"ISA Compiler Failed!";
-        }
-
-        pShader->m_bGPRsUpToDate = false;
-    }
-
-    if (i_kbParseGPRPressure)
-    {
-        unsigned int uNumVGPR = 0;
-        unsigned int uNumSGPR = 0;
-        if (GetShaderGPRUsageFromISA( pShader, uNumVGPR, uNumSGPR ))
-        {
-            wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-            swprintf_s( wsGPRS, L"\n\n%s::%s\nVGPRs: %u\nSGPRs: %u\n\n", pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, uNumVGPR, uNumSGPR );
-            OutputDebugStringW( wsGPRS );
-        }
-        else
-        {
-            wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-            swprintf_s( wsGPRS, L"\n\nFailed to determine NumVGPR and NumSGPR for %s::%s\n\n", pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-            OutputDebugStringW( wsGPRS );
-        }
-    }
-
-    //LeaveCriticalSection( &m_GenISA_CriticalSection );
-#endif
 
     return bSuccess;
 }
@@ -1482,150 +1234,8 @@ bool ShaderCache::GetShaderGPRUsageFromISA( Shader *pShader, unsigned int& io_uN
         return true;
     }
 
-#if AMD_SDK_INTERNAL_BUILD
-    unsigned int io_uGPRPoolSize = 0;
-    float io_fALUPacking = 0.0;
 
-    pShader->m_wsCompileStatus = L"Parsing GPR Pressure";
-
-    if (pShader->m_bGPRsUpToDate)
-    {
-        wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-        swprintf_s( wsGPRS, L"\n\n%s::%s\nVGPRs: %u\nSGPRs: %u [Warning -- GetShaderGPRUsageFromISA called unnecessarily; GPRs Up To Date; Update Skipped]\n\n",
-            pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, pShader->m_ISA_VGPRs, pShader->m_ISA_SGPRs );
-        OutputDebugStringW( wsGPRS );
-        assert( false );
-        pShader->m_wsCompileStatus = L"GPRs Up-to-date!";
-        return true;
-    }
-
-    FILE* pFile = NULL;
-    wchar_t wsShaderPathName[m_uPATHNAME_MAX_LENGTH];
-    CreateFullPathFromOutputFilename( wsShaderPathName, pShader->m_wsISAFile );
-    _wfopen_s( &pFile, wsShaderPathName, L"rt" );
-
-    io_uNumVGPR = 0;
-    io_uNumSGPR = 0;
-    io_uGPRPoolSize = 0;
-    io_fALUPacking = 0.0f;
-
-    /*
-    NumVgprs             = 27;
-    NumSgprs             = 28;
-    */
-
-    if (pFile)
-    {
-
-        wchar_t szLine[m_uCOMMAND_LINE_MAX_LENGTH];
-        wchar_t* pLine = szLine;
-
-        wchar_t szNumVgprs[32];
-        wchar_t szNumSgprs[32];
-        wchar_t szGPRPoolSize[32];
-        wchar_t szNumGPRs[32];
-        wchar_t szALUPacking[32];
-
-        wcscpy_s( szNumVgprs, 32, L"NumVgprs" );                  // GCN Architecture (Vector GPR)
-        wcscpy_s( szNumSgprs, 32, L"NumSgprs" );                  // GCN Architecture (Scalar GPR)
-        wcscpy_s( szGPRPoolSize, 32, L"GprPoolSize" );               // VLIW Architecture
-        wcscpy_s( szNumGPRs, 32, L"SQ_PGM_RESOURCES:NUM_GPRS" ); // VLIW Architecture
-        wcscpy_s( szALUPacking, 32, L";AluPacking" );               // VLIW Architecture
-
-
-        while (fgetws( pLine, m_uCOMMAND_LINE_MAX_LENGTH, pFile ))
-        {
-            wchar_t* pTemp = pLine;
-            while (*pTemp != L'\n')
-            {
-
-                if (!wcsncmp( pTemp, szNumVgprs, wcslen( szNumVgprs ) ))
-                {
-                    wchar_t *pStr = wcschr( pTemp, L'=' );
-                    if (pStr)
-                    {
-                        pStr += 2;
-                        io_uNumVGPR = _wtoi( pStr );
-                    }
-                }
-                else if (!wcsncmp( pTemp, szNumSgprs, wcslen( szNumSgprs ) ))
-                {
-                    wchar_t *pStr = wcschr( pTemp, L'=' );
-                    if (pStr)
-                    {
-                        pStr += 2;
-                        io_uNumSGPR = _wtoi( pStr );
-                    }
-                }
-                else if (!wcsncmp( pTemp, szNumGPRs, wcslen( szNumGPRs ) ))
-                {
-                    wchar_t *pStr = wcschr( pTemp, L'=' );
-                    if (pStr)
-                    {
-                        pStr += 2;
-                        io_uNumVGPR = _wtoi( pStr );
-                        assert( (io_uNumSGPR == 0) || (io_uNumSGPR == (~0)) );
-                        io_uNumSGPR = (~0u); // Special Flag to indicate that this is a GPR Pool
-                    }
-                }
-                else if (!wcsncmp( pTemp, szALUPacking, wcslen( szALUPacking ) ))
-                {
-                    wchar_t *pStr = wcschr( pTemp, L'=' );
-                    if (pStr)
-                    {
-                        pStr += 2;
-                        io_fALUPacking = static_cast<float>(_wtof( pStr ));
-                        assert( (io_uNumSGPR == 0) || (io_uNumSGPR == (~0)) );
-                        io_uNumSGPR = (~0u); // Special Flag to indicate that this is a GPR Pool
-                    }
-                }
-                else if (!wcsncmp( pTemp, szGPRPoolSize, wcslen( szGPRPoolSize ) ))
-                {
-                    wchar_t *pStr = wcschr( pTemp, L'=' );
-                    if (pStr)
-                    {
-                        pStr += 2;
-                        io_uGPRPoolSize = _wtoi( pStr );
-                        assert( (io_uNumSGPR == 0) || (io_uNumSGPR == (~0)) );
-                        io_uNumSGPR = (~0u); // Special Flag to indicate that this is a GPR Pool
-                    }
-                }
-
-                if ((io_uNumVGPR > 0) && (io_uNumSGPR > 0))
-                {
-                    // Cache previous results
-                    pShader->m_previous_ISA_VGPRs = pShader->m_ISA_VGPRs;
-                    pShader->m_previous_ISA_SGPRs = pShader->m_ISA_SGPRs;
-
-                    pShader->m_previous_ISA_GPRPoolSize = pShader->m_ISA_GPRPoolSize;
-                    pShader->m_previous_ISA_ALUPacking = pShader->m_ISA_ALUPacking;
-
-                    pShader->m_ISA_VGPRs = io_uNumVGPR;
-                    pShader->m_ISA_SGPRs = io_uNumSGPR;
-
-                    pShader->m_ISA_GPRPoolSize = io_uGPRPoolSize;
-                    pShader->m_ISA_ALUPacking = io_fALUPacking;
-
-                    pShader->m_bGPRsUpToDate = true;
-                    fclose( pFile );
-
-                    pShader->m_wsCompileStatus = L"GPR Pressure Updated";
-                    return true;
-                }
-
-                ++pTemp;
-            }
-        }
-
-        fclose( pFile );
-
-    }
-
-    pShader->m_wsCompileStatus = L"Failed to read ISA";
-    return false;
-#else
     return true;
-#endif
 
 }
 
@@ -1636,196 +1246,14 @@ bool ShaderCache::GenerateShaderGPRUsageFromISAForAllShaders( const bool ik_bGen
         return true;
     }
 
-#if AMD_SDK_INTERNAL_BUILD
-    bool bReturnValue = false;
-
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
-    {
-        Shader* pShader = *it;
-        unsigned int VGPR = 0, SGPR = 0;
-
-        if (pShader->m_bGPRsUpToDate)
-        {
-            wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-            swprintf_s( wsGPRS, L"\n\n%s::%s\nVGPRs: %u\nSGPRs: %u [GPRs Up To Date; Update Skipped]\n\n",
-                pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, pShader->m_ISA_VGPRs, pShader->m_ISA_SGPRs );
-            OutputDebugStringW( wsGPRS );
-            pShader->m_wsCompileStatus = L"GPRs Up-to-date!";
-            continue;
-        }
-
-        pShader->m_wsCompileStatus = L"Reading GPR Pressure";
-        bool bOK = GetShaderGPRUsageFromISA( pShader, VGPR, SGPR );
-        // assert( k_bOK );
-
-        if ((!bOK) && ik_bGenerateISAOnFailure) // Allow one single retry on failure...
-        {
-            // Possibly need to generate the Shader ISA? Try it once.
-            pShader->m_wsCompileStatus = L"Generating ISA";
-            const bool kGenSuccess = GenerateShaderISA( pShader, false ); // Don't parse GPR pressure (prevent infinite loop)
-            if (kGenSuccess)
-            {
-                bOK = GetShaderGPRUsageFromISA( pShader, VGPR, SGPR );
-            }
-        }
-
-        const bool k_bOK = bOK;
-
-        if (k_bOK)
-        {
-            wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-            swprintf_s( wsGPRS, L"\n\n%s::%s\nVGPRs: %u\nSGPRs: %u\n\n", pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, VGPR, SGPR );
-            OutputDebugStringW( wsGPRS );
-        }
-        else
-        {
-            wchar_t wsGPRS[m_uPATHNAME_MAX_LENGTH];
-            swprintf_s( wsGPRS, L"\n\nFailed to determine NumVGPR and NumSGPR for %s::%s\n\n", pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name );
-            OutputDebugStringW( wsGPRS );
-        }
-
-        if (!k_bOK)
-        {
-            if (m_ErrorDisplayType == ERROR_DISPLAY_IN_MESSAGE_BOX)
-            {
-                wchar_t wsFailureMessage[m_uPATHNAME_MAX_LENGTH];
-                swprintf_s( wsFailureMessage, L"*** Could not extract GPR usage from %s ISA.\nThe ISA Shader Compiler may have failed to execute. ***", AmdTargetInfo[pShader->m_eISATarget].m_Name );
-                MessageBoxW( NULL, wsFailureMessage, L"Error", MB_OK );
-            }
-            else
-            {
-                wchar_t wsFailureMessage[m_uPATHNAME_MAX_LENGTH];
-                swprintf_s( wsFailureMessage, L"*** Could not extract GPR usage from %s ISA. The ISA Shader Compiler may have failed to execute. ***\n", AmdTargetInfo[pShader->m_eISATarget].m_Name );
-                OutputDebugStringW( wsFailureMessage );
-                if (ShowShaderErrors())
-                {
-                    const bool kbAppendToError = (wcslen( m_wsLastShaderError ) < (3 * m_uCOMMAND_LINE_MAX_LENGTH));
-                    swprintf_s( m_wsLastShaderError, L"%s%s", (m_bHasShaderErrorsToDisplay && kbAppendToError) ? m_wsLastShaderError : L"", wsFailureMessage );
-                    m_bHasShaderErrorsToDisplay = true;
-                    m_shaderErrorRenderedCount = 0;
-                }
-            }
-        }
-
-        bReturnValue |= k_bOK;
-    }
-
-    return bReturnValue;
-#else
     return true;
-#endif
+
 }
 
 // Renders the GPR usage for the shaders
 void ShaderCache::RenderISAInfo( CDXUTTextHelper* g_pTxtHelper, int iFontHeight, DirectX::XMVECTOR FontColor, const Shader *i_pShaderCmp, wchar_t *o_wsGPRInfo )
 {
-#if AMD_SDK_INTERNAL_BUILD
-    wchar_t wsOverallProgress[m_uPATHNAME_MAX_LENGTH];
-    DirectX::XMVECTOR RedFontColor = DirectX::XMVectorSet( 1.0f, 0.0f, 0.0f, 1.0f );
-    DirectX::XMVECTOR GreenFontColor = DirectX::XMVectorSet( 0.0f, 1.0f, 0.0f, 1.0f );
-    DirectX::XMVECTOR BlueFontColor = DirectX::XMVectorSet( 0.0f, 0.0f, 1.0f, 1.0f );
 
-    if (!ShowISAGPRPressure()) { return; }
-
-    if (g_pTxtHelper)
-    {
-        g_pTxtHelper->Begin();
-        g_pTxtHelper->SetForegroundColor( FontColor );
-        g_pTxtHelper->SetInsertionPos( 5, (m_bHasShaderErrorsToDisplay) ? 300 : 60 );
-    }
-
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
-    {
-        Shader* pShader = *it;
-
-        if (i_pShaderCmp && (pShader != i_pShaderCmp)) { continue; } // We're trying to update GPR info for a single shader, skip the rest
-
-        if ((pShader->m_ISA_SGPRs == 0) && (pShader->m_ISA_VGPRs == 0))
-        {
-            // Failed to read ISA
-            swprintf_s( wsOverallProgress, L"%s.%s%s\t[Failed to locate ISA (try building all shaders?)]",
-                pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, AmdTargetInfo[pShader->m_eISATarget].m_Info );
-        }
-        else if (pShader->m_ISA_SGPRs == (~0))
-        {
-            // VLIW Hardware, GPR Pool
-            swprintf_s( wsOverallProgress, L"%s.%s%s\t[VGPR: %u, SGPR: n/a, GPRPool: %u, ALUPacking %f]",
-                pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, AmdTargetInfo[pShader->m_eISATarget].m_Info, pShader->m_ISA_VGPRs,
-                pShader->m_ISA_GPRPoolSize, pShader->m_ISA_ALUPacking );
-            const int GPRDelta = (pShader->m_ISA_VGPRs - pShader->m_previous_ISA_VGPRs);
-            if ((pShader->m_previous_ISA_VGPRs != 0) && (GPRDelta != 0))
-            {
-                if (g_pTxtHelper)
-                {
-                    g_pTxtHelper->SetForegroundColor( (GPRDelta > 0) ? RedFontColor : GreenFontColor );
-                }
-                swprintf_s( wsOverallProgress, L"%s\t[Prev VGPR: %u, Delta: %i] -- [Prev GPRPool: %u, Prev ALUPacking %f]",
-                    wsOverallProgress, pShader->m_previous_ISA_VGPRs, GPRDelta, pShader->m_previous_ISA_GPRPoolSize, pShader->m_previous_ISA_ALUPacking );
-            }
-        }
-        else
-        {
-            swprintf_s( wsOverallProgress, L"%s.%s%s\t[VGPR: %u, SGPR: %u]",
-                pShader->m_wsRawFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, AmdTargetInfo[pShader->m_eISATarget].m_Info, pShader->m_ISA_VGPRs, pShader->m_ISA_SGPRs );
-            const int VGPRDelta = (pShader->m_ISA_VGPRs - pShader->m_previous_ISA_VGPRs);
-            const int SGPRDelta = (pShader->m_ISA_SGPRs - pShader->m_previous_ISA_SGPRs);
-            DirectX::XMVECTOR thisColor;
-            if (VGPRDelta > 0)
-            {
-                if (SGPRDelta >= 0)
-                {
-                    thisColor = RedFontColor;
-                }
-                else
-                {
-                    thisColor = BlueFontColor;
-                }
-            }
-            else
-            {
-                if (SGPRDelta <= 0)
-                {
-                    thisColor = GreenFontColor;
-                }
-                else
-                {
-                    thisColor = BlueFontColor;
-                }
-            }
-
-            if ((pShader->m_previous_ISA_VGPRs != 0) && (VGPRDelta != 0))
-            {
-                if (g_pTxtHelper)
-                {
-                    g_pTxtHelper->SetForegroundColor( thisColor );
-                }
-                swprintf_s( wsOverallProgress, L"%s\t[Prev VGPR: %u, Delta: %i]", wsOverallProgress, pShader->m_previous_ISA_VGPRs, VGPRDelta );
-            }
-            if ((pShader->m_previous_ISA_SGPRs != 0) && (SGPRDelta != 0))
-            {
-                if (g_pTxtHelper)
-                {
-                    g_pTxtHelper->SetForegroundColor( thisColor );
-                }
-                swprintf_s( wsOverallProgress, L"%s\t[Prev SGPR: %u, Delta: %i]", wsOverallProgress, pShader->m_previous_ISA_SGPRs, SGPRDelta );
-            }
-        }
-        if (g_pTxtHelper)
-        {
-            g_pTxtHelper->DrawTextLine( wsOverallProgress );
-            g_pTxtHelper->SetForegroundColor( FontColor );
-        }
-        if (o_wsGPRInfo)
-        {
-            swprintf_s( o_wsGPRInfo, m_uPATHNAME_MAX_LENGTH, L"%s", wsOverallProgress ); // Write out the progress string
-        }
-    }
-
-    if (g_pTxtHelper)
-    {
-        g_pTxtHelper->End();
-    }
-#endif
 }
 
 class HTMLWriter
@@ -2000,9 +1428,7 @@ bool ShaderCache::CreateHashDigest( const std::list<Shader*>& i_ShaderList )
             L"Entry Point: %s<br>\n"
             L"Hashed Filename: %s<br>\n"
             L"ASM Target: %s<br>\n"
-#if AMD_SDK_INTERNAL_BUILD
-            L"ISA Target: %s<br>\n"
-#endif
+
             L"<br>\n"
             L"Source HLSL File: <a href=\"%s\">%s</a><br>\n"
             L"Preprocess File: <a href=\"%s\">%s</a><br>\n"
@@ -2010,26 +1436,13 @@ bool ShaderCache::CreateHashDigest( const std::list<Shader*>& i_ShaderList )
             L"Object File: <a href=\"%s\">%s</a><br>\n"
             L"Error File: <a href=\"%s\">%s</a><br>\n"
             L"Hash File: <a href=\"%s\">%s</a><br>\n"
-#if AMD_SDK_INTERNAL_BUILD
-            L"ISA File: <a href=\"%s\">%s</a><br>\n"
-            L"ISA Dir: <a href=\"Shaders\\ScDev\\%s\\%s\">Shaders\\ScDev\\%s\\%s</a><br>\n"
-#endif
+
             L"<br>\n"
             L"Compile Status: %s<br>\n"
             L"Compile Timing: %i<br>\n"
             L"Processing?: %s<br>\n"
             L"Up-to-date?: %s<br>\n"
-#if AMD_SDK_INTERNAL_BUILD
-            L"ISA Generated: %s<br>\n"
-            L"<br>\n"
-            L"GPR Pressure: <br>\n"
-            L"Current  VGPR: %i SGPR: %i<br>\n"
-            L"Previous VGPR: %i SGPR: %i<br>\n"
-            L"ALU Packing: %f<br>\n"
-            L"GPR Pool Size: %i<br>\n"
-            L"[Prev] ALU Packing: %f<br>\n"
-            L"[Prev] GPR Pool Size: %i<br>\n"
-#endif
+
             L"<br>\n"
             L"Macros: <br>\n"
             ,
@@ -2037,34 +1450,19 @@ bool ShaderCache::CreateHashDigest( const std::list<Shader*>& i_ShaderList )
             pShader->m_wsEntryPoint,
             pShader->m_wsHashedFileName,
             pShader->m_wsTarget,
-#if AMD_SDK_INTERNAL_BUILD
-            AmdTargetInfo[pShader->m_eISATarget].m_Name,
-#endif
+
             pShader->m_wsSourceFile, pShader->m_wsSourceFile,
             pShader->m_wsPreprocessFile, pShader->m_wsPreprocessFile,
             pShader->m_wsAssemblyFileWithHashedFilename, pShader->m_wsAssemblyFileWithHashedFilename,
             pShader->m_wsObjectFile, pShader->m_wsObjectFile,
             pShader->m_wsErrorFile, pShader->m_wsErrorFile,
             pShader->m_wsHashFile, pShader->m_wsHashFile,
-#if AMD_SDK_INTERNAL_BUILD
-            pShader->m_wsISAFile, pShader->m_wsISAFile,
-            AmdTargetInfo[pShader->m_eISATarget].m_Name, pShader->m_wsHashedFileName, AmdTargetInfo[pShader->m_eISATarget].m_Name, pShader->m_wsHashedFileName,
-#endif
+
             pShader->m_wsCompileStatus,
             pShader->m_iCompileWaitCount,
             pShader->m_bBeingProcessed ? L"yes" : L"no",
             pShader->m_bShaderUpToDate ? L"yes" : L"no"
-#if AMD_SDK_INTERNAL_BUILD
-            , pShader->m_bGPRsUpToDate ? L"yes" : L"no",
-            pShader->m_ISA_VGPRs,
-            pShader->m_ISA_SGPRs,
-            pShader->m_previous_ISA_VGPRs,
-            pShader->m_previous_ISA_SGPRs,
-            pShader->m_ISA_ALUPacking,
-            pShader->m_ISA_GPRPoolSize,
-            pShader->m_previous_ISA_ALUPacking,
-            pShader->m_previous_ISA_GPRPoolSize
-#endif
+
             );
 
         // Append Macros to String

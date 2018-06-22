@@ -39,38 +39,7 @@
 #include <list>
 #include <vector>
 
-// The following two defines (AMD_SDK_INTERNAL_BUILD and AMD_SDK_PREBUILT_RELEASE_EXE) are for internal AMD use.
-// If you don't work for AMD, you shouldn't need to touch them.
 
-// AMD_SDK_INTERNAL_BUILD is used to wrap all code related to generating shader ISA and querying GPR pressure,
-// so that it can be compiled out when a sample is released, as the tools necessary to make this work for GCN
-// are not public (yet). Hopefully, this define can go away in the not too distant future when such tools are
-// publicly available. *** This should be set to 0 before a sample is packaged for release. ***
-#define AMD_SDK_INTERNAL_BUILD 0
-
-// AMD_SDK_PREBUILT_RELEASE_EXE is used to build the executable that we include in a sample's release package.
-// It removes the runtime dependency on the Win8.x SDK, so that a user can download a sample package and run the
-// pre-built executable without needing to install the SDK. (Note, this requires a fully populated shader cache.)
-// *** Set this to 1 temporarily, just long enough to build the executable to package with the sample. ***
-// *** Otherwise, it should be set to 0. ***
-#define AMD_SDK_PREBUILT_RELEASE_EXE 0
-
-// AMD_SDK_PREBUILT_RELEASE_EXE implies that this is not an AMD_SDK_INTERNAL_BUILD
-#if AMD_SDK_PREBUILT_RELEASE_EXE
-#undef AMD_SDK_INTERNAL_BUILD
-#define AMD_SDK_INTERNAL_BUILD 0
-#endif
-
-// AMD_SDK_PREBUILT_RELEASE_EXE shouldn't be used with debug builds
-#if AMD_SDK_PREBUILT_RELEASE_EXE
-#if defined(DEBUG) || defined(_DEBUG)
-#error AMD_SDK_PREBUILT_RELEASE_EXE shouldn't be used with debug builds
-#endif
-#endif
-
-#if AMD_SDK_INTERNAL_BUILD
-#include "AMD_ISA.inl"
-#endif
 
 namespace AMD
 {
@@ -200,17 +169,7 @@ namespace AMD
             wchar_t                     m_wsObjectFile_with_ISA[m_uFILENAME_MAX_LENGTH];
             wchar_t                     m_wsPreprocessFile_with_ISA[m_uFILENAME_MAX_LENGTH];
 
-#if AMD_SDK_INTERNAL_BUILD
-            ISA_TARGET                  m_eISATarget;
-            unsigned int                m_ISA_VGPRs;
-            unsigned int                m_ISA_SGPRs;
-            unsigned int                m_ISA_GPRPoolSize;
-            float                       m_ISA_ALUPacking;
-            unsigned int                m_previous_ISA_VGPRs;
-            unsigned int                m_previous_ISA_SGPRs;
-            unsigned int                m_previous_ISA_GPRPoolSize;
-            float                       m_previous_ISA_ALUPacking;
-#endif
+
 
             bool                        m_bGPRsUpToDate;
             bool                        m_bBeingProcessed;
@@ -269,9 +228,7 @@ namespace AMD
         void        SetShowShaderErrorsFlag( const bool i_kbShowShaderErrors );
         void        SetGenerateShaderISAFlag( const bool i_kbGenerateShaderISA );
         void        SetShowShaderISAFlag( const bool i_kbShowShaderISA );
-#if AMD_SDK_INTERNAL_BUILD
-        void        SetTargetISA( const ISA_TARGET i_eTargetISA = DEFAULT_ISA_TARGET );
-#endif
+
 
         // Renders runtime shader compiler errors from dynamically recompiled shaders
         void RenderShaderErrors( CDXUTTextHelper* g_pTxtHelper, int iFontHeight, DirectX::XMVECTOR FontColor, const unsigned int ki_FrameTimeout = 2500 );
@@ -384,9 +341,7 @@ namespace AMD
         std::list<Shader*>      m_CompileCheckList;
         std::list<Shader*>      m_CreateList;
         std::set<Shader*>       m_ErrorList;
-#if AMD_SDK_INTERNAL_BUILD
-        std::vector< std::vector<Shader*> * > m_ISATargetList;
-#endif
+
 
         struct ProgressInfo
         {
@@ -420,9 +375,7 @@ namespace AMD
         wchar_t                 m_wsBatchWorkingDir[m_uPATHNAME_MAX_LENGTH];
         wchar_t                 m_wsSCDEVWorkingDir[m_uPATHNAME_MAX_LENGTH];
         wchar_t                 m_wsLastShaderError[m_uCOMMAND_LINE_MAX_LENGTH * 4];
-#if AMD_SDK_INTERNAL_BUILD
-        ISA_TARGET              m_eTargetISA;
-#endif
+
         CRITICAL_SECTION        m_CompileShaders_CriticalSection;
         CRITICAL_SECTION        m_GenISA_CriticalSection;
         HANDLE                  m_watchHandle;
