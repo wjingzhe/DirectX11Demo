@@ -96,32 +96,7 @@ ShaderCache::Shader::Shader()
     memset( m_wsObjectFile_with_ISA, '\0', sizeof( wchar_t[m_uFILENAME_MAX_LENGTH] ) );
     memset( m_wsPreprocessFile_with_ISA, '\0', sizeof( wchar_t[m_uFILENAME_MAX_LENGTH] ) );
 
-    // Test that we can use paths > 255 characters with unicode file handling via \\?\ syntax
-    // Each section of the path needs to be <= 260 characters.
-    // Must first create path:
-    // C:\xpSnm8ixu8zR3lqGRtIbXMNOVE15oRgP7SwhsqRgkG7atxEOZbgsJmWXDLA7pCSUuQsqko9YN03e7aUw26Aoy9UpS3mSH1uekbTquhozgbB5KQwFxKzaBkSLpVmIWX8gQpoDd9mCTFLtbO0BCGdF7lF48KpxPFTjmNVgJK4sMfi5mavXhc
 
-    FILE* pFile = NULL;
-    wchar_t wsShaderPathName[m_uPATHNAME_MAX_LENGTH + 1] =
-    {
-        L"\\\\?\\C:\\xpSnm8ixu8zR3lqGRtIbXMNOVE15oRgP7SwhsqRgkG7atxEOZbgs"
-        L"JmWXDLA7pCSUuQsqko9YN03e7aUw26Aoy9UpS3mSH1uekbTquhozgbB5KQwFxKz"
-        L"aBkSLpVmIWX8gQpoDd9mCTFLtbO0BCGdF7lF48KpxPFTjmNVgJK4sMfi5mavXhc"
-        L"\\rqgJRzfIBHlFGEcQrb3JUPcFGEt2S0ZnhetHvO2WNerlSOvqDVbBIey9bO7k0"
-        L"tytUih5E8ijWnbPHxF65X0jCuwikbtjkOXgoMBvoNGDlpfcrS0PVS7Ww5SJ3Ivg"
-        L"KdMj5VyN7qmfWkddiLoTvOybtkSchYW99uyQEgIkiPjM0mFmlCGIsTPFRDC.txt"
-        L"\0"
-    };
-
-    _wfopen_s( &pFile, wsShaderPathName, L"wb" );
-
-    if (pFile)
-    {
-        fwrite( "Hello, World!\0", 14, 1, pFile );
-        fclose( pFile );
-    }
-
-    //DebugBreak();
 
 
     m_bBeingProcessed = false;
@@ -165,8 +140,13 @@ ShaderCache::Shader::~Shader()
     {
         delete [] m_pInputLayoutDesc[iElement].SemanticName;
     }
-    delete [] m_pInputLayoutDesc;
-    m_pInputLayoutDesc = NULL;
+
+	if (m_pInputLayoutDesc)
+	{
+		delete[] m_pInputLayoutDesc;
+		m_pInputLayoutDesc = NULL;
+	}
+
 }
 
 //--------------------------------------------------------------------------------------
@@ -175,13 +155,13 @@ ShaderCache::Shader::~Shader()
 ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouchedShadersType, const ERROR_DISPLAY_TYPE i_keErrorDisplayType,
     const GENERATE_ISA_TYPE i_keGenerateShaderISAType, const SHADER_COMPILER_EXE_TYPE i_keShaderCompilerExeType )
 {
-    m_ShaderSourceList.clear();
-    m_ShaderList.clear();
+    m_ApplicationSourceShadersList.clear();
+    m_AllShadersList.clear();
     m_NeedToPreprocessList.clear();
     m_HashList.clear();
     m_NeedToCompileList.clear();
     m_CompileCheckList.clear();
-    m_CreateShaderDirectlyList.clear();
+    m_CreateShaderWithCompiledBufCodesList.clear();
     m_ErrorList.clear();
 
 
@@ -401,13 +381,13 @@ ShaderCache::~ShaderCache()
     WaitForSingleObject( s_hDoneEvent, INFINITE );
     CloseHandle( s_hDoneEvent );
 
-    for (std::list<Shader*>::iterator it = m_ShaderSourceList.begin(); it != m_ShaderSourceList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_ApplicationSourceShadersList.begin(); it != m_ApplicationSourceShadersList.end(); it++)
     {
         Shader* pShader = *it;
         delete pShader;
     }
 
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
         delete pShader;
@@ -415,18 +395,15 @@ ShaderCache::~ShaderCache()
 
 
 
-    m_ShaderSourceList.clear();
-    m_ShaderList.clear();
+    m_ApplicationSourceShadersList.clear();
+    m_AllShadersList.clear();
     m_NeedToPreprocessList.clear();
     m_HashList.clear();
     m_NeedToCompileList.clear();
     m_CompileCheckList.clear();
-    m_CreateShaderDirectlyList.clear();
+    m_CreateShaderWithCompiledBufCodesList.clear();
     m_ErrorList.clear();
 
-#if AMD_SDK_INTERNAL_BUILD
-    m_ISATargetList.clear();
-#endif
 
     if (NULL != m_pProgressInfo)
     {
@@ -617,7 +594,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
             }
         }
 
-        m_ShaderSourceList.push_back( pShaderSource );
+        m_ApplicationSourceShadersList.push_back( pShaderSource );
 
     }
 
@@ -793,7 +770,7 @@ bool ShaderCache::AddShader( ID3D11DeviceChild** ppShader,
         wcscat_s( pShader->m_wsPreprocessCommandLine, m_uCOMMAND_LINE_MAX_LENGTH, wsValue );
     }
 
-    m_ShaderList.push_back( pShader );
+    m_AllShadersList.push_back( pShader );
 
     return true;
 }
@@ -834,10 +811,10 @@ HRESULT ShaderCache::GenerateShaders( CREATE_TYPE CreateType, const bool i_kbRec
 
         if (i_kbRecreateShaders)
         {
-            m_CreateShaderDirectlyList.clear();
+            m_CreateShaderWithCompiledBufCodesList.clear();
         }
 
-        for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+        for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
         {
             Shader* pShader = *it;
 
@@ -849,7 +826,7 @@ HRESULT ShaderCache::GenerateShaders( CREATE_TYPE CreateType, const bool i_kbRec
             }
             else
             {
-                m_CreateShaderDirectlyList.push_back( pShader );
+                m_CreateShaderWithCompiledBufCodesList.push_back( pShader );
             }
         }
 
@@ -1641,7 +1618,7 @@ void ShaderCache::PreprocessShaders()
                     {
                         if (CheckCompiledObjectFileExsist( pShader ))
                         {
-                            m_CreateShaderDirectlyList.push_back( pShader );
+                            m_CreateShaderWithCompiledBufCodesList.push_back( pShader );
                         }
                         else
                         {
@@ -1831,7 +1808,7 @@ void ShaderCache::CompileShaders()
                     pShader->m_wsCompileStatus = L"Found Object File";
                     //m_pProgressInfo[m_uProgressCounter++].m_wsFilename = pShader->m_wsObjectFile_with_ISA;
 
-                    m_CreateShaderDirectlyList.push_back( pShader );
+                    m_CreateShaderWithCompiledBufCodesList.push_back( pShader );
 
                     bHasObjectFile = true;
 
@@ -1898,7 +1875,7 @@ void ShaderCache::CompileShaders()
 
     if (m_bCreateHashDigest)
     {
-        CreateHashDigest( m_CreateShaderDirectlyList );
+        CreateHashDigest( m_CreateShaderWithCompiledBufCodesList );
     }
 }
 
@@ -1911,7 +1888,7 @@ HRESULT ShaderCache::CreateShaders()
     HRESULT hr = E_FAIL;
     Shader* pShader = NULL;
 
-    for (std::list<Shader*>::iterator it = m_CreateShaderDirectlyList.begin(); it != m_CreateShaderDirectlyList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_CreateShaderWithCompiledBufCodesList.begin(); it != m_CreateShaderWithCompiledBufCodesList.end(); it++)
     {
         pShader = *it;
 
@@ -1936,7 +1913,7 @@ void ShaderCache::InvalidateShaders( void )
 {
     Shader* pShader = NULL;
 
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         pShader = *it;
         pShader->m_bShaderUpToDate = false;
@@ -2648,7 +2625,7 @@ void ShaderCache::DeleteFileByFilename( const wchar_t* pwsFile ) const
 //--------------------------------------------------------------------------------------
 void ShaderCache::DeleteErrorFiles()
 {
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
 
@@ -2671,7 +2648,7 @@ void ShaderCache::DeleteErrorFile( Shader* pShader )
 //--------------------------------------------------------------------------------------
 void ShaderCache::DeleteAssemblyFiles()
 {
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
 
@@ -2695,7 +2672,7 @@ void ShaderCache::DeleteAssemblyFile( Shader* pShader )
 //--------------------------------------------------------------------------------------
 void ShaderCache::DeleteObjectFiles()
 {
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
 
@@ -2718,7 +2695,7 @@ void ShaderCache::DeleteObjectFile( Shader* pShader )
 //--------------------------------------------------------------------------------------
 void ShaderCache::DeletePreprocessFiles()
 {
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
 
@@ -2741,7 +2718,7 @@ void ShaderCache::DeletePreprocessFile( Shader* pShader )
 //--------------------------------------------------------------------------------------
 void ShaderCache::DeleteHashFiles()
 {
-    for (std::list<Shader*>::iterator it = m_ShaderList.begin(); it != m_ShaderList.end(); it++)
+    for (std::list<Shader*>::iterator it = m_AllShadersList.begin(); it != m_AllShadersList.end(); it++)
     {
         Shader* pShader = *it;
 

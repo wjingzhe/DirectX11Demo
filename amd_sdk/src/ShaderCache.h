@@ -324,13 +324,13 @@ namespace AMD
         bool                    m_bShadersCreated;
         bool                    m_bAbort;
         bool                    m_bPrintedProgress;
-        std::list<Shader*>      m_ShaderSourceList;
-        std::list<Shader*>      m_ShaderList;
+        std::list<Shader*>      m_ApplicationSourceShadersList;//将要使用源码编译的shader对象
+        std::list<Shader*>      m_AllShadersList;//包含已编译好的对象和未进行编译处理的对象
         std::list<Shader*>      m_NeedToPreprocessList;
         std::list<Shader*>      m_HashList;
         std::list<Shader*>      m_NeedToCompileList;
         std::list<Shader*>      m_CompileCheckList;
-        std::list<Shader*>      m_CreateShaderDirectlyList;//without Compiling,just create from the compiled object files or some other cache files
+        std::list<Shader*>      m_CreateShaderWithCompiledBufCodesList;//without Compiling,just create from the compiled object files or some other cache files
         std::set<Shader*>       m_ErrorList;
 
 
