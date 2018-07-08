@@ -13,7 +13,11 @@
 using namespace DirectX;
 using namespace Triangle;
 
-
+#pragma warning( disable : 4100 ) // disable unreference formal parameter warnings for /W4 builds
+//-----------------------------------------------------------------------------------------
+// Constants
+//-----------------------------------------------------------------------------------------
+static const int TEXT_LINE_HEIGHT = 15;
 
 static TriangleRender s_TriangleRender;
 static ForwardPlus11::ForwardPlusRender s_ForwardPlusRender;
@@ -40,7 +44,8 @@ static float g_fMaxDistance = 500.0f;
 
 //CFirstPersonCamera g_Camera;
 CModelViewerCamera g_Camera;
-
+CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
+CDXUTTextHelper* g_pTextHelper = nullptr;
 
 
 LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
@@ -66,6 +71,9 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext);
 void CALLBACK OnFrameRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dImmediateContext,
 	double fTime, float fElapsedTime, void* pUserContext);
 
+void RenderText();
+
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -73,6 +81,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+
+	// Enable run-time memory check for debug builds.
+#if defined(DEBUG) || defined(_DEBUG)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     // TODO: Place code here.
 
@@ -129,6 +142,11 @@ LRESULT  CALLBACK MsgProc(HWND hWnd, UINT uMsg,WPARAM wParam, LPARAM lParam, boo
 	{
 		return 0;
 	}
+
+	// Pass messages to dialog resource manager calls so GUI state is updated correctly
+	*pbNoFurtherProcessing = g_DialogResourceManager.MsgProc(hWnd, uMsg, wParam, lParam);
+	if (*pbNoFurtherProcessing)
+		return 0;
 
 	// Pass all remaining windows message to camera ,sot it can respond to user input
 	// 常规按键处理
@@ -242,6 +260,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	g_pSamplerAnisotropic->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Anisotropic"), "Anisotropic");
 
 
+	//create AMD_SDK resource here
+	TIMER_Init(pD3dDevice);
+
 	// Create render resource here
 
 	static bool bFirstPass = true;
@@ -254,6 +275,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		bFirstPass = false;
 	}
 
+
+	V_RETURN(g_DialogResourceManager.OnD3D11CreateDevice(pD3dDevice, pD3dImmediateContext));
+	g_pTextHelper = new CDXUTTextHelper(pD3dDevice, pD3dImmediateContext, &g_DialogResourceManager, TEXT_LINE_HEIGHT);
 
 	return hr;
 }
@@ -282,6 +306,8 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	s_ForwardPlusRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 
 
+	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
+
 	return hr;
 }
 
@@ -295,12 +321,16 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 
 	//s_TriangleRender.OnReleasingSwapChain();
 	s_ForwardPlusRender.OnReleasingSwapChain();
+
+	g_DialogResourceManager.OnD3D11ReleasingSwapChain();
 }
 
 void OnD3D11DestroyDevice(void * pUserContext)
 {
+	g_DialogResourceManager.OnD3D11DestroyDevice();
+	SAFE_DELETE(g_pTextHelper);
 	DXUTGetGlobalResourceCache().OnDestroyDevice();
-	g_ShaderCache.OnDestroyDevice();
+
 	g_SceneMesh.Destroy();
 	g_SceneAlphaMesh.Destroy();
 
@@ -313,15 +343,12 @@ void OnD3D11DestroyDevice(void * pUserContext)
 
 
 
-
-
-
-
-
 	//s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
 	s_ForwardPlusRender.OnDestroyDevice(pUserContext);
 	
-	
+	//AMD
+	g_ShaderCache.OnDestroyDevice();
+	TIMER_Destroy();
 }
 
 
@@ -399,6 +426,8 @@ void ClearD3D11DeviceContext()
 // Render the scene using the D3D11 Device
 void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, double fTime, float fElapsedTime, void* pUserContext)
 {
+	// Reset the timer at start of frame
+	TIMER_Reset();
 
 	ClearD3D11DeviceContext();
 
@@ -406,7 +435,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 
 	//Clear the backBuffer and depth stencil
-	float ClearColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float ClearColor[4] = { 0.0013f, 0.0015f, 0.0050f, 0.0f };
 	ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
 	pD3dImmediateContext->ClearRenderTargetView(pRTV, ClearColor);
 	pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -418,6 +447,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 	//Render or objects here..
 	if (g_ShaderCache.ShadersReady(true))
 	{
+		TIMER_Begin(0, L"Render");
 		//render triangle for debug
 		pD3dImmediateContext->OMSetDepthStencilState(nullptr, 0x00);
 		pD3dImmediateContext->RSSetState(nullptr);
@@ -434,15 +464,55 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			g_pDepthStencilTexture,g_pDepthStencilView,g_pDepthStencilSRV,
 			fElapsedTime, MeshArray.data(),1, AlphaMeshArray.data(),1);
 
-		pD3dImmediateContext->Flush();
+		TIMER_End(); // Render
+
+		RenderText();
+
+		DXUT_EndPerfEvent();
 	}
 	else
 	{
 		// Render shader cache progress if still processing
 		pD3dImmediateContext->OMSetRenderTargets(1, (ID3D11RenderTargetView*const*)&pRTV, g_pDepthStencilView);
-		//g_ShaderCache.RenderProgress(g_pTextHelper, 15, XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+		g_ShaderCache.RenderProgress(g_pTextHelper, 15, XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
 
 		Sleep(1);
 	}
 
+}
+
+void RenderText()
+{
+	g_pTextHelper->Begin();
+	g_pTextHelper->SetInsertionPos(5, 5);
+	g_pTextHelper->SetForegroundColor(XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
+	g_pTextHelper->DrawTextLine(DXUTGetFrameStats(DXUTIsVsyncEnabled()));
+	g_pTextHelper->DrawTextLine(DXUTGetDeviceStats());
+
+	const float fGpuTime = (float)TIMER_GetTime(Gpu, L"Render")*1000.0f;
+
+	// count digits in the total time;
+	int iIntergetPart = (int)fGpuTime;
+	int iNumDigits = 0;
+	while (iIntergetPart > 0)
+	{
+		iIntergetPart /= 10;
+		iNumDigits++;
+	}
+	iNumDigits = (iNumDigits == 0) ? 1 : iNumDigits;
+	//three digits after decimal,
+	// plus the decimal point itself
+	int iNumChars = iNumDigits + 4;
+
+	//dynamic formating for sprintf_s
+	WCHAR szPrecision[16];
+	swprintf_s(szPrecision, 16, L"%%%d.3f", iNumChars);
+
+	WCHAR szBuf[256];
+	WCHAR szFormat[256];
+	swprintf_s(szFormat, 256, L"Total:        %s", szPrecision);
+	swprintf_s(szBuf, 256, szFormat, fGpuTime);
+	g_pTextHelper->DrawTextLine(szBuf);
+
+	g_pTextHelper->End();
 }
