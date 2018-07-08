@@ -63,7 +63,7 @@ struct VS_OUTPUT_SCENE
 	float3 Normal:NORMAL;//vertex normal vector
 	float2 TextureUV:TEXCOORD0;//vertex texture coords
 	float3 Tangent:TEXCOORD1;//vertex tangent vector
-	float3 PositionWS:TEXCOORD2;// vertex position(world space)
+	float4 PositionWS:TEXCOORD2;// vertex position(world space)
 };
 
 struct VS_OUTPUT_POSITION_ONLY
@@ -121,7 +121,7 @@ VS_OUTPUT_SCENE RenderSceneVS(VS_INPUT_SCENE Input)
 	Output.Position = mul(float4(Input.Position, 1), g_mWorldViewProjection);
 
 	// Position, normal, and tangent in world space
-	Output.PositionWS = mul(Input.Position, (float3x3)g_mWorld);
+	Output.PositionWS = mul(Input.Position, g_mWorld);
 	Output.Normal = mul(Input.Normal, (float3x3)g_mWorld);
 	Output.Tangent = mul(Input.Tangent, (float3x3)g_mWorld);
 
