@@ -10,6 +10,7 @@ namespace AMD
 
 
 class CDXUTSDKMesh;
+class CBaseCamera;
 
 namespace ForwardPlus11
 {
@@ -56,21 +57,26 @@ namespace ForwardPlus11
 
 		//various hook functions
 		HRESULT OnCreateDevice(ID3D11Device* pD3DDeive, AMD::ShaderCache* pShaderCache, DirectX::XMVECTOR SceneMin, DirectX::XMVECTOR SceneMax);
-		void OnDestroyDevice();
-		HRESULT OnResizedSwapChain(ID3D11Device* pD3DDevie, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, int nLineHeight);
+		void OnDestroyDevice(void * pUserContext);
+		HRESULT OnResizedSwapChain(ID3D11Device* pD3DDevie, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 		void OnReleasingSwapChain();
-		void OnRender(float fElaspedTime, unsigned uNumPointLights, unsigned uNumSporLights);
+		void OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dImmediateContext, const CBaseCamera* pCBaseCamera, ID3D11RenderTargetView* pRenderTargetView, const DXGI_SURFACE_DESC* pBackBufferDesc,
+			ID3D11Texture2D* pDepthStencilTexture,
+			ID3D11DepthStencilView* pDepthStencilView,
+			ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime, CDXUTSDKMesh** pSceneMeshes, int iCountMesh, CDXUTSDKMesh** pAlphaSceneMeshes, int iCountAlphaMesh);
 
 		void ResizeSolution(UINT width,UINT height);
 
-		unsigned GetNumTileX();//X-axis have tile counts
-		unsigned GetNumTileY();//Y-axis have tile counts
+		unsigned GetNumTilesX();//X-axis have tile counts
+		unsigned GetNumTilesY();//Y-axis have tile counts
 		unsigned GetMaxNumLightsPerTile();
 
 		ID3D11ShaderResourceView* const * GetPointLightBufferCenterAndRadiusSRV() { return &m_pPointLightBufferCenterAndRadiusSRV; }
 		ID3D11ShaderResourceView* const * GetPointLightBufferColorSRV() { return &m_pPointLightBufferColorSRV; }
 		ID3D11ShaderResourceView* const * GetSpotLightBufferCenterAndRadiusSRV() { return &m_pSpotLightBufferCenterAndRadiusSRV; }
 		ID3D11ShaderResourceView* const * GetSpotLightBufferColorSRV() {return &m_pSpotLightBufferColorSRV;}
+		ID3D11ShaderResourceView* const * GetSpotLightBufferParamsSRV() { return &m_pSpotLightBufferParamsSRV; }
+		
 
 		ID3D11ShaderResourceView* const * GetLightIndexBufferSRV() { return &m_pLightIndexBufferSRV; }
 		ID3D11UnorderedAccessView* const * GetLightIndexBufferUAV() { return &m_pLightIndexBufferUAV; }
@@ -78,7 +84,9 @@ namespace ForwardPlus11
 
 	protected:
 		void ReleaseAllD3D11COM(void);
-
+		void ReleaseSwapChainAssociatedCOM(void);
+		void ReleaseOneTimeInitedCOM(void);
+		void ReleaseShaderCachedCOM(void);
 
 	private:
 
@@ -90,6 +98,18 @@ namespace ForwardPlus11
 		//Forward rendering render target with and height
 		unsigned int m_uWidth;
 		unsigned int m_uHeight;
+
+
+		//Buffers for light culling
+		ID3D11Buffer* m_pLightIndexBuffer;
+		ID3D11ShaderResourceView* m_pLightIndexBufferSRV;
+		ID3D11UnorderedAccessView* m_pLightIndexBufferUAV;
+
+
+
+		//Constant Buffer
+		ID3D11Buffer* m_pCbPerObject;
+		ID3D11Buffer* m_pCbPerFrame;
 
 		//Point Lights
 		ID3D11Buffer* m_pPointLightBufferCenterAndRadius;
@@ -105,11 +125,26 @@ namespace ForwardPlus11
 		ID3D11Buffer* m_pSpotLightBufferParams;
 		ID3D11ShaderResourceView* m_pSpotLightBufferParamsSRV;
 
+		//SamplerState
+		ID3D11SamplerState* m_pSamAnisotropic;
 
-		//Buffers for light culling
-		ID3D11Buffer* m_pLightIndexBuffer;
-		ID3D11ShaderResourceView* m_pLightIndexBufferSRV;
-		ID3D11UnorderedAccessView* m_pLightIndexBufferUAV;
+		//DepthStencilState
+		ID3D11DepthStencilState* m_pDepthLess;
+		ID3D11DepthStencilState* m_pDepthEqualAndDisableDepthWrite;
+		ID3D11DepthStencilState* m_pDisableDepthWrite;
+		ID3D11DepthStencilState* m_pDisableDepthTest;
+
+
+		//Rasterize states
+		ID3D11RasterizerState* m_pDisableCullingRS;
+
+
+		// Blend States
+		ID3D11BlendState* m_pAdditiveBS;
+		ID3D11BlendState* m_pOpaqueBS;
+		ID3D11BlendState* m_pDepthOnlyBS;
+		ID3D11BlendState* m_pDepthOnlyAlphaToCoverageBS;
+
 
 
 		//Vertex Shader
@@ -118,10 +153,10 @@ namespace ForwardPlus11
 		ID3D11VertexShader* m_pSceneMeshVS;
 		
 		//Pixel Shader
-		ID3D11PixelShader* m_pSceneMeshPS;//m_pSceneNoAlphaTestAndLightCullPS;
+		ID3D11PixelShader* m_pSceneNoAlphaTestAndLightCullPS;//m_pSceneNoAlphaTestAndLightCullPS;
 		ID3D11PixelShader* m_pSceneAlphaTestPS;//m_pSceneAlphaTestAndLightCullPS;
-		ID3D11PixelShader* m_pSceneNoCullPS;//m_pSceneNoAlphaTestAndNoLightCullPS;
-		ID3D11PixelShader* m_pSceneNoCullAlphaTestPS;//m_pSceneAlphaTestAndNoLightCullPS
+		ID3D11PixelShader* m_pSceneNoAlphaTestAndNoLightCullPS;//m_pSceneNoAlphaTestAndNoLightCullPS;
+		ID3D11PixelShader* m_pSceneAlphaTestAndNoLightCullPS;//m_pSceneAlphaTestAndNoLightCullPS
 		ID3D11PixelShader* m_pSceneAlphaTestOnlyPS;
 
 		// Compute Shader
@@ -134,32 +169,14 @@ namespace ForwardPlus11
 		ID3D11InputLayout* m_pPositionAndTexInputLayout;
 		ID3D11InputLayout* m_pMeshInputLayout;
 
-		//SamplerState
-		ID3D11SamplerState* m_pSamAnisotropic;
+
+
+
 
 		// Depth buffer data
 		ID3D11Texture2D* m_pDepthStencilTexture;
 		ID3D11DepthStencilView* m_pDepthStencilView;
 		ID3D11ShaderResourceView* m_pDepthStencilSRV;
-
-		//DepthStencilState
-		ID3D11DepthStencilState* m_pDepthLess;
-		ID3D11DepthStencilState* m_pDepthEqualAndDisableDepthWrite;
-		ID3D11DepthStencilState* m_pDisableDepthWrite;
-		ID3D11DepthStencilState* m_pDisableDepthTest;
-
-		// Blend States
-		ID3D11BlendState* m_pAdditiveBS;
-		ID3D11BlendState* m_pOpaqueBS;
-		ID3D11BlendState* m_pDepthOnlyBS;
-		ID3D11BlendState* m_pDepthOnlyAlphaToCoverageBS;
-
-		//Rasterize states
-		ID3D11RasterizerState* m_pDisableCullingRS;
-
-		//Constant Buffer
-		ID3D11Buffer* m_pCbPerObject;
-		ID3D11Buffer* m_pCbPerFrame;
 
 
 		// Number of currently active lights

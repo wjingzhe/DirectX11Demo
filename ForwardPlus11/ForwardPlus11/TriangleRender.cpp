@@ -68,7 +68,7 @@ namespace Triangle
 		indexBufferDesc.ByteWidth = sizeof(GeometryHelper::uint32)*m_MeshData.Indices32.size();
 		InitData.pSysMem = &m_MeshData.Indices32[0];
 		V_RETURN(pD3dDevice->CreateBuffer(&indexBufferDesc, &InitData, &m_pMeshIB));
-		DXUT_SetDebugName(m_pMeshIB, "TriangleIB");
+		m_pMeshIB->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("TriangleIB"), "TriangleIB");
 
 
 		//Create vertex buffer
@@ -79,7 +79,8 @@ namespace Triangle
 		vertexBufferDesc.ByteWidth = sizeof(GeometryHelper::Vertex)*m_MeshData.Vertices.size();
 		InitData.pSysMem = &m_MeshData.Vertices[0];
 		V_RETURN(pD3dDevice->CreateBuffer(&vertexBufferDesc, &InitData, &m_pMeshVB));
-		DXUT_SetDebugName(m_pMeshVB, "TriangleVB");
+		m_pMeshVB->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("TriangleVB"), "TriangleVB");
+
 
 		//  Create constant buffers
 		D3D11_BUFFER_DESC ConstantBufferDesc;
@@ -90,11 +91,11 @@ namespace Triangle
 
 		ConstantBufferDesc.ByteWidth = sizeof(CB_PER_OBJECT);
 		V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerObject));
-		DXUT_SetDebugName(m_pConstantBufferPerObject, "CB_PER_OBJECT");
+		m_pConstantBufferPerObject->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("CB_PER_OBJECT"), "CB_PER_OBJECT");
 
 		ConstantBufferDesc.ByteWidth = sizeof(CB_PER_FRAME);
 		V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerFrame));
-		DXUT_SetDebugName(m_pConstantBufferPerFrame, "CB_PER_FRAME");
+		m_pConstantBufferPerFrame->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("CB_PER_FRAME"), "CB_PER_FRAME");
 
 		return hr;
 	}

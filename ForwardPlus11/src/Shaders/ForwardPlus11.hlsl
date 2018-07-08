@@ -34,7 +34,7 @@ struct VS_OUTPUT_SCENE
 	float3 Normal:NORMAL;// vertex normal
 	float2 TextureUV:TEXCOORD0;
 	float3 Tangent:TEXCOORD1;
-	float3 PostitionWS:TEXCOORD2;//
+	float4 PositionWS:TEXCOORD2;//
 };
 
 struct VS_OUTPUT_POSITION_ONLY
@@ -60,6 +60,23 @@ VS_OUTPUT_POSITION_ONLY RenderScenePositionOnlyVS(VS_INPUT_SCENE Input)
 	return Output;
 }
 
+//---------------------------------------------------------------------
+// This shader just tranforms position and passes through tex coord
+// (e.g. for depth pre-pass with alpha test)
+//---------------------------------------------------------------------
+VS_OUTPUT_POSITION_AND_TEX RenderScenePositionAndTexVS(VS_INPUT_SCENE Input)
+{
+	VS_OUTPUT_POSITION_AND_TEX Output;
+
+	//Transform the position from object space to homogenous projection space
+	Output.Position = mul(float4(Input.Position, 1), g_mWorldViewProjection);
+
+	// just copy the texture coordinate through
+	Output.TextureUV = Input.TextureUV;
+
+	return Output;
+}
+
 
 // this shader transforms position.calculates world-space position,normal,
 // and tangent,and passes tex coords through to the pixel shader.
@@ -71,9 +88,9 @@ VS_OUTPUT_SCENE RenderSceneVS(VS_INPUT_SCENE Input)
 	Output.Position = mul(float4(Input.Position, 1), g_mWorldViewProjection);
 
 	// Position, normal, and tangent in world space
-	Output.PositionWS = mul(Input.Position, g_mWorld);
+	Output.PositionWS = mul(float4(Input.Position,1.0f), g_mWorld);
 	Output.Normal = mul(Input.Normal, (float3x3)g_mWorld);//without scaling
-	Output.Tangent = mul(Input。Tangent, (float3x3)g_mWorld);
+	Output.Tangent = mul(Input.Tangent, (float3x3)g_mWorld);
 
 	//Just copy the texture coordinate through
 	Output.TextureUV = Input.TextureUV;
@@ -101,7 +118,7 @@ float4 RenderSceneAlphaTestOnlyPS(VS_OUTPUT_POSITION_AND_TEX Input):SV_TARGET
 // This shader doed alpha testing
 float4 RenderScenePS(VS_OUTPUT_SCENE pin):SV_TARGET
 {
-	float3 vPositionWS = pin.PositionWS;
+	float3 vPositionWS = pin.PositionWS.xyz;
 	float3 AccumDiffuse = float3(0, 0, 0);
 	float3 AccumSpecular = float3(0, 0, 0);
 
@@ -136,7 +153,7 @@ float4 RenderScenePS(VS_OUTPUT_SCENE pin):SV_TARGET
 #if(USE_LIGHT_CULLING ==1)
 	uint nTileIndex = GetTileIndex(pin.Position.xy);
 	uint nIndex = g_uMaxNumLightsPerTile* nTileIndex;
-	uint nNextLightIndex = g_PerTileLightIndexBuffer(nIndex);
+	uint nNextLightIndex = g_PerTileLightIndexBuffer[nIndex];
 #else
 	uint nIndex;
 	uint nNumPointLights = g_uNumLights & 0xFFFFu;
@@ -170,19 +187,19 @@ float4 RenderScenePS(VS_OUTPUT_SCENE pin):SV_TARGET
 
 		float fRad = LightCenterAndRadius.w;
 
-		if (fLightDistance < fRad)
+		if (fToLightDistance < fRad)
 		{
-			float x = fLightDistance / fRad;
+			float x = fToLightDistance / fRad;
 
 			//jingz 表示没看懂
 			// fake inverse squared falloff
 			// -(1/k)*(1 - (k+1)/(1+k*x^2))
 			// k = 20; -(1/20)*(1-21/(1+20*x^2))再转化一下就变成下面的形式
 			float fFallOff = -0.05f + 1.05f / (1 + 20 * x*x);
-			LightColorDiffuse = g_PointLightBufferColor[nLightIndex].rgb* saturate(dot(vToLightDir,vNorm))*fFallOff;
+			LightColorDiffuse = g_PointLightBufferColor[nLightIndex].rgb* saturate(dot(vToLightDir, vNorm))*fFallOff;
 
-			float3 vHalfAngle = normalize(vViewDir + vLightDir);
-			LightColorSpecular = g_PointLightBufferColor[nLightIndex].rgb * pow(saturate(dot(vHalfAngle, vNorm), 8))*fFallOff;
+			float3 vHalfAngle = normalize(vViewDir + vToLightDir);
+			LightColorSpecular = g_PointLightBufferColor[nLightIndex].rgb * pow(saturate(dot(vHalfAngle, vNorm)), 8)*fFallOff;
 
 		}
 

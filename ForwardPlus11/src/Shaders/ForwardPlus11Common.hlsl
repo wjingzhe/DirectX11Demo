@@ -12,9 +12,9 @@ cbuffer cbPerFrame:register(b1)
 {
 	matrix g_mProjection:packoffset(c0);
 	matrix g_mProjectionInv:packoffset(c4);
-	float4 g_vCameraPos:packoffset(c8);
+	float3 g_vCameraPos:packoffset(c8);
 	float g_fAlphaTest:packoffset(c8.w);
-	uint g_uNumLights:packoffset(c9);
+	uint g_uNumLights:packoffset(c9.x);
 	uint g_uWindowWidth:packoffset(c9.y);
 	uint g_uWindowHeight:packoffset(c9.z);
 	uint g_uMaxNumLightsPerTile:packoffset(c9.w);

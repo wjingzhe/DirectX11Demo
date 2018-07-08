@@ -21,14 +21,14 @@ RWBuffer<uint> g_PerTileLightIndexBufferOut:register(u0);
 // Group Shared Memory (aka local data share,or LDS)
 //
 #if(USE_DEPTH_BOUNDS==1)||(USE_DEPTH_BOUNDS==2)
-groupshared uint ldsMaxZ;
-groupshared uint ldsMinZ;
+groupshared uint ldsMaxViewZ;
+groupshared uint ldsMinViewZ;
 #endif
 
 groupshared uint ldsLightIndexCounter;
 groupshared uint ldsLightIndex[MAX_NUM_LIGHTS_PER_TILE];
 
-groupshared float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
+//groupshared float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
 
 //Helper functions
 
@@ -37,7 +37,7 @@ groupshared float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
 float3 CreatePlaneEquation(float3 b, float3 c)
 {
 	// normalize(cross(b-a,c-a)),except we know 'a' is the origin
-	// also,typically there would be a fourth term of the plane equation,
+	// also,typically there would be a fouth term of the plane equation,
 	// -(n dot a),except know 'a' is the origin
 	return normalize(cross(b, c));
 }
@@ -72,7 +72,7 @@ uint GetNumTilesX()
 }
 
 // calculate the number of tiles in the vertical direction
-uint GetNumTileY()
+uint GetNumTilesY()
 {
 	return (uint)((g_uWindowHeight + TILE_SIZE - 1) / (float)TILE_SIZE);
 }
@@ -96,45 +96,45 @@ float ConvertProjDepthToView(float z)
 #if(USE_DEPTH_BOUNDS == 1)// non_MSAA
 void CalculateMinMaxDepthInLds(uint3 globalThreadIndex)
 {
-	float depth = g_DepthTexture.Load(uint3(globalThreadIndex.x, gloablThreadIndex.y, 0)).x;
-	float viewPosZ = ConvertProjDepthToView(Depth);
+	float depth = g_DepthTexture.Load(uint3(globalThreadIndex.x, globalThreadIndex.y, 0)).x;
+	float viewPosZ = ConvertProjDepthToView(depth);
 	uint z = asuint(viewPosZ);
-	if (depth != 0, f)
+	if (depth != 0.f)
 	{
-		InterlockedMax(ldsMaxZ, z);
-		InterlockedMin(ldsMinZ, z);
+		InterlockedMax(ldsMaxViewZ, z);
+		InterlockedMin(ldsMinViewZ, z);
 	}
 }
 #elif(USE_DEPTH_BOUNDS == 2) //MSAA
 void CalculateMinMaxDepthInLdsMSAA(uint3 globalThreadIndex, uint depthBufferNumSamples)
 {
-	float maxZForThisPixel = 0.f;
-	float minZForThisPixel = FLT_MAX;
+	float maxViewZ = 0.f;
+	float minViewZ = FLT_MAX;
 
 	//float depth0 = g_DepthTexture.Load(uint2(globalThreadIndex.x, globalThreadIndex.y), 0).x;
 	//float viewPosZ0 = ConvertProjDepthToView(depth0);
 	//if (depth0 != 0.0f)
 	//{
-	//	maxZForThisPixel = max(maxZForThisPixel, viewPosZ0);
-	//	minZForThisPixel = min(minZForThisPixel, viewPosZ0);
+	//	maxViewZ = max(maxViewZ, viewPosZ0);
+	//	minViewZ = min(minViewZ, viewPosZ0);
 	//}
 
 	for (uint sampleIndex = 0; sampleIndex < depthBufferNumSamples; sampleIndex++)
 	{
 		float depth = g_DepthTexture.Load(uint2(globalThreadIndex.x, globalThreadIndex.y), sampleIndex).x;
 		float viewPosZ = ConvertProjDepthToView(depth);
-		if (depth != 0.f)
+		if (depth > 1E-5)
 		{
-			maxZForThisPixel = max(maxZForThisPixel, viewPosZ);
-			minZForThisPixel = min(minZForThisPixel, viewPosZ);
+			maxViewZ = max(maxViewZ, viewPosZ);
+			minViewZ = min(minViewZ, viewPosZ);
 		}
 	}
 
-	uint zMaxForThisPixel = asuint(maxZForThisPixel);
-	uint zMinForThisPixel = asuint(minZForThisPixel);
+	uint zMaxForThisPixel = asuint(maxViewZ);
+	uint zMinForThisPixel = asuint(minViewZ);
 
-	InterlockedMax(ldsMaxZ, zMaxForThisPixel);
-	InterlockedMin(ldsMinZ, zMinForThisPixel);
+	InterlockedMax(ldsMaxViewZ, zMaxForThisPixel);
+	InterlockedMin(ldsMinViewZ, zMinForThisPixel);
 }
 
 #endif
@@ -151,67 +151,67 @@ void CalculateMinMaxDepthInLdsMSAA(uint3 globalThreadIndex, uint depthBufferNumS
 // Light culling shader
 //--------------
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y,1)]
-void CullLightCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_GroupThreadID, uint groupIndex : SV_GroupID)
+void CullLightsCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_GroupThreadID, uint3 groupIndex : SV_GroupID)
 {
 	uint localIndexFlattened = localIndex.x + localIndex.y*NUM_THREADS_X;
 	if (localIndexFlattened == 0)
 	{
 #if(USE_DEPTH_BOUNDS ==1 )||(USE_DEPTH_BOUNDS == 2)
-		ldsMinZ = 0x7f7fffff;// FLT_MAX as a uint 为什么不是0x7FFFFFFF
-		ldsMaxZ = 0;
+		ldsMinViewZ = 0x7f7fffff;// FLT_MAX as a uint 为什么不是0x7FFFFFFF
+		ldsMaxViewZ = 0;
 #endif
 		ldsLightIndexCounter = 0;
 
-
-		{
-			// construct frustum for this tile
-			uint pxm = TILE_SIZE* groupIndex.x;
-			uint pym = TILE_SIZE* groupIndex.y;
-			uint pxp = TILE_SIZE* (groupIndex.x + 1);
-			uint pyp = TILE_SIZE* (groupIndex.y + 1);
-
-			uint uWindowWidthEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesX();
-			uint uWindowHeightEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesY();
-
-			//four corners of the tile,clockwise from top-left
-			float3 TopLeft = ConvertProjToView(
-				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-					1.0f, 1.0f)
-			).xyz;
-
-			float3 TopRight = ConvertProjToView(
-				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-					1.0f, 1.0f)
-			).xyz;
-
-			float3 BottomRight = ConvertProjToView(
-				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-					1.0f, 1.0f)
-			).xyz;
-
-			float3 BottomLeft = ConvertProjToView(
-				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-					1.0f, 1.0f)
-			).xyz;
-
-
-			// create plane equation for the four sides of the frustum.
-			// which the positive half-space outside the frutum
-			// (and remember view space is left handed,so use the left-hand rule to determine cross produce direction)
-			TopEqn = CreatePlaneEquation(TopLef, TopRight);
-			RightEqn = CreatePlaneEquation(TopRight, BottomRight);
-			BottomEqn = CreatePlaneEquation(BottomRight, BottomLeft);
-			LeftEqn = CreatePlaneEquation(BottomLeft, TopLef);
-
-		}
+		
 
 	}
 
+	float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
+	{
+		// construct frustum for this tile
+		uint pxm = TILE_SIZE* groupIndex.x;
+		uint pym = TILE_SIZE* groupIndex.y;
+		uint pxp = TILE_SIZE* (groupIndex.x + 1);
+		uint pyp = TILE_SIZE* (groupIndex.y + 1);
 
+		uint uWindowWidthEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesX();
+		uint uWindowHeightEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesY();
+
+		//four corners of the tile,clockwise from top-left
+		float3 TopLeft = ConvertProjToView(
+			float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+			(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				1.0f, 1.0f)
+		).xyz;
+
+		float3 TopRight = ConvertProjToView(
+			float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+			(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				1.0f, 1.0f)
+		).xyz;
+
+		float3 BottomRight = ConvertProjToView(
+			float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+			(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				1.0f, 1.0f)
+		).xyz;
+
+		float3 BottomLeft = ConvertProjToView(
+			float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+			(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				1.0f, 1.0f)
+		).xyz;
+
+
+		// create plane equation for the four sides of the frustum.
+		// which the positive half-space outside the frutum
+		// (and remember view space is left handed,so use the left-hand rule to determine cross produce direction)
+		TopEqn = CreatePlaneEquation(TopLeft, TopRight);
+		RightEqn = CreatePlaneEquation(TopRight, BottomRight);
+		BottomEqn = CreatePlaneEquation(BottomRight, BottomLeft);
+		LeftEqn = CreatePlaneEquation(BottomLeft, TopLeft);
+
+	}
 
 
 	GroupMemoryBarrierWithGroupSync();
@@ -220,8 +220,8 @@ void CullLightCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_Gr
 	// to form the front and back of the frustum
 
 #if(USE_DEPTH_BOUNDS == 1)||(USE_DEPTH_BOUNDS == 2)
-	float maxZ = 0.0f;
-	float minZ = FLT_MAX;
+	float maxViewZ = 0.0f;
+	float minViewZ = FLT_MAX;
 #if(USE_DEPTH_BOUNDS == 1) //non-MSAA
 	CalculateMinMaxDepthInLds(globalIndex);
 #elif(USE_DEPTH_BOUNDS == 2)
@@ -231,8 +231,8 @@ void CullLightCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_Gr
 #endif
 
 	GroupMemoryBarrierWithGroupSync();
-	maxZ = asfloat(ldsMaxZ);
-	minZ = asfloat(ldsMinZ);
+	maxViewZ = asfloat(ldsMaxViewZ);
+	minViewZ = asfloat(ldsMinViewZ);
 
 #endif
 
@@ -249,15 +249,15 @@ void CullLightCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_Gr
 		if (TestFrustumSides(center.xyz, r, TopEqn, RightEqn, BottomEqn, LeftEqn))
 		{
 #if(USE_DEPTH_BOUNDS != 0)
-			if(-center.z + minZ < r && center.z - maxZ < r)
+			if(-center.z + minViewZ < r && center.z - maxViewZ < r)
 #else
-			if (center.z < r)
+			if (-center.z < r)
 #endif
 			{
 				// do a thread-safe increment of the list counter
 				// adn put the index of this light into the list
-				uint disIndex = 0;
-				InterLockedAdd(ldsLightIndexCounter, 1, disIndex);
+				uint dstIndex = 0;
+				InterlockedAdd(ldsLightIndexCounter, 1, dstIndex);
 				ldsLightIndex[dstIndex] = i;
 			}
 		}
@@ -277,11 +277,11 @@ void CullLightCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_Gr
 		center.xyz = mul(float4(center.xyz, 1), g_mWorldView).xyz;
 
 		// test if sphere is intersecting or inside frustum
-		if (TestFrustumSides(center.xyz, r, frustumEqn0, frustumEqn1, frustumEqn2, frustumEqn3))
+		if (TestFrustumSides(center.xyz, r, TopEqn, RightEqn, BottomEqn, LeftEqn))
 		{
 
 #if(USE_DEPTH_BOUNDS != 0)
-			if (-center.z + minZ < r && center.z - maxZ < r)
+			if (-center.z + minViewZ < r && center.z - maxViewZ < r)
 #else
 			if (-center.z < r)
 #endif
