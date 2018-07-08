@@ -110,10 +110,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	InitApp();
 	DXUTInit(true,true,NULL);//Parse the command line,show msgBoxes on error,no extra command line params
 	DXUTSetCursorSettings(true, true);
-	DXUTCreateWindow(L"TestTriangle v1.2",hInstance,nullptr,nullptr, 2880, 1880);
+	DXUTCreateWindow(L"TestTriangle v1.2");
 
 
-	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, 2880, 1880);
+	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, 1920, 1080);//jingz 在此窗口为出现全屏化之前，其分辨率一直有个错误bug，偶然消除了
 
 	DXUTMainLoop();
 
