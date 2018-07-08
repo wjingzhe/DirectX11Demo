@@ -160,7 +160,7 @@ void CalculateMinMaxDepthInLdsMSAA(uint3 globalThreadIndex, uint depthBufferNumS
 
 
 	uint zMaxForThisPixel = asuint(maxZForThisPixel);
-	uint zMinForThisPixel = asuint(maxZForThisPixel);
+	uint zMinForThisPixel = asuint(minZForThisPixel);
 
 	InterlockedMax(ldsMaxZ, zMaxForThisPixel);
 	InterlockedMin(ldsMinZ, zMinForThisPixel);
