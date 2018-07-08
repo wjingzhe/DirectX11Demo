@@ -176,7 +176,7 @@ namespace ForwardPlus11
 
 	}
 
-	ForwardPlus11::ForwardPlusRender::~ForwardPlusRender()
+	ForwardPlusRender::~ForwardPlusRender()
 	{
 		ReleaseAllD3D11COM();
 	}
@@ -313,7 +313,7 @@ namespace ForwardPlus11
 
 
 
-	HRESULT ForwardPlus11::ForwardPlusRender::OnCreateDevice(ID3D11Device * pD3DDeive, AMD::ShaderCache* pShaderCache, XMVECTOR SceneMin, XMVECTOR SceneMax)
+	HRESULT ForwardPlusRender::OnCreateDevice(ID3D11Device * pD3DDeive, AMD::ShaderCache* pShaderCache, XMVECTOR SceneMin, XMVECTOR SceneMax)
 	{
 		HRESULT hr;
 
@@ -500,7 +500,7 @@ namespace ForwardPlus11
 
 	}
 
-	HRESULT ForwardPlus11::ForwardPlusRender::OnResizedSwapChain(ID3D11Device * pD3DDevie, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
+	HRESULT ForwardPlusRender::OnResizedSwapChain(ID3D11Device * pD3DDevie, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 	{
 		HRESULT hr;
 
@@ -766,19 +766,19 @@ namespace ForwardPlus11
 		bSolutionSized = true;
 	}
 
-	unsigned ForwardPlus11::ForwardPlusRender::GetNumTilesX()
+	unsigned ForwardPlusRender::GetNumTilesX()
 	{
 		assert(bSolutionSized);
 		return (unsigned)((m_uWidth + TILE_RES - 1) / (float)TILE_RES);
 	}
 
-	unsigned ForwardPlus11::ForwardPlusRender::GetNumTilesY()
+	unsigned ForwardPlusRender::GetNumTilesY()
 	{
 		assert(bSolutionSized);
 		return (unsigned)((m_uHeight + TILE_RES - 1) / (float)TILE_RES);
 	}
 
-	unsigned ForwardPlus11::ForwardPlusRender::GetMaxNumLightsPerTile()
+	unsigned ForwardPlusRender::GetMaxNumLightsPerTile()
 	{
 		const unsigned kAdjustmentMultipier = 32;
 
