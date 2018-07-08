@@ -454,6 +454,9 @@ public:
     DirectX::XMMATRIX GetWorldMatrix( _In_ UINT iFrameIndex ) const;
     DirectX::XMMATRIX GetInfluenceMatrix( _In_ UINT iFrameIndex ) const;
     bool              GetAnimationProperties( _Out_ UINT* pNumKeys, _Out_ float* pFrameTime ) const;
+
+	void CalculateMeshMinMax( DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut);
+	static void CalculateMeshMinMax(const CDXUTSDKMesh & Mesh, DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut);
 };
 
 #endif

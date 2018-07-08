@@ -1,0 +1,325 @@
+#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
+
+
+#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Common.hlsl"
+
+cbuffer cbPerObject : register ( b0 ) 
+{ 
+    matrix g_mWorldViewProjection : packoffset ( c0 ) ; 
+    matrix g_mWorldView : packoffset ( c4 ) ; 
+    matrix g_mWorld : packoffset ( c8 ) ; 
+    float4 g_MaterialAmbientColorUp : packoffset ( c12 ) ; 
+    float4 g_MaterialAmbientColorDown : packoffset ( c13 ) ; 
+} 
+
+cbuffer cbPerFrame : register ( b1 ) 
+{ 
+    matrix g_mProjection : packoffset ( c0 ) ; 
+    matrix g_mProjectionInv : packoffset ( c4 ) ; 
+    float3 g_vCameraPos : packoffset ( c8 ) ; 
+    float g_fAlphaTest : packoffset ( c8 . w ) ; 
+    uint g_uNumLights : packoffset ( c9 . x ) ; 
+    uint g_uWindowWidth : packoffset ( c9 . y ) ; 
+    uint g_uWindowHeight : packoffset ( c9 . z ) ; 
+    uint g_uMaxNumLightsPerTile : packoffset ( c9 . w ) ; 
+} 
+
+#line 27
+
+
+
+
+
+#line 36
+uint GetTileIndex ( float2 ScreenPos ) 
+{ 
+    float fTileRes = ( float ) 16 ; 
+    uint uNumCellX = ( g_uWindowWidth + 16 - 1 ) / 16 ; 
+    uint uTileIndex = floor ( ScreenPos . x / fTileRes ) + floor ( ScreenPos . y / fTileRes ) * uNumCellX ; 
+    return uTileIndex ; 
+} 
+
+#line 3 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
+
+
+#line 8
+Buffer < float4 > g_PointLightBufferCenterAndRadius : register ( t0 ) ; 
+Buffer < float4 > g_SpotLightBufferCenterAndRadius : register ( t1 ) ; 
+
+#line 13
+
+Texture2DMS < float > g_DepthTexture : register ( t2 ) ; 
+
+
+#line 18
+RWBuffer < uint > g_PerTileLightIndexBufferOut : register ( u0 ) ; 
+
+#line 23
+
+groupshared uint ldsMaxZ ; 
+groupshared uint ldsMinZ ; 
+
+
+groupshared uint ldsLightIndexCounter ; 
+groupshared uint ldsLightIndex [ 544 ] ; 
+
+groupshared float3 TopEqn , RightEqn , BottomEqn , LeftEqn ; 
+
+#line 37
+float3 CreatePlaneEquation ( float3 b , float3 c ) 
+{ 
+    
+#line 42
+    return normalize ( cross ( b , c ) ) ; 
+} 
+
+#line 46
+float GetSignedDistanceFromPlane ( float3 p , float3 eqn ) 
+{ 
+    
+#line 53
+    return dot ( eqn , p ) ; 
+} 
+
+#line 57
+bool TestFrustumSides ( float3 center , float radius , float3 plane0 , float3 plane1 , float3 plane2 , float3 plane3 ) 
+{ 
+    bool intersectingOrInside0 = GetSignedDistanceFromPlane ( center , plane0 ) < radius ; 
+    bool intersectingOrInside1 = GetSignedDistanceFromPlane ( center , plane1 ) < radius ; 
+    bool intersectingOrInside2 = GetSignedDistanceFromPlane ( center , plane2 ) < radius ; 
+    bool intersectingOrInside3 = GetSignedDistanceFromPlane ( center , plane3 ) < radius ; 
+    
+    return ( intersectingOrInside0 && intersectingOrInside1 && intersectingOrInside2 && intersectingOrInside3 ) ; 
+} 
+
+#line 69
+uint GetNumTilesX ( ) 
+{ 
+    return ( uint ) ( ( g_uWindowWidth + 16 - 1 ) / ( float ) 16 ) ; 
+} 
+
+#line 75
+uint GetNumTilesY ( ) 
+{ 
+    return ( uint ) ( ( g_uWindowHeight + 16 - 1 ) / ( float ) 16 ) ; 
+} 
+
+#line 81
+float4 ConvertProjToView ( float4 p ) 
+{ 
+    p = mul ( p , g_mProjectionInv ) ; 
+    p /= p . w ; 
+    return p ; 
+} 
+
+#line 90
+float ConvertProjDepthToView ( float z ) 
+{ 
+    z = 1.0f / ( z * g_mProjectionInv . _34 + g_mProjectionInv . _44 ) ; 
+    return z ; 
+} 
+
+#line 108
+
+void CalculateMinMaxDepthInLdsMSAA ( uint3 globalThreadIndex , uint depthBufferNumSamples ) 
+{ 
+    float maxZForThisPixel = 0.f ; 
+    float minZForThisPixel = 3.402823466e+38F ; 
+    
+#line 122
+    for ( uint sampleIndex = 0 ; sampleIndex < depthBufferNumSamples ; sampleIndex ++ ) 
+    { 
+        float depth = g_DepthTexture . Load ( uint2 ( globalThreadIndex . x , globalThreadIndex . y ) , sampleIndex ) . x ; 
+        float viewPosZ = ConvertProjDepthToView ( depth ) ; 
+        if ( depth != 0.f ) 
+        { 
+            maxZForThisPixel = max ( maxZForThisPixel , viewPosZ ) ; 
+            minZForThisPixel = min ( minZForThisPixel , viewPosZ ) ; 
+        } 
+    } 
+    
+    uint zMaxForThisPixel = asuint ( maxZForThisPixel ) ; 
+    uint zMinForThisPixel = asuint ( minZForThisPixel ) ; 
+    
+    InterlockedMax ( ldsMaxZ , zMaxForThisPixel ) ; 
+    InterlockedMin ( ldsMinZ , zMinForThisPixel ) ; 
+} 
+
+
+
+#line 146
+
+
+
+
+#line 153
+[ numthreads ( 16 , 16 , 1 ) ] 
+void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex : SV_GroupThreadID , uint3 groupIndex : SV_GroupID ) 
+{ 
+    uint localIndexFlattened = localIndex . x + localIndex . y * 16 ; 
+    if ( localIndexFlattened == 0 ) 
+    { 
+        
+        ldsMinZ = 0x7f7fffff ; 
+        ldsMaxZ = 0 ; 
+        
+        ldsLightIndexCounter = 0 ; 
+        
+#line 166
+        { 
+            
+            uint pxm = 16 * groupIndex . x ; 
+            uint pym = 16 * groupIndex . y ; 
+            uint pxp = 16 * ( groupIndex . x + 1 ) ; 
+            uint pyp = 16 * ( groupIndex . y + 1 ) ; 
+            
+            uint uWindowWidthEvenlyDivisibleByTileSize = 16 * GetNumTilesX ( ) ; 
+            uint uWindowHeightEvenlyDivisibleByTileSize = 16 * GetNumTilesY ( ) ; 
+            
+#line 177
+            float3 TopLeft = ConvertProjToView ( 
+            float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            1.0f , 1.0f ) 
+            ) . xyz ; 
+            
+            float3 TopRight = ConvertProjToView ( 
+            float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            1.0f , 1.0f ) 
+            ) . xyz ; 
+            
+            float3 BottomRight = ConvertProjToView ( 
+            float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            1.0f , 1.0f ) 
+            ) . xyz ; 
+            
+            float3 BottomLeft = ConvertProjToView ( 
+            float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+            1.0f , 1.0f ) 
+            ) . xyz ; 
+            
+#line 205
+            TopEqn = CreatePlaneEquation ( TopLeft , TopRight ) ; 
+            RightEqn = CreatePlaneEquation ( TopRight , BottomRight ) ; 
+            BottomEqn = CreatePlaneEquation ( BottomRight , BottomLeft ) ; 
+            LeftEqn = CreatePlaneEquation ( BottomLeft , TopLeft ) ; 
+            
+        } 
+        
+    } 
+    
+#line 217
+    GroupMemoryBarrierWithGroupSync ( ) ; 
+    
+#line 222
+    
+    float maxZ = 0.0f ; 
+    float minZ = 3.402823466e+38F ; 
+    
+#line 227
+    
+    uint depthBufferWidth , depthBufferHeight , depthBufferNumSamples ; 
+    g_DepthTexture . GetDimensions ( depthBufferWidth , depthBufferHeight , depthBufferNumSamples ) ; 
+    CalculateMinMaxDepthInLdsMSAA ( globalIndex , depthBufferNumSamples ) ; 
+    
+    
+    GroupMemoryBarrierWithGroupSync ( ) ; 
+    maxZ = asfloat ( ldsMaxZ ) ; 
+    minZ = asfloat ( ldsMinZ ) ; 
+    
+    
+    
+#line 241
+    uint uNumPointLights = g_uNumLights & 0xFFFFu ; 
+    for ( uint i = localIndexFlattened ; i < uNumPointLights ; i += ( 16 * 16 ) ) 
+    { 
+        float4 center = g_PointLightBufferCenterAndRadius [ i ] ; 
+        float r = center . w ; 
+        center . xyz = mul ( float4 ( center . xyz , 1 ) , g_mWorldView ) . xyz ; 
+        
+#line 249
+        if ( TestFrustumSides ( center . xyz , r , TopEqn , RightEqn , BottomEqn , LeftEqn ) ) 
+        { 
+            
+            if ( - center . z + minZ < r && center . z - maxZ < r ) 
+            
+#line 255
+            
+            { 
+                
+#line 259
+                uint dstIndex = 0 ; 
+                InterlockedAdd ( ldsLightIndexCounter , 1 , dstIndex ) ; 
+                ldsLightIndex [ dstIndex ] = i ; 
+            } 
+        } 
+        
+    } 
+    
+    GroupMemoryBarrierWithGroupSync ( ) ; 
+    
+    uint uNumPointLightsInThisTile = ldsLightIndexCounter ; 
+    
+#line 272
+    uint uNumSpotLights = ( g_uNumLights & 0xFFFF0000u ) >> 16 ; 
+    for ( uint j = localIndexFlattened ; j < uNumSpotLights ; j += ( 16 * 16 ) ) 
+    { 
+        float4 center = g_SpotLightBufferCenterAndRadius [ j ] ; 
+        float r = center . w ; 
+        center . xyz = mul ( float4 ( center . xyz , 1 ) , g_mWorldView ) . xyz ; 
+        
+#line 280
+        if ( TestFrustumSides ( center . xyz , r , TopEqn , RightEqn , BottomEqn , LeftEqn ) ) 
+        { 
+            
+            
+            if ( - center . z + minZ < r && center . z - maxZ < r ) 
+            
+#line 287
+            
+            { 
+                
+#line 291
+                uint dstIndex = 0 ; 
+                InterlockedAdd ( ldsLightIndexCounter , 1 , dstIndex ) ; 
+                ldsLightIndex [ dstIndex ] = j ; 
+            } 
+        } 
+    } 
+    
+    GroupMemoryBarrierWithGroupSync ( ) ; 
+    
+#line 304
+    { 
+        uint tileIndexFlattened = groupIndex . x + groupIndex . y * GetNumTilesX ( ) ; 
+        uint startOffset = g_uMaxNumLightsPerTile * tileIndexFlattened ; 
+        
+#line 310
+        for ( uint i = localIndexFlattened ; i < uNumPointLightsInThisTile ; i += ( 16 * 16 ) ) 
+        { 
+            
+            g_PerTileLightIndexBufferOut [ startOffset + i ] = ldsLightIndex [ i ] ; 
+        } 
+        
+        for ( uint j = ( localIndexFlattened + uNumPointLightsInThisTile ) ; j < ldsLightIndexCounter ; j += ( 16 * 16 ) ) 
+        { 
+            
+            g_PerTileLightIndexBufferOut [ startOffset + j + 1 ] = ldsLightIndex [ j ] ; 
+        } 
+        
+        if ( localIndexFlattened == 0 ) 
+        { 
+            
+            g_PerTileLightIndexBufferOut [ startOffset + uNumPointLightsInThisTile ] = 0x7FFFFFFF ; 
+            
+#line 328
+            g_PerTileLightIndexBufferOut [ startOffset + ldsLightIndexCounter + 1 ] = 0x7FFFFFFF ; 
+        } 
+        
+    } 
+    
+#line 334
+}  

@@ -1312,3 +1312,24 @@ bool CDXUTSDKMesh::GetAnimationProperties( UINT* pNumKeys, float* pFrameTime ) c
 
     return true;
 }
+
+void CDXUTSDKMesh::CalculateMeshMinMax(DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut)
+{
+	CalculateMeshMinMax(*this, pBBoxMinOut, pBBoxMaxOut);
+}
+
+void CDXUTSDKMesh::CalculateMeshMinMax(const CDXUTSDKMesh & Mesh, DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut)
+{
+	*pBBoxMinOut = Mesh.GetMeshBBoxCenter(0) - Mesh.GetMeshBBoxExtents(0);
+	*pBBoxMaxOut = Mesh.GetMeshBBoxCenter(0) + Mesh.GetMeshBBoxExtents(0);
+
+	for (unsigned int i = 1; i < Mesh.GetNumMeshes(); ++i)
+	{
+		XMVECTOR vNewMin = Mesh.GetMeshBBoxCenter(i) - Mesh.GetMeshBBoxExtents(i);
+		XMVECTOR vNewMax = Mesh.GetMeshBBoxCenter(i) + Mesh.GetMeshBBoxExtents(i);
+
+		*pBBoxMinOut = XMVectorMin(*pBBoxMinOut, vNewMin);
+		*pBBoxMaxOut = XMVectorMax(*pBBoxMaxOut, vNewMax);
+
+	}
+}
