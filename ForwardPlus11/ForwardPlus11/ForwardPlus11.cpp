@@ -28,16 +28,6 @@ CDXUTSDKMesh g_SceneAlphaMesh;
 
 static AMD::ShaderCache g_ShaderCache;
 
-
-//Rasterize states
-ID3D11RasterizerState* g_pCullingBackRS = nullptr;
-
-// Depth stencil states
-ID3D11DepthStencilState* g_pDepthStencilDefaultDS = nullptr;
-
-// Blend states 
-ID3D11BlendState* g_pOpaqueState = nullptr;
-
 ID3D11SamplerState* g_pSamplerAnisotropic = nullptr;
 
 // Depth stencil data
@@ -249,61 +239,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &g_pSamplerAnisotropic));
-	DXUT_SetDebugName(g_pSamplerAnisotropic, "Anisotropic");
-
-
-	// Create blend states
-	D3D11_BLEND_DESC BlendStateDesc;
-	BlendStateDesc.AlphaToCoverageEnable = FALSE;
-	BlendStateDesc.IndependentBlendEnable = FALSE;
-	BlendStateDesc.RenderTarget[0].BlendEnable = FALSE;
-	BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	BlendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
-	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	//Create OpaqueState
-	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &g_pOpaqueState));
-
-
-	//Create rasterizer states
-	D3D11_RASTERIZER_DESC RasterizerDesc;
-	RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;// D3D11_FILL_SOLID;
-	RasterizerDesc.CullMode = D3D11_CULL_BACK;// disable culling
-	RasterizerDesc.FrontCounterClockwise = FALSE;
-	RasterizerDesc.DepthBias = 0;
-	RasterizerDesc.DepthBiasClamp = 0.0f;
-	RasterizerDesc.SlopeScaledDepthBias = 0.0f;
-	RasterizerDesc.DepthClipEnable = TRUE;
-	RasterizerDesc.ScissorEnable = FALSE;
-	RasterizerDesc.MultisampleEnable = FALSE;
-	RasterizerDesc.AntialiasedLineEnable = FALSE;
-	V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &g_pCullingBackRS));
-
-	// Create depth stencil states
-	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
-	DepthStencilDesc.DepthEnable = TRUE;
-	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;//jingz leave it as default in Direct3D
-	DepthStencilDesc.StencilEnable = TRUE;
-	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
-	DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-	DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo
-	DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo stencil test passed but failed in depth tests
-	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;//jingz todo
-	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;//jingz todo
-	//jingz backface usually was culled
-	DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
-
-
-
+	g_pSamplerAnisotropic->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Anisotropic"), "Anisotropic");
 
 
 	// Create render resource here
@@ -368,11 +304,6 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	g_SceneMesh.Destroy();
 	g_SceneAlphaMesh.Destroy();
 
-	SAFE_RELEASE(g_pCullingBackRS);
-
-	SAFE_RELEASE(g_pDepthStencilDefaultDS);
-
-	SAFE_RELEASE(g_pOpaqueState);
 
 	SAFE_RELEASE(g_pSamplerAnisotropic);
 
@@ -482,14 +413,14 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 	// Switch off alpha blending
 	// float BlendFactor[4] = { 1.0f,1.0f,0.0f,0.0f }; 这些参数没什么用
-	pD3dImmediateContext->OMSetBlendState(g_pOpaqueState, nullptr, 0xFFFFFFFF);
+	pD3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
 	//Render or objects here..
 	if (g_ShaderCache.ShadersReady(true))
 	{
 		//render triangle for debug
-		pD3dImmediateContext->OMSetDepthStencilState(g_pDepthStencilDefaultDS, 0x00);
-		pD3dImmediateContext->RSSetState(g_pCullingBackRS);
+		pD3dImmediateContext->OMSetDepthStencilState(nullptr, 0x00);
+		pD3dImmediateContext->RSSetState(nullptr);
 		//s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext,&g_Camera, pRTV, g_pDepthStencilView);
 
 		std::vector< CDXUTSDKMesh*>MeshArray;
