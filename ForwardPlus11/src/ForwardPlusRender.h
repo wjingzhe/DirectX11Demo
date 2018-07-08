@@ -154,7 +154,7 @@ namespace ForwardPlus11
 		
 		//Pixel Shader
 		ID3D11PixelShader* m_pSceneNoAlphaTestAndLightCullPS;//m_pSceneNoAlphaTestAndLightCullPS;
-		ID3D11PixelShader* m_pSceneAlphaTestPS;//m_pSceneAlphaTestAndLightCullPS;
+		ID3D11PixelShader* m_pSceneAlphaTestAndLightCullPS;//m_pSceneAlphaTestAndLightCullPS;
 		ID3D11PixelShader* m_pSceneNoAlphaTestAndNoLightCullPS;//m_pSceneNoAlphaTestAndNoLightCullPS;
 		ID3D11PixelShader* m_pSceneAlphaTestAndNoLightCullPS;//m_pSceneAlphaTestAndNoLightCullPS
 		ID3D11PixelShader* m_pSceneAlphaTestOnlyPS;

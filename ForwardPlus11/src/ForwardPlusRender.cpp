@@ -154,7 +154,7 @@ namespace ForwardPlus11
 		m_pSceneMeshVS(nullptr),
 		//Pixel Shader
 		m_pSceneNoAlphaTestAndLightCullPS(nullptr),
-		m_pSceneAlphaTestPS(nullptr),
+		m_pSceneAlphaTestAndLightCullPS(nullptr),
 		m_pSceneNoAlphaTestAndNoLightCullPS(nullptr),
 		m_pSceneAlphaTestAndNoLightCullPS(nullptr),
 		m_pSceneAlphaTestOnlyPS(nullptr),
@@ -280,7 +280,7 @@ namespace ForwardPlus11
 
 		ShaderMacros[0].m_iValue = 1;
 		ShaderMacros[1].m_iValue = 1;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestAndLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
 
 		ShaderMacros[0].m_iValue = 0;
 		ShaderMacros[1].m_iValue = 0;
@@ -556,7 +556,7 @@ namespace ForwardPlus11
 	{
 		// Default pixel shader
 		ID3D11PixelShader* pScenePS = m_pSceneNoAlphaTestAndLightCullPS;
-		ID3D11PixelShader* pAlphaScenePS = m_pSceneAlphaTestAndNoLightCullPS;
+		ID3D11PixelShader* pAlphaScenePS = m_pSceneAlphaTestAndLightCullPS;
 
 		// Default compute shader
 		bool bMsaaEnabled = (pBackBufferDesc->SampleDesc.Count > 1);
@@ -631,9 +631,9 @@ namespace ForwardPlus11
 			ID3D11UnorderedAccessView* pNullUAV = nullptr;
 			ID3D11SamplerState* pNullSampler = nullptr;
 
-			//TIMER_Begin(0, L"Render");
+			TIMER_Begin(0, L"ForwardPlus");
 			{
-				//	TIMER_Begin(0, L"Depth pre-pass");
+				TIMER_Begin(0, L"Depth pre-pass");
 				{
 					// Depth pre-pass (to eliminate pixel overdraw during forward rendering)
 					pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, pDepthStencilView); //null color buffer
@@ -678,11 +678,11 @@ namespace ForwardPlus11
 					pD3dImmediateContext->RSSetState(nullptr);
 					pD3dImmediateContext->OMSetBlendState(m_pOpaqueBS, BlendFactor, 0xFFFFFFFF);
 				}
-				//	TIMER_End(); //Depth pre-pass
+				TIMER_End(); //Depth pre-pass
 
 
 
-				//	TIMER_Begin(0, L"Light culling");
+				TIMER_Begin(0, L"Light culling");
 				{
 					// Cull lights on the GPU,using a Compute Shader
 					pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, pNullDSV); // null color buffer and depth-stencil
@@ -705,10 +705,10 @@ namespace ForwardPlus11
 					pD3dImmediateContext->CSSetShaderResources(2, 1, &pNullSRV);
 					pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
 				}
-				//	TIMER_End(); //Light culling
+				TIMER_End(); //Light culling
 
 
-				//	TIMER_Begin(0, L"Forward rendering");
+				TIMER_Begin(0, L"Forward rendering");
 				{
 					// forward rendering
 					pD3dImmediateContext->OMSetRenderTargets(1, (ID3D11RenderTargetView*const*)&pRTV, pDepthStencilView);
@@ -749,10 +749,10 @@ namespace ForwardPlus11
 					pD3dImmediateContext->PSSetShaderResources(7, 1, &pNullSRV);
 					pD3dImmediateContext->OMSetDepthStencilState(nullptr, 0x00);
 				}
-				//TIMER_End();// Forward rendering
+				TIMER_End();// Forward rendering
 
 			}
-			//TIMER_End();//Render
+			TIMER_End();//ForwardPlus
 
 		}
 
@@ -854,7 +854,7 @@ namespace ForwardPlus11
 
 		//PS
 		SAFE_RELEASE(m_pSceneNoAlphaTestAndLightCullPS);
-		SAFE_RELEASE(m_pSceneAlphaTestPS);
+		SAFE_RELEASE(m_pSceneAlphaTestAndLightCullPS);
 		SAFE_RELEASE(m_pSceneNoAlphaTestAndNoLightCullPS);
 		SAFE_RELEASE(m_pSceneAlphaTestAndNoLightCullPS);
 		SAFE_RELEASE(m_pSceneAlphaTestOnlyPS);

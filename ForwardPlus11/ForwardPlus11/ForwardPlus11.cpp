@@ -514,5 +514,24 @@ void RenderText()
 	swprintf_s(szBuf, 256, szFormat, fGpuTime);
 	g_pTextHelper->DrawTextLine(szBuf);
 
+
+	const float fGpuTimeDepthPrePass = (float)TIMER_GetTime(Gpu, L"Render|ForwardPlus|Depth pre-pass") * 1000.0f;
+	swprintf_s(szFormat, 256, L"+----Z Pass: %s", szPrecision);
+	swprintf_s(szBuf, 256, szFormat, fGpuTimeDepthPrePass);
+	g_pTextHelper->DrawTextLine(szBuf);
+
+	const float fGpuTimeLightCulling = (float)TIMER_GetTime(Gpu, L"Render|ForwardPlus|Light culling") * 1000.0f;
+	swprintf_s(szFormat, 256, L"+------Cull: %s", szPrecision);
+	swprintf_s(szBuf, 256, szFormat, fGpuTimeLightCulling);
+	g_pTextHelper->DrawTextLine(szBuf);
+
+	const float fGpuTimeForwardRendering = (float)TIMER_GetTime(Gpu, L"Render|ForwardPlus|Forward rendering") * 1000.0f;
+	swprintf_s(szFormat, 256, L"+---Forward: %s", szPrecision);
+	swprintf_s(szBuf, 256, szFormat, fGpuTimeForwardRendering);
+	g_pTextHelper->DrawTextLine(szBuf);
+
+	//g_pTextHelper->SetInsertionPos(5, DXUTGetDXGIBackBufferSurfaceDesc()->Height - AMD::HUD::iElementDelta);
+	//g_pTextHelper->DrawTextLine(L"Toggle GUI    : F1");
+
 	g_pTextHelper->End();
 }
