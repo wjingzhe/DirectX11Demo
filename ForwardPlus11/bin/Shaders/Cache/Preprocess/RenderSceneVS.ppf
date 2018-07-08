@@ -1,7 +1,7 @@
-#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11.hlsl"
+#line 1 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11.hlsl"
 
 
-#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Common.hlsl"
+#line 1 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Common.hlsl"
 
 cbuffer cbPerObject : register ( b0 ) 
 { 
@@ -39,7 +39,7 @@ uint GetTileIndex ( float2 ScreenPos )
     return uTileIndex ; 
 } 
 
-#line 5 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11.hlsl"
+#line 5 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11.hlsl"
 Texture2D g_TextureDiffuse : register ( t0 ) ; 
 Texture2D g_TextureNormal : register ( t1 ) ; 
 SamplerState g_Sampler : register ( s0 ) ; 

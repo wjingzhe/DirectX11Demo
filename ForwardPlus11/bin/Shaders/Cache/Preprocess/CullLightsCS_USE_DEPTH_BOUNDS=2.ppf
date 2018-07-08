@@ -1,7 +1,7 @@
-#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
+#line 1 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
 
 
-#line 1 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Common.hlsl"
+#line 1 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Common.hlsl"
 
 cbuffer cbPerObject : register ( b0 ) 
 { 
@@ -39,7 +39,7 @@ uint GetTileIndex ( float2 ScreenPos )
     return uTileIndex ; 
 } 
 
-#line 3 "G:\\SelfWorkSpace\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
+#line 3 "C:\\Users\\Jingz\\Desktop\\DirectX11Demo\\ForwardPlus11\\src\\Shaders\\ForwardPlus11Tiling.hlsl"
 
 
 #line 8
@@ -56,14 +56,12 @@ RWBuffer < uint > g_PerTileLightIndexBufferOut : register ( u0 ) ;
 
 #line 23
 
-groupshared uint ldsMaxZ ; 
-groupshared uint ldsMinZ ; 
+groupshared uint ldsMaxViewZ ; 
+groupshared uint ldsMinViewZ ; 
 
 
 groupshared uint ldsLightIndexCounter ; 
 groupshared uint ldsLightIndex [ 544 ] ; 
-
-groupshared float3 TopEqn , RightEqn , BottomEqn , LeftEqn ; 
 
 #line 37
 float3 CreatePlaneEquation ( float3 b , float3 c ) 
@@ -123,26 +121,26 @@ float ConvertProjDepthToView ( float z )
 
 void CalculateMinMaxDepthInLdsMSAA ( uint3 globalThreadIndex , uint depthBufferNumSamples ) 
 { 
-    float maxZForThisPixel = 0.f ; 
-    float minZForThisPixel = 3.402823466e+38F ; 
+    float maxViewZ = 0.f ; 
+    float minViewZ = 3.402823466e+38F ; 
     
 #line 122
     for ( uint sampleIndex = 0 ; sampleIndex < depthBufferNumSamples ; sampleIndex ++ ) 
     { 
         float depth = g_DepthTexture . Load ( uint2 ( globalThreadIndex . x , globalThreadIndex . y ) , sampleIndex ) . x ; 
         float viewPosZ = ConvertProjDepthToView ( depth ) ; 
-        if ( depth != 0.f ) 
+        if ( depth > 1E-5 ) 
         { 
-            maxZForThisPixel = max ( maxZForThisPixel , viewPosZ ) ; 
-            minZForThisPixel = min ( minZForThisPixel , viewPosZ ) ; 
+            maxViewZ = max ( maxViewZ , viewPosZ ) ; 
+            minViewZ = min ( minViewZ , viewPosZ ) ; 
         } 
     } 
     
-    uint zMaxForThisPixel = asuint ( maxZForThisPixel ) ; 
-    uint zMinForThisPixel = asuint ( minZForThisPixel ) ; 
+    uint zMaxForThisPixel = asuint ( maxViewZ ) ; 
+    uint zMinForThisPixel = asuint ( minViewZ ) ; 
     
-    InterlockedMax ( ldsMaxZ , zMaxForThisPixel ) ; 
-    InterlockedMin ( ldsMinZ , zMinForThisPixel ) ; 
+    InterlockedMax ( ldsMaxViewZ , zMaxForThisPixel ) ; 
+    InterlockedMin ( ldsMinViewZ , zMinForThisPixel ) ; 
 } 
 
 
@@ -160,54 +158,55 @@ void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex :
     if ( localIndexFlattened == 0 ) 
     { 
         
-        ldsMinZ = 0x7f7fffff ; 
-        ldsMaxZ = 0 ; 
+        ldsMinViewZ = 0x7f7fffff ; 
+        ldsMaxViewZ = 0 ; 
         
         ldsLightIndexCounter = 0 ; 
         
-#line 166
-        { 
-            
-            uint pxm = 16 * groupIndex . x ; 
-            uint pym = 16 * groupIndex . y ; 
-            uint pxp = 16 * ( groupIndex . x + 1 ) ; 
-            uint pyp = 16 * ( groupIndex . y + 1 ) ; 
-            
-            uint uWindowWidthEvenlyDivisibleByTileSize = 16 * GetNumTilesX ( ) ; 
-            uint uWindowHeightEvenlyDivisibleByTileSize = 16 * GetNumTilesY ( ) ; 
-            
-#line 177
-            float3 TopLeft = ConvertProjToView ( 
-            float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            1.0f , 1.0f ) 
-            ) . xyz ; 
-            
-            float3 TopRight = ConvertProjToView ( 
-            float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            1.0f , 1.0f ) 
-            ) . xyz ; 
-            
-            float3 BottomRight = ConvertProjToView ( 
-            float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            1.0f , 1.0f ) 
-            ) . xyz ; 
-            
-            float3 BottomLeft = ConvertProjToView ( 
-            float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
-            1.0f , 1.0f ) 
-            ) . xyz ; 
-            
-#line 205
-            TopEqn = CreatePlaneEquation ( TopLeft , TopRight ) ; 
-            RightEqn = CreatePlaneEquation ( TopRight , BottomRight ) ; 
-            BottomEqn = CreatePlaneEquation ( BottomRight , BottomLeft ) ; 
-            LeftEqn = CreatePlaneEquation ( BottomLeft , TopLeft ) ; 
-            
-        } 
+#line 167
+    } 
+    
+    float3 TopEqn , RightEqn , BottomEqn , LeftEqn ; 
+    { 
+        
+        uint pxm = 16 * groupIndex . x ; 
+        uint pym = 16 * groupIndex . y ; 
+        uint pxp = 16 * ( groupIndex . x + 1 ) ; 
+        uint pyp = 16 * ( groupIndex . y + 1 ) ; 
+        
+        uint uWindowWidthEvenlyDivisibleByTileSize = 16 * GetNumTilesX ( ) ; 
+        uint uWindowHeightEvenlyDivisibleByTileSize = 16 * GetNumTilesY ( ) ; 
+        
+#line 181
+        float3 TopLeft = ConvertProjToView ( 
+        float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        1.0f , 1.0f ) 
+        ) . xyz ; 
+        
+        float3 TopRight = ConvertProjToView ( 
+        float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        ( uWindowHeightEvenlyDivisibleByTileSize - pym ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        1.0f , 1.0f ) 
+        ) . xyz ; 
+        
+        float3 BottomRight = ConvertProjToView ( 
+        float4 ( pxp / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        1.0f , 1.0f ) 
+        ) . xyz ; 
+        
+        float3 BottomLeft = ConvertProjToView ( 
+        float4 ( pxm / ( float ) uWindowWidthEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        ( uWindowHeightEvenlyDivisibleByTileSize - pyp ) / ( float ) uWindowHeightEvenlyDivisibleByTileSize * 2.0f - 1.0f , 
+        1.0f , 1.0f ) 
+        ) . xyz ; 
+        
+#line 209
+        TopEqn = CreatePlaneEquation ( TopLeft , TopRight ) ; 
+        RightEqn = CreatePlaneEquation ( TopRight , BottomRight ) ; 
+        BottomEqn = CreatePlaneEquation ( BottomRight , BottomLeft ) ; 
+        LeftEqn = CreatePlaneEquation ( BottomLeft , TopLeft ) ; 
         
     } 
     
@@ -216,8 +215,8 @@ void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex :
     
 #line 222
     
-    float maxZ = 0.0f ; 
-    float minZ = 3.402823466e+38F ; 
+    float maxViewZ = 0.0f ; 
+    float minViewZ = 3.402823466e+38F ; 
     
 #line 227
     
@@ -227,8 +226,8 @@ void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex :
     
     
     GroupMemoryBarrierWithGroupSync ( ) ; 
-    maxZ = asfloat ( ldsMaxZ ) ; 
-    minZ = asfloat ( ldsMinZ ) ; 
+    maxViewZ = asfloat ( ldsMaxViewZ ) ; 
+    minViewZ = asfloat ( ldsMinViewZ ) ; 
     
     
     
@@ -244,7 +243,7 @@ void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex :
         if ( TestFrustumSides ( center . xyz , r , TopEqn , RightEqn , BottomEqn , LeftEqn ) ) 
         { 
             
-            if ( - center . z + minZ < r && center . z - maxZ < r ) 
+            if ( - center . z + minViewZ < r && center . z - maxViewZ < r ) 
             
 #line 255
             
@@ -276,7 +275,7 @@ void CullLightsCS ( uint3 globalIndex : SV_DispatchThreadID , uint3 localIndex :
         { 
             
             
-            if ( - center . z + minZ < r && center . z - maxZ < r ) 
+            if ( - center . z + minViewZ < r && center . z - maxViewZ < r ) 
             
 #line 287
             
