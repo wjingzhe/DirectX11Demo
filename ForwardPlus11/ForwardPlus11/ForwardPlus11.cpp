@@ -73,6 +73,7 @@ void CALLBACK OnFrameRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dI
 
 void RenderText();
 
+void InitApp();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -106,7 +107,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DXUTSetCallbackD3D11DeviceDestroyed(OnD3D11DestroyDevice);
 	DXUTSetCallbackD3D11FrameRender(OnFrameRender);
 
-
+	InitApp();
 	DXUTInit(true,true,NULL);//Parse the command line,show msgBoxes on error,no extra command line params
 	DXUTSetCursorSettings(true, true);
 	DXUTCreateWindow(L"TestTriangle v1.2");
@@ -227,27 +228,6 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(s_ForwardPlusRender.OnCreateDevice(pD3dDevice,&g_ShaderCache, SceneMin, SceneMax));
 
-	// Setup the camera's view parameters
-	XMVECTOR SceneCenter = 0.5f*(SceneMax + SceneMin);
-	XMVECTOR SceneExtents = 0.5f*(SceneMax - SceneMin);
-	XMVECTOR BoundaryMin = SceneCenter - 2.0f*SceneExtents;
-	XMVECTOR BoundaryMax = SceneCenter + 2.0f*SceneExtents;
-	XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
-
-	g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
-	XMVECTOR vEye = SceneCenter - XMVectorSet(0.67f*XMVectorGetX(SceneExtents),0.5f*XMVectorGetY(SceneExtents),0.0f,0.0f);
-	XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, 0.5f*XMVectorGetY(SceneExtents), 0.0f, 0.0f);
-	g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL,MOUSE_LEFT_BUTTON);//left_button can rotate camera
-	g_Camera.SetEnablePositionMovement(true);
-	g_Camera.SetViewParams(vEye, vLookAtPos);
-	g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
-		
-	XMFLOAT3 vBoundaryMin, vBoundaryMax;
-	XMStoreFloat3(&vBoundaryMin, BoundaryMin);
-	XMStoreFloat3(&vBoundaryMax, BoundaryMax);
-	g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
-
-
 	//Create state objects
 	D3D11_SAMPLER_DESC SamplerDesc;
 	ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
@@ -264,6 +244,30 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	TIMER_Init(pD3dDevice);
 
 	// Create render resource here
+
+	static bool bCameraInit = false;
+	if (!bCameraInit)
+	{
+		// Setup the camera's view parameters
+		XMVECTOR SceneCenter = 0.5f*(SceneMax + SceneMin);
+		XMVECTOR SceneExtents = 0.5f*(SceneMax - SceneMin);
+		XMVECTOR BoundaryMin = SceneCenter - 2.0f*SceneExtents;
+		XMVECTOR BoundaryMax = SceneCenter + 2.0f*SceneExtents;
+		XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
+
+		g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
+		XMVECTOR vEye = SceneCenter - XMVectorSet(0.67f*XMVectorGetX(SceneExtents), 0.5f*XMVectorGetY(SceneExtents), 0.0f, 0.0f);
+		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, 0.5f*XMVectorGetY(SceneExtents), 0.0f, 0.0f);
+		g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
+		g_Camera.SetEnablePositionMovement(true);
+		g_Camera.SetViewParams(vEye, vLookAtPos);
+		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
+
+		XMFLOAT3 vBoundaryMin, vBoundaryMax;
+		XMStoreFloat3(&vBoundaryMin, BoundaryMin);
+		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
+		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
+	}
 
 	static bool bFirstPass = true;
 
@@ -534,4 +538,9 @@ void RenderText()
 	//g_pTextHelper->DrawTextLine(L"Toggle GUI    : F1");
 
 	g_pTextHelper->End();
+}
+
+void InitApp()
+{
+
 }

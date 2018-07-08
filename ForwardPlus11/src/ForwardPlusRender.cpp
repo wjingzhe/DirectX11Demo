@@ -171,7 +171,8 @@ namespace ForwardPlus11
 		m_pDepthStencilView(nullptr),
 		m_pDepthStencilSRV(nullptr),
 
-		bFirstPass(true)
+		bShaderInited(false),
+		bIsLightInited(false)
 	{
 
 	}
@@ -317,8 +318,12 @@ namespace ForwardPlus11
 	{
 		HRESULT hr;
 
+		if (!bIsLightInited)
+		{
+			this->InitRandomLights(SceneMin, SceneMax);
+			bIsLightInited = true;
+		}
 
-		this->InitRandomLights(SceneMin, SceneMax);
 
 		D3D11_SUBRESOURCE_DATA InitData;
 
@@ -484,10 +489,10 @@ namespace ForwardPlus11
 		V_RETURN(pD3DDeive->CreateBlendState(&BlendStateDesc, &m_pDepthOnlyAlphaToCoverageBS));
 
 
-		if (bFirstPass)
+		if (!bShaderInited)
 		{
 			AddShaderToCache(pShaderCache);
-			bFirstPass = false;
+			bShaderInited = true;
 		}
 
 
@@ -554,6 +559,11 @@ namespace ForwardPlus11
 		ID3D11DepthStencilView* pDepthStencilView,
 		ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime, CDXUTSDKMesh** pSceneMeshes, int iCountMesh, CDXUTSDKMesh** pAlphaSceneMeshes, int iCountAlphaMesh)
 	{
+		if (!bShaderInited)
+		{
+			return;
+		}
+
 		// Default pixel shader
 		ID3D11PixelShader* pScenePS = m_pSceneNoAlphaTestAndLightCullPS;
 		ID3D11PixelShader* pAlphaScenePS = m_pSceneAlphaTestAndLightCullPS;

@@ -181,10 +181,11 @@ namespace ForwardPlus11
 
 		// Number of currently active lights
 		static const int g_iNumActivePointLights = 2048;
-		static const int g_iNumActiveSpotLights = 0;
+		static const int g_iNumActiveSpotLights = 2048;
 
-		bool bFirstPass;
+		bool bShaderInited;
 		bool bSolutionSized;
+		bool bIsLightInited;
 	};
 
 }
