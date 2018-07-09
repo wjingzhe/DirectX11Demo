@@ -28,7 +28,7 @@ groupshared uint ldsMinViewZ;
 groupshared uint ldsLightIndexCounter;
 groupshared uint ldsLightIndex[MAX_NUM_LIGHTS_PER_TILE];
 
-//groupshared float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
+groupshared float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
 
 //Helper functions
 
@@ -161,12 +161,9 @@ void CullLightsCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_G
 		ldsMaxViewZ = 0;
 #endif
 		ldsLightIndexCounter = 0;
-
-		
-
 	}
 
-	float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
+	//ViewOriginPoint-Tile-Frustum
 	{
 		// construct frustum for this tile
 		uint pxm = TILE_SIZE* groupIndex.x;
@@ -176,42 +173,124 @@ void CullLightsCS(uint3 globalIndex:SV_DispatchThreadID, uint3 localIndex : SV_G
 
 		uint uWindowWidthEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesX();
 		uint uWindowHeightEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesY();
+	
+		if (localIndexFlattened == 0)
+		{
+			//four corners of the tile,clockwise from top-left
+			float3 TopLeft = ConvertProjToView(
+				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
 
-		//four corners of the tile,clockwise from top-left
-		float3 TopLeft = ConvertProjToView(
-			float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-			(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				1.0f, 1.0f)
-		).xyz;
+			float3 TopRight = ConvertProjToView(
+				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
 
-		float3 TopRight = ConvertProjToView(
-			float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-			(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				1.0f, 1.0f)
-		).xyz;
+			TopEqn = CreatePlaneEquation(TopLeft, TopRight);
+		}
 
-		float3 BottomRight = ConvertProjToView(
-			float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-			(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				1.0f, 1.0f)
-		).xyz;
+		else if (localIndexFlattened == 1)
+		{
+			float3 TopRight = ConvertProjToView(
+				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
 
-		float3 BottomLeft = ConvertProjToView(
-			float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
-			(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
-				1.0f, 1.0f)
-		).xyz;
+			float3 BottomRight = ConvertProjToView(
+				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
 
+			RightEqn = CreatePlaneEquation(TopRight, BottomRight);
+		}
 
-		// create plane equation for the four sides of the frustum.
-		// which the positive half-space outside the frutum
-		// (and remember view space is left handed,so use the left-hand rule to determine cross produce direction)
-		TopEqn = CreatePlaneEquation(TopLeft, TopRight);
-		RightEqn = CreatePlaneEquation(TopRight, BottomRight);
-		BottomEqn = CreatePlaneEquation(BottomRight, BottomLeft);
-		LeftEqn = CreatePlaneEquation(BottomLeft, TopLeft);
+		else if (localIndexFlattened == 2)
+		{
+			float3 BottomRight = ConvertProjToView(
+				float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
+
+			float3 BottomLeft = ConvertProjToView(
+				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
+			BottomEqn = CreatePlaneEquation(BottomRight, BottomLeft);
+		}
+		else if (localIndexFlattened == 3)
+		{
+			float3 BottomLeft = ConvertProjToView(
+				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
+			float3 TopLeft = ConvertProjToView(
+				float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+				(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+					1.0f, 1.0f)
+			).xyz;
+
+			LeftEqn = CreatePlaneEquation(BottomLeft, TopLeft);
+		}
 
 	}
+
+
+
+
+	//float3 TopEqn, RightEqn, BottomEqn, LeftEqn;
+	//{
+	//	// construct frustum for this tile
+	//	uint pxm = TILE_SIZE* groupIndex.x;
+	//	uint pym = TILE_SIZE* groupIndex.y;
+	//	uint pxp = TILE_SIZE* (groupIndex.x + 1);
+	//	uint pyp = TILE_SIZE* (groupIndex.y + 1);
+
+	//	uint uWindowWidthEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesX();
+	//	uint uWindowHeightEvenlyDivisibleByTileSize = TILE_SIZE* GetNumTilesY();
+
+	//	//four corners of the tile,clockwise from top-left
+	//	float3 TopLeft = ConvertProjToView(
+	//		float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//		(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//			1.0f, 1.0f)
+	//	).xyz;
+
+	//	float3 TopRight = ConvertProjToView(
+	//		float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//		(uWindowHeightEvenlyDivisibleByTileSize - pym) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//			1.0f, 1.0f)
+	//	).xyz;
+
+	//	float3 BottomRight = ConvertProjToView(
+	//		float4(pxp / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//		(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//			1.0f, 1.0f)
+	//	).xyz;
+
+	//	float3 BottomLeft = ConvertProjToView(
+	//		float4(pxm / (float)uWindowWidthEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//		(uWindowHeightEvenlyDivisibleByTileSize - pyp) / (float)uWindowHeightEvenlyDivisibleByTileSize*2.0f - 1.0f,
+	//			1.0f, 1.0f)
+	//	).xyz;
+
+
+	//	// create plane equation for the four sides of the frustum.
+	//	// which the positive half-space outside the frutum
+	//	// (and remember view space is left handed,so use the left-hand rule to determine cross produce direction)
+	//	TopEqn = CreatePlaneEquation(TopLeft, TopRight);
+	//	RightEqn = CreatePlaneEquation(TopRight, BottomRight);
+	//	BottomEqn = CreatePlaneEquation(BottomRight, BottomLeft);
+	//	LeftEqn = CreatePlaneEquation(BottomLeft, TopLeft);
+
+	//}
 
 
 	GroupMemoryBarrierWithGroupSync();
