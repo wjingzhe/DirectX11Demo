@@ -63,7 +63,9 @@ namespace ForwardPlus11
 		void OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dImmediateContext, const CBaseCamera* pCBaseCamera, ID3D11RenderTargetView* pRenderTargetView, const DXGI_SURFACE_DESC* pBackBufferDesc,
 			ID3D11Texture2D* pDepthStencilTexture,
 			ID3D11DepthStencilView* pDepthStencilView,
-			ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime, CDXUTSDKMesh** pSceneMeshes, int iCountMesh, CDXUTSDKMesh** pAlphaSceneMeshes, int iCountAlphaMesh);
+			ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime = 0.0f,
+			CDXUTSDKMesh** pSceneMeshes = nullptr, int iCountMesh = 0, CDXUTSDKMesh** pAlphaSceneMeshes = nullptr,int iCountAlphaMesh = 0, 
+			int iNumActivePointLights = 0, int iNumActiveSpotLights = 0);
 
 		void ResizeSolution(UINT width,UINT height);
 
@@ -81,6 +83,15 @@ namespace ForwardPlus11
 		ID3D11ShaderResourceView* const * GetLightIndexBufferSRV() { return &m_pLightIndexBufferSRV; }
 		ID3D11UnorderedAccessView* const * GetLightIndexBufferUAV() { return &m_pLightIndexBufferUAV; }
 
+		void SetLightCullingEnable(bool bCullFlag)
+		{
+			m_bLightCullingEnabled = bCullFlag;
+		}
+
+		void SetLightCullingDepthBoundEnable(bool bDepthBound)
+		{
+			m_bDepthBoundsEnabled = bDepthBound;
+		}
 
 	protected:
 		void ReleaseAllD3D11COM(void);
@@ -183,9 +194,11 @@ namespace ForwardPlus11
 		static const int g_iNumActivePointLights = 2048;
 		static const int g_iNumActiveSpotLights = 2048;
 
-		bool bShaderInited;
-		bool bSolutionSized;
-		bool bIsLightInited;
+		bool m_bShaderInited;
+		bool m_bSolutionSized;
+		bool m_bIsLightInited;
+		bool m_bLightCullingEnabled;
+		bool m_bDepthBoundsEnabled;
 	};
 
 }

@@ -9,6 +9,7 @@
 #include "TriangleRender.h"
 #include "../src/ForwardPlusRender.h"
 #include <algorithm>
+#include "..\\..\\DXUT\\Optional\\DXUTSettingsDlg.h"
 
 using namespace DirectX;
 using namespace Triangle;
@@ -39,13 +40,51 @@ ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
 ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
 ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 
+//GUI
+static bool g_bRenderHUD = false;
+static bool g_bCD3DSettingsDlgActive = false;
+//Debug
+static bool g_bDebugDrawingEnabled = false;
+static bool g_bDebugDrawMethodOne = true;
+//Render
+static bool g_bLightCullingEnabled = true;
+static bool g_bDepthBoundsEnabled = true;
+
+
+
+//--------------------------------------------------------------------------------------
+// UI control IDs
+//--------------------------------------------------------------------------------------
+enum
+{
+	IDC_BUTTON_TOGGLEFULLSCREEN = 1,
+	IDC_BUTTON_CHANGEDEVICE,
+	IDC_CHECKBOX_ENABLE_LIGHT_DRAWING,
+	IDC_STATIC_NUM_POINT_LIGHTS,
+	IDC_SLIDER_NUM_POINT_LIGHTS,
+	IDC_STATIC_NUM_SPOT_LIGHTS,
+	IDC_SLIDER_NUM_SPOT_LIGHTS,
+	IDC_CHECKBOX_ENABLE_LIGHT_CULLING,
+	IDC_CHECKBOX_ENABLE_DEPTH_BOUNDS,
+	IDC_CHECKBOX_ENABLE_DEBUG_DRAWING,
+	IDC_RADIOBUTTON_DEBUG_DRAWING_ONE,
+	IDC_RADIOBUTTON_DEBUG_DRAWING_TWO,
+	IDC_TILE_DRAWING_GROUP,
+	IDC_NUM_CONTROL_IDS
+};
+
+// Number of currently active lights
+static int g_iNumActivePointLights = 2048;
+static int g_iNumActiveSpotLights = 2048;
 
 static float g_fMaxDistance = 500.0f;
 
 //CFirstPersonCamera g_Camera;
-CModelViewerCamera g_Camera;
-CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
-CDXUTTextHelper* g_pTextHelper = nullptr;
+static CModelViewerCamera	g_Camera;
+static AMD::HUD             g_HUD;
+static CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
+static CDXUTTextHelper*			g_pTextHelper = nullptr;
+CD3DSettingsDlg             g_D3dSettingsGUI;           // Device settings dialog
 
 
 LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
@@ -75,6 +114,9 @@ void RenderText();
 
 void InitApp();
 
+void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -93,6 +135,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	// Set DXUT callbacks
 
 	DXUTSetCallbackMsgProc(MsgProc);
+	DXUTSetCallbackKeyboard(OnKeyboard);
 	DXUTSetCallbackDeviceChanging(ModifyDeviceSettings);
 	DXUTSetCallbackFrameMove(OnFrameTimeUpdated);
 
@@ -149,6 +192,19 @@ LRESULT  CALLBACK MsgProc(HWND hWnd, UINT uMsg,WPARAM wParam, LPARAM lParam, boo
 	if (*pbNoFurtherProcessing)
 		return 0;
 
+	// Pass messages to settings dialog if its active
+	if (g_D3dSettingsGUI.IsActive())
+	{
+		g_D3dSettingsGUI.MsgProc(hWnd, uMsg, wParam, lParam);
+		return 0;
+	}
+
+	// Give the dialogs a chance to handle the message first
+	*pbNoFurtherProcessing = g_HUD.m_GUI.MsgProc(hWnd, uMsg, wParam, lParam);
+	if (*pbNoFurtherProcessing)
+		return 0;
+
+
 	// Pass all remaining windows message to camera ,sot it can respond to user input
 	// 常规按键处理
 	g_Camera.HandleMessages(hWnd, uMsg, wParam, lParam);
@@ -197,6 +253,24 @@ void OnFrameTimeUpdated(double fTotalTime, float fElaspedTime, void * pUserConte
 {
 	//目前update逻辑只有相机部分，并由相机去驱动场景变化
 	g_Camera.FrameMove(fElaspedTime);
+
+
+	// See if we need to use one of the debug drawing shaders instead
+	g_bDebugDrawingEnabled = g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->GetEnabled() &&
+		g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->GetChecked();
+	g_bDebugDrawMethodOne = g_HUD.m_GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_ONE)->GetEnabled() &&
+		g_HUD.m_GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_ONE)->GetChecked();
+
+	// And see if we need to use the no-cull pixel shader instead
+	g_bLightCullingEnabled = g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_CULLING)->GetEnabled() &&
+		g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_CULLING)->GetChecked();
+
+	// Determine which compute shader we should use
+	g_bDepthBoundsEnabled = g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEPTH_BOUNDS)->GetEnabled() &&
+		g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEPTH_BOUNDS)->GetChecked();
+
+	s_ForwardPlusRender.SetLightCullingEnable(g_bLightCullingEnabled);
+	s_ForwardPlusRender.SetLightCullingDepthBoundEnable(g_bDepthBoundsEnabled);
 }
 
 
@@ -242,6 +316,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	//create AMD_SDK resource here
 	TIMER_Init(pD3dDevice);
+	g_HUD.OnCreateDevice(pD3dDevice);
 
 	// Create render resource here
 
@@ -281,6 +356,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 
 	V_RETURN(g_DialogResourceManager.OnD3D11CreateDevice(pD3dDevice, pD3dImmediateContext));
+	V_RETURN(g_D3dSettingsGUI.OnD3D11CreateDevice(pD3dDevice));
 	g_pTextHelper = new CDXUTTextHelper(pD3dDevice, pD3dImmediateContext, &g_DialogResourceManager, TEXT_LINE_HEIGHT);
 
 	return hr;
@@ -291,6 +367,15 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwapChain, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 {
 	HRESULT hr;
+
+	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(g_D3dSettingsGUI.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
+
+	//Set the location and size of AMD standard HUD
+	g_HUD.m_GUI.SetLocation(pBackBufferSurfaceDesc->Width - AMD::HUD::iDialogWidth, 0);
+	g_HUD.m_GUI.SetSize(AMD::HUD::iDialogWidth, pBackBufferSurfaceDesc->Height);
+	g_HUD.OnResizedSwapChain(pBackBufferSurfaceDesc);
+
 
 	// Setup the camera's projection parameter
 	float fApsectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
@@ -309,8 +394,6 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	//s_TriangleRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_ForwardPlusRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 
-
-	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
 
 	return hr;
 }
@@ -332,6 +415,7 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 void OnD3D11DestroyDevice(void * pUserContext)
 {
 	g_DialogResourceManager.OnD3D11DestroyDevice();
+	g_D3dSettingsGUI.OnD3D11DestroyDevice();
 	SAFE_DELETE(g_pTextHelper);
 	DXUTGetGlobalResourceCache().OnDestroyDevice();
 
@@ -352,6 +436,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	
 	//AMD
 	g_ShaderCache.OnDestroyDevice();
+	g_HUD.OnDestroyDevice();
 	TIMER_Destroy();
 }
 
@@ -430,8 +515,17 @@ void ClearD3D11DeviceContext()
 // Render the scene using the D3D11 Device
 void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, double fTime, float fElapsedTime, void* pUserContext)
 {
+
 	// Reset the timer at start of frame
 	TIMER_Reset();
+	
+	// If the settings dialog is being shown, then render it instead of rendering the app's scene
+	if (g_D3dSettingsGUI.IsActive())
+	{
+		g_D3dSettingsGUI.OnRender(fElapsedTime);
+		return;
+	}
+
 
 	ClearD3D11DeviceContext();
 
@@ -466,13 +560,19 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDes = DXUTGetDXGIBackBufferSurfaceDesc();
 		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext,&g_Camera ,pRTV,pBackBufferSurfaceDes,
 			g_pDepthStencilTexture,g_pDepthStencilView,g_pDepthStencilSRV,
-			fElapsedTime, MeshArray.data(),1, AlphaMeshArray.data(),1);
+			fElapsedTime, MeshArray.data(),1, AlphaMeshArray.data(),1,g_iNumActivePointLights,g_iNumActiveSpotLights);
 
 		TIMER_End(); // Render
 
+
 		RenderText();
 
-		DXUT_EndPerfEvent();
+
+		if (g_bRenderHUD)
+		{
+			g_HUD.OnRender(fElapsedTime);
+		}
+
 	}
 	else
 	{
@@ -534,13 +634,125 @@ void RenderText()
 	swprintf_s(szBuf, 256, szFormat, fGpuTimeForwardRendering);
 	g_pTextHelper->DrawTextLine(szBuf);
 
-	//g_pTextHelper->SetInsertionPos(5, DXUTGetDXGIBackBufferSurfaceDesc()->Height - AMD::HUD::iElementDelta);
-	//g_pTextHelper->DrawTextLine(L"Toggle GUI    : F1");
+	g_pTextHelper->SetInsertionPos(5, DXUTGetDXGIBackBufferSurfaceDesc()->Height - AMD::HUD::iElementDelta);
+	g_pTextHelper->DrawTextLine(L"Toggle GUI    : F1");
 
 	g_pTextHelper->End();
 }
 
 void InitApp()
 {
+	g_D3dSettingsGUI.Init(&g_DialogResourceManager);
 
+
+	WCHAR szTemp[256];
+
+	D3DCOLOR DlgColor = 0x88888888;//Semi-transparent background for the dialog
+
+	auto& GUI = g_HUD.m_GUI;
+
+	GUI.Init(&g_DialogResourceManager);
+	GUI.SetBackgroundColors(DlgColor);
+	GUI.SetCallback(OnGUIEvent);
+
+	int iY = AMD::HUD::iElementDelta;
+
+	GUI.AddButton(IDC_BUTTON_TOGGLEFULLSCREEN, L"Toggle full screen", AMD::HUD::iElementOffset, iY, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, VK_F11);
+	GUI.AddButton(IDC_BUTTON_CHANGEDEVICE, L"Change device (F2)", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, VK_F2);
+
+	iY += AMD::HUD::iGroupDelta;
+
+	//Point Light
+	GUI.AddCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_DRAWING, L"Show Lights", AMD::HUD::iElementOffset, iY, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, false);
+	swprintf_s(szTemp, L"Active Point Lights : %d", g_iNumActivePointLights);
+	GUI.AddStatic(IDC_STATIC_NUM_POINT_LIGHTS, szTemp, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
+	GUI.AddSlider(IDC_SLIDER_NUM_POINT_LIGHTS, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 0, ForwardPlus11::MAX_NUM_LIGHTS, g_iNumActivePointLights, true);
+
+	swprintf_s(szTemp, L"Active Spot Lights : %d", g_iNumActiveSpotLights);
+	GUI.AddStatic(IDC_STATIC_NUM_SPOT_LIGHTS, szTemp, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
+	GUI.AddSlider(IDC_SLIDER_NUM_SPOT_LIGHTS, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 0, ForwardPlus11::MAX_NUM_LIGHTS, g_iNumActiveSpotLights);
+
+	iY += AMD::HUD::iGroupDelta;
+
+	GUI.AddCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_CULLING, L"Enable Light Culling", AMD::HUD::iElementOffset, iY, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, true);
+	GUI.AddCheckBox(IDC_CHECKBOX_ENABLE_DEPTH_BOUNDS, L"Enable Depth Bounds", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, true);
+	GUI.AddCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING, L"Show Lights Per Tile", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, false);
+	GUI.AddRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_ONE, IDC_TILE_DRAWING_GROUP, L"Radar Colors", 2 * AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth - AMD::HUD::iElementOffset, AMD::HUD::iElementHeight, true);
+	GUI.AddRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_TWO, IDC_TILE_DRAWING_GROUP, L"Grayscale", 2 * AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth - AMD::HUD::iElementOffset, AMD::HUD::iElementHeight, false);
+	GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_ONE)->SetEnabled(false);
+	GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_TWO)->SetEnabled(false);
+
+	iY += AMD::HUD::iGroupDelta;
+
+}
+
+
+//--------------------------------------------------------------------------------------
+// Handle key presses
+//--------------------------------------------------------------------------------------
+void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext)
+{
+	if (bKeyDown)
+	{
+		switch (nChar)
+		{
+		case VK_F1:
+			g_bRenderHUD = !g_bRenderHUD;
+			break;
+		}
+	}
+}
+
+//--------------------------------------------------------------------------------------
+// Handles the GUI events
+//--------------------------------------------------------------------------------------
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl * pControl, void * pUserContext)
+{
+	WCHAR szTemp[256];
+
+	switch (nControlID)
+	{
+	case IDC_BUTTON_TOGGLEFULLSCREEN:
+		DXUTToggleFullScreen();
+		break;
+	case IDC_BUTTON_CHANGEDEVICE:
+		g_D3dSettingsGUI.SetActive(!g_D3dSettingsGUI.IsActive());
+		break;
+	case IDC_SLIDER_NUM_POINT_LIGHTS:
+	{
+		// update
+		g_iNumActivePointLights = ((CDXUTSlider*)pControl)->GetValue();
+		swprintf_s(szTemp, L"Active Point Lights : %d", g_iNumActivePointLights);
+		g_HUD.m_GUI.GetStatic(IDC_STATIC_NUM_POINT_LIGHTS)->SetText(szTemp);
+	}
+	break;
+	case IDC_SLIDER_NUM_SPOT_LIGHTS:
+	{
+		// update
+		g_iNumActiveSpotLights = ((CDXUTSlider*)pControl)->GetValue();
+		swprintf_s(szTemp, L"Active Spot Lights : %d", g_iNumActiveSpotLights);
+		g_HUD.m_GUI.GetStatic(IDC_STATIC_NUM_SPOT_LIGHTS)->SetText(szTemp);
+	}
+	break;
+	case IDC_CHECKBOX_ENABLE_LIGHT_CULLING:
+	{
+		bool bLightCullingEnabled = g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_CULLING)->GetEnabled() &&
+			g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_LIGHT_CULLING)->GetChecked();
+		g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->SetEnabled(bLightCullingEnabled);
+		g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEPTH_BOUNDS)->SetEnabled(bLightCullingEnabled);
+		if (bLightCullingEnabled == false)
+		{
+			g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->SetChecked(false);
+		}
+	}
+	// intentional fall-through to IDC_ENABLE_DEBUG_DRAWING case
+	case IDC_CHECKBOX_ENABLE_DEBUG_DRAWING:
+	{
+		bool bTileDrawingEnabled = g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->GetEnabled() &&
+			g_HUD.m_GUI.GetCheckBox(IDC_CHECKBOX_ENABLE_DEBUG_DRAWING)->GetChecked();
+		g_HUD.m_GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_ONE)->SetEnabled(bTileDrawingEnabled);
+		g_HUD.m_GUI.GetRadioButton(IDC_RADIOBUTTON_DEBUG_DRAWING_TWO)->SetEnabled(bTileDrawingEnabled);
+	}
+	break;
+	}
 }

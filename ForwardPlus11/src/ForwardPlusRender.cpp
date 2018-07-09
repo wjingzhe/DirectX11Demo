@@ -113,7 +113,7 @@ namespace ForwardPlus11
 	ForwardPlusRender::ForwardPlusRender()
 		:m_uWidth(0),
 		m_uHeight(0),
-		bSolutionSized(false),
+		m_bSolutionSized(false),
 		//Buffers for light culling
 		m_pLightIndexBuffer(nullptr),
 		m_pLightIndexBufferSRV(nullptr),
@@ -170,8 +170,10 @@ namespace ForwardPlus11
 		m_pDepthStencilView(nullptr),
 		m_pDepthStencilSRV(nullptr),
 
-		bShaderInited(false),
-		bIsLightInited(false)
+		m_bShaderInited(false),
+		m_bIsLightInited(false),
+		m_bLightCullingEnabled(true),
+		m_bDepthBoundsEnabled(true)
 	{
 
 	}
@@ -317,10 +319,10 @@ namespace ForwardPlus11
 	{
 		HRESULT hr;
 
-		if (!bIsLightInited)
+		if (!m_bIsLightInited)
 		{
 			this->InitRandomLights(SceneMin, SceneMax);
-			bIsLightInited = true;
+			m_bIsLightInited = true;
 		}
 
 
@@ -488,10 +490,10 @@ namespace ForwardPlus11
 		V_RETURN(pD3DDeive->CreateBlendState(&BlendStateDesc, &m_pDepthOnlyAlphaToCoverageBS));
 
 
-		if (!bShaderInited)
+		if (!m_bShaderInited)
 		{
 			AddShaderToCache(pShaderCache);
-			bShaderInited = true;
+			m_bShaderInited = true;
 		}
 
 
@@ -556,21 +558,25 @@ namespace ForwardPlus11
 	void ForwardPlusRender::OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dImmediateContext, const CBaseCamera* pCBaseCamera, ID3D11RenderTargetView* pRenderTargetView, const DXGI_SURFACE_DESC* pBackBufferDesc,
 		ID3D11Texture2D* pDepthStencilTexture,
 		ID3D11DepthStencilView* pDepthStencilView,
-		ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime, CDXUTSDKMesh** pSceneMeshes, int iCountMesh, CDXUTSDKMesh** pAlphaSceneMeshes, int iCountAlphaMesh)
+		ID3D11ShaderResourceView* pDepthStencilSRV, float fElaspedTime, CDXUTSDKMesh** pSceneMeshes, int iCountMesh, CDXUTSDKMesh** pAlphaSceneMeshes, int iCountAlphaMesh,
+		int iNumActivePointLights, int iNumActiveSpotLights)
 	{
-		if (!bShaderInited)
+		if (!m_bShaderInited)
 		{
 			return;
 		}
 
 		// Default pixel shader
-		ID3D11PixelShader* pScenePS = m_pSceneNoAlphaTestAndLightCullPS;
-		ID3D11PixelShader* pAlphaScenePS = m_pSceneAlphaTestAndLightCullPS;
+		ID3D11PixelShader* pScenePS = m_bLightCullingEnabled?m_pSceneNoAlphaTestAndLightCullPS:m_pSceneNoAlphaTestAndNoLightCullPS;
+		ID3D11PixelShader* pAlphaScenePS = m_bLightCullingEnabled ? m_pSceneAlphaTestAndLightCullPS: m_pSceneAlphaTestAndNoLightCullPS;
+
+
 
 		// Default compute shader
 		bool bMsaaEnabled = (pBackBufferDesc->SampleDesc.Count > 1);
 		ID3D11ComputeShader* pLightCullCS = bMsaaEnabled ? m_pLightCullMSAA_CS : m_pLightCullCS;
-
+		pLightCullCS = m_bDepthBoundsEnabled ? pLightCullCS : m_pLightCullNoDepthCS;
+		pDepthStencilSRV = m_bDepthBoundsEnabled ? pDepthStencilSRV : nullptr;
 
 		// Clear the backBuffer and depth stencil
 		float ClearColor[4] = { 0.0013f,0.0015f,0.0050f,0.0f };
@@ -605,7 +611,7 @@ namespace ForwardPlus11
 		pPerFrame->m_mProjection = XMMatrixTranspose(mProj);
 		pPerFrame->m_mProjectionInv = XMMatrixTranspose(mInvProj);
 		pPerFrame->m_vCameraPosAndAlphaTest = XMLoadFloat4(&CameraPosAndAlphaTest);
-		pPerFrame->m_uNumLights = (((unsigned)g_iNumActiveSpotLights & 0xFFFFu) << 16) | ((unsigned)g_iNumActivePointLights & 0xFFFFu);
+		pPerFrame->m_uNumLights = (((unsigned)iNumActiveSpotLights & 0xFFFFu) << 16) | ((unsigned)iNumActivePointLights & 0xFFFFu);
 		pPerFrame->m_uWindowWidth = pBackBufferDesc->Width;
 		pPerFrame->m_uWindowHeight = pBackBufferDesc->Height;
 		pPerFrame->m_uMaxNumLightsPerTile = GetMaxNumLightsPerTile();
@@ -690,32 +696,33 @@ namespace ForwardPlus11
 				TIMER_End(); //Depth pre-pass
 
 
-
-				TIMER_Begin(0, L"Light culling");
+				if (m_bLightCullingEnabled)
 				{
-					// Cull lights on the GPU,using a Compute Shader
-					pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, pNullDSV); // null color buffer and depth-stencil
-					pD3dImmediateContext->VSSetShader(nullptr, nullptr, 0);// null vertex shader
-					pD3dImmediateContext->PSSetShader(nullptr, nullptr, 0); // null pixel shader
-					pD3dImmediateContext->PSSetShaderResources(0, 1, &pNullSRV);
-					pD3dImmediateContext->PSSetShaderResources(1, 1, &pNullSRV);
-					pD3dImmediateContext->PSSetSamplers(0, 1, &pNullSampler);
-					pD3dImmediateContext->CSSetShader(pLightCullCS, nullptr, 0);
-					pD3dImmediateContext->CSSetShaderResources(0, 1, GetPointLightBufferCenterAndRadiusSRV());
-					pD3dImmediateContext->CSSetShaderResources(1, 1, GetSpotLightBufferCenterAndRadiusSRV());
-					pD3dImmediateContext->CSSetShaderResources(2, 1, &pDepthStencilSRV);
-					pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, GetLightIndexBufferUAV(), nullptr); // target UAV;
-					pD3dImmediateContext->Dispatch(GetNumTilesX(), GetNumTilesY(), 1);
+					TIMER_Begin(0, L"Light culling");
+					{
+						// Cull lights on the GPU,using a Compute Shader
+						pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, pNullDSV); // null color buffer and depth-stencil
+						pD3dImmediateContext->VSSetShader(nullptr, nullptr, 0);// null vertex shader
+						pD3dImmediateContext->PSSetShader(nullptr, nullptr, 0); // null pixel shader
+						pD3dImmediateContext->PSSetShaderResources(0, 1, &pNullSRV);
+						pD3dImmediateContext->PSSetShaderResources(1, 1, &pNullSRV);
+						pD3dImmediateContext->PSSetSamplers(0, 1, &pNullSampler);
+						pD3dImmediateContext->CSSetShader(pLightCullCS, nullptr, 0);
+						pD3dImmediateContext->CSSetShaderResources(0, 1, GetPointLightBufferCenterAndRadiusSRV());
+						pD3dImmediateContext->CSSetShaderResources(1, 1, GetSpotLightBufferCenterAndRadiusSRV());
+						pD3dImmediateContext->CSSetShaderResources(2, 1, &pDepthStencilSRV);
+						pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, GetLightIndexBufferUAV(), nullptr); // target UAV;
+						pD3dImmediateContext->Dispatch(GetNumTilesX(), GetNumTilesY(), 1);
 
-					//clear state
-					pD3dImmediateContext->CSSetShader(nullptr, nullptr, 0);
-					pD3dImmediateContext->CSSetShaderResources(0, 1, &pNullSRV);
-					pD3dImmediateContext->CSSetShaderResources(1, 1, &pNullSRV);
-					pD3dImmediateContext->CSSetShaderResources(2, 1, &pNullSRV);
-					pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+						//clear state
+						pD3dImmediateContext->CSSetShader(nullptr, nullptr, 0);
+						pD3dImmediateContext->CSSetShaderResources(0, 1, &pNullSRV);
+						pD3dImmediateContext->CSSetShaderResources(1, 1, &pNullSRV);
+						pD3dImmediateContext->CSSetShaderResources(2, 1, &pNullSRV);
+						pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+					}
+					TIMER_End(); //Light culling
 				}
-				TIMER_End(); //Light culling
-
 
 				TIMER_Begin(0, L"Forward rendering");
 				{
@@ -772,18 +779,18 @@ namespace ForwardPlus11
 	{
 		m_uWidth = width;
 		m_uHeight = height;
-		bSolutionSized = true;
+		m_bSolutionSized = true;
 	}
 
 	unsigned ForwardPlusRender::GetNumTilesX()
 	{
-		assert(bSolutionSized);
+		assert(m_bSolutionSized);
 		return (unsigned)((m_uWidth + TILE_RES - 1) / (float)TILE_RES);
 	}
 
 	unsigned ForwardPlusRender::GetNumTilesY()
 	{
-		assert(bSolutionSized);
+		assert(m_bSolutionSized);
 		return (unsigned)((m_uHeight + TILE_RES - 1) / (float)TILE_RES);
 	}
 
