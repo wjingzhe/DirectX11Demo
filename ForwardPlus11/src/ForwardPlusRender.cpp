@@ -110,7 +110,6 @@ static SpotParams PackSpotParams(const XMFLOAT3& vLightDir, float fCosineOfConeA
 }
 namespace ForwardPlus11
 {
-
 	ForwardPlusRender::ForwardPlusRender()
 		:m_uWidth(0),
 		m_uHeight(0),

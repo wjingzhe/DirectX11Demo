@@ -364,7 +364,7 @@ void EndText11( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3d11DeviceConte
             g_FontBufferBytes11 = 0;
             return;
         }
-        DXUT_SetDebugName( g_pFontBuffer11, "DXUT Text11" );
+        DXUT_SetDebugName( g_pFontBuffer11, "DXUT FontBuffer" );
     }
 
     // Copy the sprites over
@@ -2312,13 +2312,13 @@ HRESULT CDXUTDialogResourceManager::OnD3D11CreateDevice( ID3D11Device* pd3dDevic
 
     // Create Shaders
     V_RETURN( pd3dDevice->CreateVertexShader( pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &m_pVSRenderUI11 ) );
-    DXUT_SetDebugName( m_pVSRenderUI11, "CDXUTDialogResourceManager" );
+    DXUT_SetDebugName( m_pVSRenderUI11, "CDXUTDialogResourceManagerVS" );
 
     V_RETURN( pd3dDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &m_pPSRenderUI11 ) );
-    DXUT_SetDebugName( m_pPSRenderUI11, "CDXUTDialogResourceManager" );
+    DXUT_SetDebugName( m_pPSRenderUI11, "CDXUTDialogResourceManagerPS" );
 
     V_RETURN( pd3dDevice->CreatePixelShader( pPSUntexBlob->GetBufferPointer(), pPSUntexBlob->GetBufferSize(), nullptr, &m_pPSRenderUIUntex11 ) );
-    DXUT_SetDebugName( m_pPSRenderUIUntex11, "CDXUTDialogResourceManager" );
+    DXUT_SetDebugName( m_pPSRenderUIUntex11, "CDXUTDialogResourceManagerUnTexPS" );
     
     // States
     D3D11_DEPTH_STENCIL_DESC DSDesc;

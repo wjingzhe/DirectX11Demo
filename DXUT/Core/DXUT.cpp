@@ -2332,13 +2332,14 @@ HRESULT DXUTCreateD3D11Views( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
         return hr;
     D3D11_TEXTURE2D_DESC backBufferSurfaceDesc;
     pBackBuffer->GetDesc( &backBufferSurfaceDesc );
+	pBackBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DXUT RenderTargetBuffer"), "DXUT RenderTargetBuffer");
 
     // Create the render target view
     hr = pd3dDevice->CreateRenderTargetView( pBackBuffer, nullptr, &pRTV );
     SAFE_RELEASE( pBackBuffer );
     if( FAILED( hr ) )
         return hr;
-    DXUT_SetDebugName( pRTV, "DXUT" );
+	pRTV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DXUT RenderTargetView"), "DXUT RenderTargetView");
     GetDXUTState().SetD3D11RenderTargetView( pRTV );
 
     if( pDeviceSettings->d3d11.AutoCreateDepthStencil )
@@ -2360,7 +2361,7 @@ HRESULT DXUTCreateD3D11Views( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
         hr = pd3dDevice->CreateTexture2D( &descDepth, nullptr, &pDepthStencil );
         if( FAILED( hr ) )
             return hr;
-        DXUT_SetDebugName( pDepthStencil, "DXUT" );
+		pDepthStencil->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DXUT DepthStencil Buffer"), "DXUT DepthStencil Buffer");
         GetDXUTState().SetD3D11DepthStencil( pDepthStencil );
 
         // Create the depth stencil view
@@ -2375,7 +2376,7 @@ HRESULT DXUTCreateD3D11Views( ID3D11Device* pd3dDevice, ID3D11DeviceContext* pd3
         hr = pd3dDevice->CreateDepthStencilView( pDepthStencil, &descDSV, &pDSV );
         if( FAILED( hr ) )
             return hr;
-        DXUT_SetDebugName( pDSV, "DXUT" );
+		pDSV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DXUT DepthStencilView"), "DXUT DepthStencilView");
         GetDXUTState().SetD3D11DepthStencilView( pDSV );
     }
 
@@ -2553,7 +2554,7 @@ HRESULT DXUTCreate3DEnvironment11()
         DXUT_ERR( L"CreateRasterizerState", hr );
         return DXUTERR_CREATINGDEVICE;
     }
-    DXUT_SetDebugName( pRS, "DXUT Default" );
+	pRS->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DXUT DefaultRasterize"), "DXUT DefaultRasterize");
     GetDXUTState().SetD3D11RasterizerState(pRS);
     pd3dImmediateContext->RSSetState(pRS);
 

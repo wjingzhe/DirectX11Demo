@@ -128,7 +128,7 @@ HRESULT CDXUTSDKMesh::CreateVertexBuffer( ID3D11Device* pd3dDevice, SDKMESH_VERT
         hr = pd3dDevice->CreateBuffer( &bufferDesc, &InitData, &pHeader->pVB11 );
         if (SUCCEEDED(hr))
         {
-            DXUT_SetDebugName(pHeader->pVB11, "CDXUTSDKMesh");
+            DXUT_SetDebugName(pHeader->pVB11, "CDXUTSDKMeshVertex");
         }
     }
 
@@ -163,7 +163,7 @@ HRESULT CDXUTSDKMesh::CreateIndexBuffer( ID3D11Device* pd3dDevice, SDKMESH_INDEX
         hr = pd3dDevice->CreateBuffer( &bufferDesc, &InitData, &pHeader->pIB11 );
         if (SUCCEEDED(hr))
         {
-            DXUT_SetDebugName(pHeader->pIB11, "CDXUTSDKMesh");
+            DXUT_SetDebugName(pHeader->pIB11, "CDXUTSDKMeshIndex");
         }
     }
 
