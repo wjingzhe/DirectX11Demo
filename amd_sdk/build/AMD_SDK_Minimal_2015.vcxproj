@@ -99,35 +99,39 @@
   <ItemGroup>
     <ClInclude Include="..\inc\AMD_SDK.h" />
     <ClInclude Include="..\inc\ShaderCacheSampleHelper.h" />
-    <ClInclude Include="..\src\AMD_Mesh.h" />
-    <ClInclude Include="..\src\Geometry.h" />
-    <ClInclude Include="..\src\HUD.h" />
-    <ClInclude Include="..\src\HelperFunctions.h" />
-    <ClInclude Include="..\src\LineRender.h" />
-    <ClInclude Include="..\src\Magnify.h" />
-    <ClInclude Include="..\src\MagnifyTool.h" />
-    <ClInclude Include="..\src\ShaderCache.h" />
-    <ClInclude Include="..\src\Sprite.h" />
-    <ClInclude Include="..\src\Timer.h" />
-    <ClInclude Include="..\src\crc.h" />
+    <ClInclude Include="..\source\AMD_Mesh.h" />
+    <ClInclude Include="..\source\crc.h" />
+    <ClInclude Include="..\source\Geometry.h" />
+    <ClInclude Include="..\source\HelperFunctions.h" />
+    <ClInclude Include="..\source\HUD.h" />
+    <ClInclude Include="..\source\LineRender.h" />
+    <ClInclude Include="..\source\Magnify.h" />
+    <ClInclude Include="..\source\MagnifyTool.h" />
+    <ClInclude Include="..\source\ShaderCache.h" />
+    <ClInclude Include="..\source\Sprite.h" />
+    <ClInclude Include="..\source\Timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\AMD_Mesh.cpp" />
-    <ClCompile Include="..\src\Geometry.cpp" />
-    <ClCompile Include="..\src\HUD.cpp" />
-    <ClCompile Include="..\src\HelperFunctions.cpp" />
-    <ClCompile Include="..\src\LineRender.cpp" />
-    <ClCompile Include="..\src\Magnify.cpp" />
-    <ClCompile Include="..\src\MagnifyTool.cpp" />
-    <ClCompile Include="..\src\ShaderCache.cpp" />
-    <ClCompile Include="..\src\ShaderCacheSampleHelper.cpp" />
-    <ClCompile Include="..\src\Sprite.cpp" />
-    <ClCompile Include="..\src\Timer.cpp" />
-    <ClCompile Include="..\src\crc.cpp" />
+    <ClCompile Include="..\source\AMD_Mesh.cpp" />
+    <ClCompile Include="..\source\crc.cpp" />
+    <ClCompile Include="..\source\Geometry.cpp" />
+    <ClCompile Include="..\source\HelperFunctions.cpp" />
+    <ClCompile Include="..\source\HUD.cpp" />
+    <ClCompile Include="..\source\LineRender.cpp" />
+    <ClCompile Include="..\source\Magnify.cpp" />
+    <ClCompile Include="..\source\MagnifyTool.cpp" />
+    <ClCompile Include="..\source\ShaderCache.cpp" />
+    <ClCompile Include="..\source\ShaderCacheSampleHelper.cpp" />
+    <ClCompile Include="..\source\Sprite.cpp" />
+    <ClCompile Include="..\source\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\Shaders\Line.hlsl" />
-    <None Include="..\src\Shaders\Sprite.hlsl" />
+    <None Include="..\source\Shaders\Line.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="..\source\Shaders\Sprite.hlsl">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

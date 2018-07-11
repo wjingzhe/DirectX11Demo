@@ -153,17 +153,20 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ForwardPlusRender.h" />
-    <ClInclude Include="GeometryHelper.h" />
+    <ClInclude Include="..\source\DeferredDecalRender.h" />
+    <ClInclude Include="..\source\ForwardPlusRender.h" />
+    <ClInclude Include="..\source\GeometryHelper.h" />
+    <ClInclude Include="..\source\TriangleRender.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ForwardPlus11.h" />
-    <ClInclude Include="TriangleRender.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ForwardPlusRender.cpp" />
-    <ClCompile Include="GeometryHelper.cpp" />
+    <ClCompile Include="..\source\DeferredDecalRender.cpp" />
+    <ClCompile Include="..\source\ForwardPlusRender.cpp" />
+    <ClCompile Include="..\source\GeometryHelper.cpp" />
+    <ClCompile Include="..\source\TriangleRender.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -171,7 +174,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ForwardPlus11.cpp" />
-    <ClCompile Include="TriangleRender.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ForwardPlus11.rc" />

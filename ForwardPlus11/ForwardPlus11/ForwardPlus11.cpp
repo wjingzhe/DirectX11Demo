@@ -6,8 +6,8 @@
 #include "../../DXUT/Core/DXUT.h"
 #include "../../DXUT/Optional/DXUTcamera.h"
 #include "../../DXUT/Optional/SDKmisc.h"
-#include "TriangleRender.h"
-#include "../src/ForwardPlusRender.h"
+#include "../source/TriangleRender.h"
+#include "../source/ForwardPlusRender.h"
 #include <algorithm>
 #include "..\\..\\DXUT\\Optional\\DXUTSettingsDlg.h"
 

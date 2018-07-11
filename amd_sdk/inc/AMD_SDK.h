@@ -33,23 +33,23 @@
 #define VENDOR_ID_INTEL     (0x8086)
 
 // DXUT helper code
-#include "..\\..\\DXUT\\Core\\DXUT.h"
-#include "..\\..\\DXUT\\Core\\DXUTmisc.h"
-#include "..\\..\\DXUT\\Optional\\DXUTgui.h"
-#include "..\\..\\DXUT\\Optional\\SDKmisc.h"
-#include "..\\..\\DXUT\\Optional\\SDKMesh.h"
+#include "../../DXUT/Core/DXUT.h"
+#include "../../DXUT/Core/DXUTmisc.h"
+#include "../../DXUT/Optional/DXUTgui.h"
+#include "../../DXUT/Optional/SDKmisc.h"
+#include "../../DXUT/Optional/SDKMesh.h"
 
 // AMD helper classes and functions
-#include "..\\src\\Timer.h"
-#include "..\\src\\ShaderCache.h"
-#include "..\\src\\HelperFunctions.h"
-#include "..\\src\\Sprite.h"
-#include "..\\src\\Magnify.h"
-#include "..\\src\\MagnifyTool.h"
-#include "..\\src\\HUD.h"
-#include "..\\src\\Geometry.h"
-#include "..\\src\\LineRender.h"
-#include "..\\src\\AMD_Mesh.h"
+#include "../source/Timer.h"
+#include "../source/ShaderCache.h"
+#include "../source/HelperFunctions.h"
+#include "../source/Sprite.h"
+#include "../source/Magnify.h"
+#include "../source/MagnifyTool.h"
+#include "../source/HUD.h"
+#include "../source/Geometry.h"
+#include "../source/LineRender.h"
+#include "../source/AMD_Mesh.h"
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))

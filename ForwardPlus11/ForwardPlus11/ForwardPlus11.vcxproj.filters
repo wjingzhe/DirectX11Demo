@@ -33,13 +33,16 @@
     <ClInclude Include="ForwardPlus11.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GeometryHelper.h">
+    <ClInclude Include="..\source\DeferredDecalRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TriangleRender.h">
+    <ClInclude Include="..\source\ForwardPlusRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ForwardPlusRender.h">
+    <ClInclude Include="..\source\GeometryHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\TriangleRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,13 +53,16 @@
     <ClCompile Include="ForwardPlus11.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeometryHelper.cpp">
+    <ClCompile Include="..\source\DeferredDecalRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TriangleRender.cpp">
+    <ClCompile Include="..\source\ForwardPlusRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ForwardPlusRender.cpp">
+    <ClCompile Include="..\source\GeometryHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\TriangleRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

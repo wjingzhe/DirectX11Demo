@@ -30,7 +30,7 @@
 //
 // Assumption, relies on following directory structure:
 //
-// SolutionDir\..\src\Shaders
+// SolutionDir\..\source\Shaders
 //--------------------------------------------------------------------------------------
 
 
@@ -51,12 +51,12 @@ using namespace AMD;
 // The done event handle
 static HANDLE   s_hDoneEvent = 0;
 
-static const wchar_t *FXC_PATH_STRING_LOCAL = L"\\src\\Shaders\\fxc.exe";
-static const wchar_t *DEV_PATH_STRING_LOCAL = L"\\src\\Shaders\\Dev.exe";
-static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_10_SDK = L"\\Windows Kits\\10\\bin\\x64\\fxc.exe";
-static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_8_1_SDK = L"\\Windows Kits\\8.1\\bin\\x64\\fxc.exe";
-static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_8_0_SDK = L"\\Windows Kits\\8.0\\bin\\x64\\fxc.exe";
-static const wchar_t *DEV_PATH_STRING_INSTALLED = L"\\Dev.exe";
+static const wchar_t *FXC_PATH_STRING_LOCAL = L"/src/Shaders/fxc.exe";
+static const wchar_t *DEV_PATH_STRING_LOCAL = L"/src/Shaders/Dev.exe";
+static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_10_SDK = L"/Windows Kits/10/bin/x64/fxc.exe";
+static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_8_1_SDK = L"/Windows Kits/8.1/bin/x64/fxc.exe";
+static const wchar_t *FXC_PATH_STRING_INSTALLED_WIN_8_0_SDK = L"/Windows Kits/8.0/bin/x64/fxc.exe";
+static const wchar_t *DEV_PATH_STRING_INSTALLED = L"/Dev.exe";
 
 //--------------------------------------------------------------------------------------
 // Constructor
@@ -181,7 +181,7 @@ ShaderCache::ShaderCache( const SHADER_AUTO_RECOMPILE_TYPE i_keAutoRecompileTouc
     PathCombine( m_wsWorkingDir, wsWorkingDir, L"..\\bin" );
     swprintf_s( m_wsUnicodeWorkingDir, L"%s%s", L"", m_wsWorkingDir );//"\\\\?\\" jingz 这段字符是怎么回事
 
-    PathCombine( m_wsShaderSourceDir, m_wsWorkingDir, L"..\\src\\Shaders" );
+    PathCombine( m_wsShaderSourceDir, m_wsWorkingDir, L"..\\source\\Shaders" );
     swprintf_s( m_wsUnicodeShaderSourceDir, L"%s%s", L"", m_wsShaderSourceDir );//"\\\\?\\"
 
     PathCombine( m_wsAmdSdkDir, m_wsWorkingDir, L"..\\..\\AMD_SDK" );
