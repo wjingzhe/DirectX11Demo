@@ -53,10 +53,10 @@ namespace ForwardPlus11
 		static void CalculateSceneMinMax(CDXUTSDKMesh& Mesh, DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
 		static void InitRandomLights(const DirectX::XMVECTOR& BBoxMin, const DirectX::XMVECTOR& BBoxMax);
 
-		void AddShaderToCache(AMD::ShaderCache* pShaderCache);
+		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 
 		//various hook functions
-		HRESULT OnCreateDevice(ID3D11Device* pD3DDeive, AMD::ShaderCache* pShaderCache, DirectX::XMVECTOR SceneMin, DirectX::XMVECTOR SceneMax);
+		HRESULT OnCreateDevice(ID3D11Device* pD3DDeive, DirectX::XMVECTOR SceneMin, DirectX::XMVECTOR SceneMax);
 		void OnDestroyDevice(void * pUserContext);
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3DDevie, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 		void OnReleasingSwapChain();

@@ -246,76 +246,82 @@ namespace ForwardPlus11
 
 	}
 
-	void ForwardPlusRender::AddShaderToCache(AMD::ShaderCache * pShaderCache)
+	void ForwardPlusRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
 	{
-		//Ensure all shaders(and input layouts) are released
-		ReleaseShaderCachedCOM();
-
-		AMD::ShaderCache::Macro ShaderMacros[2];
-		wcscpy_s(ShaderMacros[0].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_ALPHA_TEST");
-		wcscpy_s(ShaderMacros[1].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_LIGHT_CULLING");
-
-
-
-		const D3D11_INPUT_ELEMENT_DESC layout[] =
+		if (!m_bShaderInited)
 		{
-			{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,24,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 }
-		};
+			//Ensure all shaders(and input layouts) are released
+			ReleaseShaderCachedCOM();
 
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePositionOnlyVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderScenePositionOnlyVS",
-			L"ForwardPlus11.hlsl", 0, nullptr, &m_pPositionOnlyInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
-
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePositionAndTextureVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderScenePositionAndTexVS",
-			L"ForwardPlus11.hlsl", 0, nullptr, &m_pPositionAndTexInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
-
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneMeshVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderSceneVS",
-			L"ForwardPlus11.hlsl", 0, nullptr, &m_pMeshInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
-
-
-		//Pixel Shader
-		ShaderMacros[0].m_iValue = 0;
-		ShaderMacros[1].m_iValue = 1;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneNoAlphaTestAndLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
-
-		ShaderMacros[0].m_iValue = 1;
-		ShaderMacros[1].m_iValue = 1;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestAndLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
-
-		ShaderMacros[0].m_iValue = 0;
-		ShaderMacros[1].m_iValue = 0;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneNoAlphaTestAndNoLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
-
-		ShaderMacros[0].m_iValue = 1;
-		ShaderMacros[1].m_iValue = 0;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestAndNoLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
-
-
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestOnlyPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderSceneAlphaTestOnlyPS",
-			L"ForwardPlus11.hlsl", 0, nullptr, nullptr, nullptr, 0);
+			AMD::ShaderCache::Macro ShaderMacros[2];
+			wcscpy_s(ShaderMacros[0].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_ALPHA_TEST");
+			wcscpy_s(ShaderMacros[1].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_LIGHT_CULLING");
 
 
 
-		AMD::ShaderCache::Macro ShaderMacroUseDepthBounds;
-		wcscpy_s(ShaderMacroUseDepthBounds.m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_DEPTH_BOUNDS");
-		// Compute Shader
-		ShaderMacroUseDepthBounds.m_iValue = 1;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+			const D3D11_INPUT_ELEMENT_DESC layout[] =
+			{
+				{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+				{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
+				{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,24,D3D11_INPUT_PER_VERTEX_DATA,0 },
+				{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 }
+			};
 
-		ShaderMacroUseDepthBounds.m_iValue = 2;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullMSAA_CS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePositionOnlyVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderScenePositionOnlyVS",
+				L"ForwardPlus11.hlsl", 0, nullptr, &m_pPositionOnlyInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
-		ShaderMacroUseDepthBounds.m_iValue = 0;
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullNoDepthCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePositionAndTextureVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderScenePositionAndTexVS",
+				L"ForwardPlus11.hlsl", 0, nullptr, &m_pPositionAndTexInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneMeshVS, AMD::ShaderCache::SHADER_TYPE_VERTEX, L"vs_5_0", L"RenderSceneVS",
+				L"ForwardPlus11.hlsl", 0, nullptr, &m_pMeshInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+
+
+			//Pixel Shader
+			ShaderMacros[0].m_iValue = 0;
+			ShaderMacros[1].m_iValue = 1;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneNoAlphaTestAndLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
+
+			ShaderMacros[0].m_iValue = 1;
+			ShaderMacros[1].m_iValue = 1;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestAndLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
+
+			ShaderMacros[0].m_iValue = 0;
+			ShaderMacros[1].m_iValue = 0;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneNoAlphaTestAndNoLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
+
+			ShaderMacros[0].m_iValue = 1;
+			ShaderMacros[1].m_iValue = 0;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestAndNoLightCullPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderScenePS", L"ForwardPlus11.hlsl", 2, ShaderMacros, nullptr, nullptr, 0);
+
+
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pSceneAlphaTestOnlyPS, AMD::ShaderCache::SHADER_TYPE_PIXEL, L"ps_5_0", L"RenderSceneAlphaTestOnlyPS",
+				L"ForwardPlus11.hlsl", 0, nullptr, nullptr, nullptr, 0);
+
+
+
+			AMD::ShaderCache::Macro ShaderMacroUseDepthBounds;
+			wcscpy_s(ShaderMacroUseDepthBounds.m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"USE_DEPTH_BOUNDS");
+			// Compute Shader
+			ShaderMacroUseDepthBounds.m_iValue = 1;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+
+			ShaderMacroUseDepthBounds.m_iValue = 2;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullMSAA_CS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+
+			ShaderMacroUseDepthBounds.m_iValue = 0;
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pLightCullNoDepthCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CullLightsCS", L"ForwardPlus11Tiling.hlsl", 1, &ShaderMacroUseDepthBounds, nullptr, nullptr, 0);
+
+
+			m_bShaderInited = true;
+		}
 
 	}
 
 
 
 
-	HRESULT ForwardPlusRender::OnCreateDevice(ID3D11Device * pD3DDeive, AMD::ShaderCache* pShaderCache, XMVECTOR SceneMin, XMVECTOR SceneMax)
+	HRESULT ForwardPlusRender::OnCreateDevice(ID3D11Device * pD3DDeive, XMVECTOR SceneMin, XMVECTOR SceneMax)
 	{
 		HRESULT hr;
 
@@ -489,21 +495,12 @@ namespace ForwardPlus11
 		BlendStateDesc.AlphaToCoverageEnable = TRUE;
 		V_RETURN(pD3DDeive->CreateBlendState(&BlendStateDesc, &m_pDepthOnlyAlphaToCoverageBS));
 
-
-		if (!m_bShaderInited)
-		{
-			AddShaderToCache(pShaderCache);
-			m_bShaderInited = true;
-		}
-
-
 		return hr;
 	}
 
 	void ForwardPlusRender::OnDestroyDevice(void * pUserContext)
 	{
 		ReleaseAllD3D11COM();
-
 	}
 
 	HRESULT ForwardPlusRender::OnResizedSwapChain(ID3D11Device * pD3DDevie, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
@@ -659,6 +656,7 @@ namespace ForwardPlus11
 					pD3dImmediateContext->PSSetShaderResources(0, 1, &pNullSRV);
 					pD3dImmediateContext->PSSetShaderResources(1, 1, &pNullSRV);
 					pD3dImmediateContext->PSSetSamplers(0, 1, &pNullSampler);
+					pD3dImmediateContext->RSSetState(nullptr);
 
 					for (int i = 0; i < iCountMesh; ++i)
 					{
@@ -860,6 +858,7 @@ namespace ForwardPlus11
 
 
 		ReleaseShaderCachedCOM();
+
 	}
 	void ForwardPlusRender::ReleaseShaderCachedCOM(void)
 	{
@@ -884,6 +883,8 @@ namespace ForwardPlus11
 		SAFE_RELEASE(m_pPositionOnlyInputLayout);
 		SAFE_RELEASE(m_pPositionAndTexInputLayout);
 		SAFE_RELEASE(m_pMeshInputLayout);
+
+		m_bShaderInited = false;
 	}
 
 }
