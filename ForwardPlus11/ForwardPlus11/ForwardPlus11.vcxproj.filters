@@ -80,16 +80,16 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\Shaders\DrawBasicGeometry.hlsl">
+    <None Include="..\source\Shaders\DrawBasicGeometry.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\src\Shaders\ForwardPlus11.hlsl">
+    <None Include="..\source\Shaders\ForwardPlus11.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\src\Shaders\ForwardPlus11Common.hlsl">
+    <None Include="..\source\Shaders\ForwardPlus11Common.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="..\src\Shaders\ForwardPlus11Tiling.hlsl">
+    <None Include="..\source\Shaders\ForwardPlus11Tiling.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

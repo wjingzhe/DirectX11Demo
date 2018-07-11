@@ -8,6 +8,7 @@
 #include "../../DXUT/Optional/SDKmisc.h"
 #include "../source/TriangleRender.h"
 #include "../source/ForwardPlusRender.h"
+#include "../source/DeferredDecalRender.h"
 #include <algorithm>
 #include "..\\..\\DXUT\\Optional\\DXUTSettingsDlg.h"
 
@@ -22,6 +23,7 @@ static const int TEXT_LINE_HEIGHT = 15;
 
 static TriangleRender s_TriangleRender;
 static ForwardPlus11::ForwardPlusRender s_ForwardPlusRender;
+static PostProcess::DeferredDecalRender s_DeferredDecalRender;
 
 // Direct3D 11 resources
 CDXUTSDKMesh g_SceneMesh;
@@ -50,7 +52,7 @@ static bool g_bDebugDrawMethodOne = true;
 static bool g_bLightCullingEnabled = true;
 static bool g_bDepthBoundsEnabled = true;
 
-
+static bool s_bFirstPass = true;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -75,7 +77,7 @@ enum
 
 // Number of currently active lights
 static int g_iNumActivePointLights = 2048;
-static int g_iNumActiveSpotLights = 2048;
+static int g_iNumActiveSpotLights = 0;
 
 static float g_fMaxDistance = 500.0f;
 
@@ -152,7 +154,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	InitApp();
 	DXUTInit(true,true,NULL);//Parse the command line,show msgBoxes on error,no extra command line params
-	DXUTSetCursorSettings(true, true);
+	DXUTSetCursorSettings(true, false);
 	DXUTCreateWindow(L"TestTriangle v1.2");
 
 
@@ -300,7 +302,8 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	g_SceneAlphaMesh.Create(pD3dDevice, L"sponza\\sponza_alpha.sdkmesh",nullptr);
 	g_SceneMesh.CalculateMeshMinMax(&SceneMin, &SceneMax);
 
-	V_RETURN(s_ForwardPlusRender.OnCreateDevice(pD3dDevice,&g_ShaderCache, SceneMin, SceneMax));
+	V_RETURN(s_ForwardPlusRender.OnCreateDevice(pD3dDevice, SceneMin, SceneMax));
+	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 
 	//Create state objects
 	D3D11_SAMPLER_DESC SamplerDesc;
@@ -342,16 +345,19 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMin, BoundaryMin);
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
+
+		bCameraInit = true;
 	}
 
-	static bool bFirstPass = true;
-
 	// Generate shaders ( this is an async operation - call AMD::ShaderCache::ShadersReady() to find out if they are complete)
-	if (bFirstPass)
+	if (s_bFirstPass)
 	{
-		g_ShaderCache.GenerateShaders(AMD::ShaderCache::CREATE_TYPE_COMPILE_CHANGES);//Only compile shaders that have changed(development mode)
+		s_ForwardPlusRender.AddShadersToCache(&g_ShaderCache);
+		s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
 
-		bFirstPass = false;
+		g_ShaderCache.GenerateShaders(AMD::ShaderCache::CREATE_TYPE_USE_CACHED);//Only compile shaders that have changed(development mode)
+
+		s_bFirstPass = false;
 	}
 
 
@@ -392,8 +398,8 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 
 	//jingz todo
 	//s_TriangleRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
-	s_ForwardPlusRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
-
+	V_RETURN(s_ForwardPlusRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
+	V_RETURN(s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
 
 	return hr;
 }
@@ -408,6 +414,7 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 
 	//s_TriangleRender.OnReleasingSwapChain();
 	s_ForwardPlusRender.OnReleasingSwapChain();
+	s_DeferredDecalRender.OnReleasingSwapChain();
 
 	g_DialogResourceManager.OnD3D11ReleasingSwapChain();
 }
@@ -433,11 +440,14 @@ void OnD3D11DestroyDevice(void * pUserContext)
 
 	//s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
 	s_ForwardPlusRender.OnDestroyDevice(pUserContext);
+	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
 	
 	//AMD
 	g_ShaderCache.OnDestroyDevice();
 	g_HUD.OnDestroyDevice();
 	TIMER_Destroy();
+
+	s_bFirstPass = true;
 }
 
 
@@ -543,7 +553,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 	pD3dImmediateContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
 	//Render or objects here..
-	if (g_ShaderCache.ShadersReady(true))
+	if (g_ShaderCache.ShadersReady(false))
 	{
 		TIMER_Begin(0, L"Render");
 		//render triangle for debug
@@ -558,9 +568,12 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		AlphaMeshArray.push_back(&g_SceneAlphaMesh);
 
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDes = DXUTGetDXGIBackBufferSurfaceDesc();
-		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext,&g_Camera ,pRTV,pBackBufferSurfaceDes,
-			g_pDepthStencilTexture,g_pDepthStencilView,g_pDepthStencilSRV,
-			fElapsedTime, MeshArray.data(),1, AlphaMeshArray.data(),1,g_iNumActivePointLights,g_iNumActiveSpotLights);
+		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDes,
+			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
+			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
+
+
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
 
 		TIMER_End(); // Render
 
@@ -579,8 +592,6 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		// Render shader cache progress if still processing
 		pD3dImmediateContext->OMSetRenderTargets(1, (ID3D11RenderTargetView*const*)&pRTV, g_pDepthStencilView);
 		g_ShaderCache.RenderProgress(g_pTextHelper, 15, XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f));
-
-		Sleep(1);
 	}
 
 }
