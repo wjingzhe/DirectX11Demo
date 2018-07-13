@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "DeferredDecalRender.h"
 using namespace DirectX;
 

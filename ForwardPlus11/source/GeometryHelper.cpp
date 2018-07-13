@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "GeometryHelper.h"
 #include <utility>
 #include <algorithm>

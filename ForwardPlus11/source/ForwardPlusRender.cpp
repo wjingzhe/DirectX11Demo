@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ForwardPlusRender.h"
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTcamera.h"

@@ -1,7 +1,6 @@
 // TestTriangle.cpp : Defines the entry point for the application.
 //
 
-#include "stdafx.h"
 #include "ForwardPlus11.h"
 #include "../../DXUT/Core/DXUT.h"
 #include "../../DXUT/Optional/DXUTcamera.h"

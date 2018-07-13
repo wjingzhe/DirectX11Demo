@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TriangleRender.h"
 using namespace DirectX;
 
