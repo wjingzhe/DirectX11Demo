@@ -29,9 +29,18 @@ public:
 
 #pragma pack(pop)
 
+	// Direct3D 11 resources
 
-	ID3D11Buffer* g_pConstantBufferPerObject = nullptr;
-	ID3D11Buffer* g_pConstantBufferPerFrame = nullptr;
+	//Rasterize states
+	ID3D11RasterizerState* m_pCullingBackRS = nullptr;
+
+	// Depth stencil states
+	ID3D11DepthStencilState* m_pDepthStencilDefaultDS = nullptr;
+
+	// Blend states 
+	ID3D11BlendState* m_pOpaqueState = nullptr;
+	ID3D11BlendState* m_pDepthOnlyState = nullptr;//No color pass can be writen
+	ID3D11BlendState* m_pDepthOnlyAndAlphaToCoverageState = nullptr;
 
 	TriangleRender();
 	~TriangleRender();
@@ -57,7 +66,13 @@ public:
 	ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
 	ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
 	ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
+	ID3D11Buffer* m_pConstantBufferPerObject = nullptr;
+	ID3D11Buffer* m_pConstantBufferPerFrame = nullptr;
+	ID3D11SamplerState* m_pSamplerLinear = nullptr;
 
 protected:
+
+	void ReleaseAllD3D11COM(void);
+
 private:
 };

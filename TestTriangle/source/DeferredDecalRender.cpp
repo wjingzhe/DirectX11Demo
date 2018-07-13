@@ -109,7 +109,7 @@ namespace PostProcess
 		DepthStencilDesc.StencilEnable = true;
 		DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 		DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_LESS;
+		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_GREATER;
 		DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 		DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 		DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
@@ -179,7 +179,7 @@ namespace PostProcess
 		pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 		pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
 		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthAlwaysAndStencilOnlyOneTime, 1);
-		float BlendFactor[1] = { 0.0f };
+		float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 		pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
 		pD3dImmediateContext->RSSetState(nullptr);
 

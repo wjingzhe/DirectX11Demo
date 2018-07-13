@@ -12,10 +12,12 @@
 
 using namespace DirectX;
 
-#ifdef Triangle
+//#define TRIANGLE
+
+#ifdef TRIANGLE
 static TriangleRender s_TriangleRender;
 #else
-static PostProcess::DeferredDecalRender s_TriangleRender;
+static PostProcess::DeferredDecalRender s_DeferredDecalRender;
 #endif
 
 
@@ -26,24 +28,6 @@ static PostProcess::DeferredDecalRender s_TriangleRender;
 static AMD::ShaderCache g_ShaderCache;
 
 
-// Direct3D 11 resources
-
-
-
-
-
-// Blend states 
-ID3D11BlendState* g_pOpaqueState = nullptr;
-ID3D11BlendState* g_pDepthOnlyState = nullptr;//No color pass can be writen
-ID3D11BlendState* g_pDepthOnlyAndAlphaToCoverageState = nullptr;
-
-
-//Rasterize states
-ID3D11RasterizerState* g_pCullingBackRS = nullptr;
-
-// Depth stencil states
-ID3D11DepthStencilState* g_pDepthStencilDefaultDS = nullptr;
-ID3D11DepthStencilState* g_pDepthEqualAndDisableDepthWriteDS = nullptr;
 // Depth stencil data
 ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
 ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
@@ -54,7 +38,6 @@ static float g_fMaxDistance = 500.0f;
 
 //CFirstPersonCamera g_Camera;
 CModelViewerCamera g_Camera;
-ID3D11SamplerState* g_pSamplerLinear = nullptr;
 
 
 LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
@@ -220,86 +203,16 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	
 
 	//load the scene mesh
+
+#ifdef TRIANGLE
 	s_TriangleRender.GenerateMeshData();
 	TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
 	V_RETURN(s_TriangleRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
-
-
-
-	//Create state objects
-	D3D11_SAMPLER_DESC SamplerDesc;
-	ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
-	SamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	SamplerDesc.AddressU = SamplerDesc.AddressV = SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	SamplerDesc.MaxAnisotropy = 16;
-	SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &g_pSamplerLinear));
-	DXUT_SetDebugName(g_pSamplerLinear, "Linear");
-
-
-
-
-	// Create blend states
-	D3D11_BLEND_DESC BlendStateDesc;
-	BlendStateDesc.AlphaToCoverageEnable = FALSE;
-	BlendStateDesc.IndependentBlendEnable = FALSE;
-	BlendStateDesc.RenderTarget[0].BlendEnable = FALSE;
-	BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	BlendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
-	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	//Create OpaqueState
-	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &g_pOpaqueState));
-
-	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0;
-	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &g_pDepthOnlyState));
-
-	BlendStateDesc.AlphaToCoverageEnable = TRUE;
-	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0;
-	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &g_pDepthOnlyAndAlphaToCoverageState));
-
-
-	//Create rasterizer states
-	D3D11_RASTERIZER_DESC RasterizerDesc;
-	RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;// D3D11_FILL_SOLID;
-	RasterizerDesc.CullMode = D3D11_CULL_BACK;// disable culling
-	RasterizerDesc.FrontCounterClockwise = FALSE;
-	RasterizerDesc.DepthBias = 0;
-	RasterizerDesc.DepthBiasClamp = 0.0f;
-	RasterizerDesc.SlopeScaledDepthBias = 0.0f;
-	RasterizerDesc.DepthClipEnable = TRUE;
-	RasterizerDesc.ScissorEnable = FALSE;
-	RasterizerDesc.MultisampleEnable = FALSE;
-	RasterizerDesc.AntialiasedLineEnable = FALSE;
-	V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &g_pCullingBackRS));
-
-	// Create depth stencil states
-	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
-	DepthStencilDesc.DepthEnable = TRUE;
-	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;//jingz leave it as default in Direct3D
-	DepthStencilDesc.StencilEnable = TRUE;
-	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
-	DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-	DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo
-	DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo stencil test passed but failed in depth tests
-	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;//jingz todo
-	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;//jingz todo
-	//jingz backface usually was culled
-	DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
-
-	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_EQUAL;
-	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthEqualAndDisableDepthWriteDS));
+#else
+	s_DeferredDecalRender.GenerateMeshData();
+	PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
+	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+#endif
 
 	static bool bFirstPass = true;
 
@@ -327,13 +240,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 
-		//Init light buffer data;
-		//jingz todo
-
 	}
-
-	// Create render resource here
-	//jingz todo
 
 	// Generate shaders ( this is an async operation - call AMD::ShaderCache::ShadersReady() to find out if they are complete)
 	if (bFirstPass)
@@ -355,7 +262,11 @@ HRESULT AddShadersToCache()
 {
 	HRESULT hr = E_FAIL;
 
+#ifdef TRIANGLE
 	s_TriangleRender.AddShadersToCache(&g_ShaderCache);
+#else
+	s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
+#endif
 
 	return hr;
 }
@@ -373,8 +284,14 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
 		DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count));
 
-	//jingz todo
+
+#ifdef TRIANGLE
 	s_TriangleRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+#else
+	s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+#endif
+
+
 
 	return S_OK;
 }
@@ -386,8 +303,12 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 	SAFE_RELEASE(g_pDepthStencilView);
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
-
+#ifdef TRIANGLE
 	s_TriangleRender.OnReleasingSwapChain();
+#else
+	s_DeferredDecalRender.OnReleasingSwapChain();
+#endif
+
 }
 
 void OnD3D11DestroyDevice(void * pUserContext)
@@ -396,26 +317,16 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	g_ShaderCache.OnDestroyDevice();
 
 
-
-
-	SAFE_RELEASE(g_pOpaqueState);
-	SAFE_RELEASE(g_pDepthOnlyState);
-	SAFE_RELEASE(g_pDepthOnlyAndAlphaToCoverageState);
-
-	SAFE_RELEASE(g_pCullingBackRS);
-
-	SAFE_RELEASE(g_pDepthStencilDefaultDS);
-	SAFE_RELEASE(g_pDepthEqualAndDisableDepthWriteDS);
-
 	SAFE_RELEASE(g_pDepthStencilView);
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
 
 
-	SAFE_RELEASE(g_pSamplerLinear);
-
+#ifdef TRIANGLE
 	s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
-
+#else
+	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
+#endif
 	
 	
 }
@@ -510,18 +421,18 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 
 
-	// Switch off alpha blending
-	// float BlendFactor[4] = { 1.0f,1.0f,0.0f,0.0f }; 这些参数没什么用
-	pD3dImmediateContext->OMSetBlendState(g_pOpaqueState, nullptr, 0xFFFFFFFF);
+
 
 	//Render or objects here..
 	if (g_ShaderCache.ShadersReady(true))
 	{
-		pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, g_pDepthStencilView);
-		pD3dImmediateContext->OMSetDepthStencilState(g_pDepthStencilDefaultDS, 0x00);
-		pD3dImmediateContext->RSSetState(g_pCullingBackRS);
 
-		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera,pRTV,g_pDepthStencilView);
+#ifdef TRIANGLE
+		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
+#else
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
+#endif
+
 	
 	}
 	else
