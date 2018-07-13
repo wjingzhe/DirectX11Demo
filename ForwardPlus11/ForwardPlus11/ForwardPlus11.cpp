@@ -345,6 +345,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 
+		s_DeferredDecalRender.SetDecalPosition(vLookAtPos);
+
+
 		bCameraInit = true;
 	}
 

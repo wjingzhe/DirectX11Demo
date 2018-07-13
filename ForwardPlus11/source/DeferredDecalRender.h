@@ -34,7 +34,7 @@ namespace PostProcess
 
 		GeometryHelper::MeshData m_MeshData;
 
-		void GenerateMeshData();
+		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f,unsigned int numSubdivision = 6);
 
 		static void CalculateSceneMinMax(GeometryHelper::MeshData& meshData, DirectX::XMVECTOR* pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
 
@@ -54,11 +54,24 @@ namespace PostProcess
 		ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
 		ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
 
+		void SetDecalPosition(const DirectX::XMVECTOR& position)
+		{
+			XMStoreFloat4(&m_Position4, position);
+		}
+
+		void SetDecalPosition(const DirectX::XMFLOAT4& position)
+		{
+			m_Position4 = position;
+		}
+
 	protected:
 		void ReleaseAllD3D11COM(void);
 
 	private:
 
+		DirectX::XMFLOAT4 m_Position4;
+		ID3D11DepthStencilState* m_pDepthAlwaysAndStencilOnlyOneTime;
+		ID3D11RasterizerState* m_pRasterizerState;
 
 		ID3D11Buffer* m_pConstantBufferPerObject;
 		ID3D11Buffer* m_pConstantBufferPerFrame;
