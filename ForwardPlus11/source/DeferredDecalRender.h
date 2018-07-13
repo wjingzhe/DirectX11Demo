@@ -16,7 +16,9 @@ namespace PostProcess
 	struct CB_PER_OBJECT
 	{
 		DirectX::XMMATRIX mWorldViewProjection;
-		DirectX::XMMATRIX mWolrd;
+		DirectX::XMMATRIX mWorld;
+		DirectX::XMMATRIX mWorldViewProjectionInv;
+		DirectX::XMFLOAT4 boxExtend;
 	};
 
 	struct CB_PER_FRAME
@@ -64,14 +66,29 @@ namespace PostProcess
 			m_Position4 = position;
 		}
 
+		void SetDecalTextureSRV(ID3D11ShaderResourceView* pDecalTextureSRV)
+		{
+			SAFE_RELEASE(m_pDecalTextureSRV);
+			m_pDecalTextureSRV = pDecalTextureSRV;
+			m_pDecalTextureSRV->AddRef();
+		}
+
+	//	ID3D11ShaderResourceView* const * GetDecalTextureSRV() { return &m_pDecalTextureSRV; }
+
 	protected:
 		void ReleaseAllD3D11COM(void);
 
 	private:
+		ID3D11ShaderResourceView* m_pDecalTextureSRV;
 
 		DirectX::XMFLOAT4 m_Position4;
+
+		DirectX::XMFLOAT4 m_BoxExtend;
+
 		ID3D11DepthStencilState* m_pDepthAlwaysAndStencilOnlyOneTime;
 		ID3D11RasterizerState* m_pRasterizerState;
+		//SamplerState
+		ID3D11SamplerState* m_pSamAnisotropic;
 
 		ID3D11Buffer* m_pConstantBufferPerObject;
 		ID3D11Buffer* m_pConstantBufferPerFrame;

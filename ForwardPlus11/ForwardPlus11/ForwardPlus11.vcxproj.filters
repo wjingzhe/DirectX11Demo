@@ -92,5 +92,8 @@
     <None Include="..\source\Shaders\ForwardPlus11Tiling.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="..\source\Shaders\DeferredDecal.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

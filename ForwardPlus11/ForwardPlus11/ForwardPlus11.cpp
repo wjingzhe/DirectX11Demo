@@ -9,7 +9,9 @@
 #include "../source/ForwardPlusRender.h"
 #include "../source/DeferredDecalRender.h"
 #include <algorithm>
-#include "..\\..\\DXUT\\Optional\\DXUTSettingsDlg.h"
+#include "../../DXUT/Optional/DXUTSettingsDlg.h"
+#include "../../DXUT/Core/DDSTextureLoader.h"
+
 
 using namespace DirectX;
 using namespace Triangle;
@@ -44,6 +46,9 @@ ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 ID3D11Texture2D* g_pTempDepthStencilTexture = nullptr;
 ID3D11DepthStencilView* g_pTempDepthStencilView = nullptr;
 ID3D11ShaderResourceView* g_pTempDepthStencilSRV = nullptr;
+
+ID3D11Texture2D* g_pDecalTexture = nullptr;
+ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
 
 
 //GUI
@@ -238,7 +243,7 @@ bool ModifyDeviceSettings(DXUTDeviceSettings * pDeviceSettings, void * pUserCont
 		// and that Forward+ uses the hardware MSAA as intended,then default to 4x MSAA
 		else
 		{
-			pDeviceSettings->d3d11.sd.SampleDesc.Count = 4;
+			pDeviceSettings->d3d11.sd.SampleDesc.Count = 1;
 		}
 
 		//Start with sync disabled
@@ -295,8 +300,11 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 {
 	HRESULT hr;
 
-	using namespace DirectX;
-		
+
+	
+
+	V_RETURN(CreateDDSTextureFromFile(pD3dDevice,L"C:/Users/jingzwang/Desktop/DirectX11Demo/ForwardPlus11/media/sponza/sponza_curtain_green_diff.dds",(ID3D11Resource**) &g_pDecalTexture, &g_pDecalTextureSRV));
+	
 	XMVECTOR SceneMin, SceneMax;
 
 	ID3D11DeviceContext* pD3dImmediateContext = DXUTGetD3D11DeviceContext();
@@ -308,6 +316,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(s_ForwardPlusRender.OnCreateDevice(pD3dDevice, SceneMin, SceneMax));
 	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+	s_DeferredDecalRender.SetDecalTextureSRV(g_pDecalTextureSRV);
 
 	//Create state objects
 	D3D11_SAMPLER_DESC SamplerDesc;
@@ -350,7 +359,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 
-		s_DeferredDecalRender.SetDecalPosition(vLookAtPos);
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.85f*XMVectorGetY(SceneExtents), 0.0f, 0.0f));
 
 
 		bCameraInit = true;
@@ -362,7 +371,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		s_ForwardPlusRender.AddShadersToCache(&g_ShaderCache);
 		s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
 
-		g_ShaderCache.GenerateShaders(AMD::ShaderCache::CREATE_TYPE_USE_CACHED);//Only compile shaders that have changed(development mode)
+		g_ShaderCache.GenerateShaders(AMD::ShaderCache::CREATE_TYPE_COMPILE_CHANGES);//Only compile shaders that have changed(development mode)
 
 		s_bFirstPass = false;
 	}
@@ -458,6 +467,9 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	SAFE_RELEASE(g_pTempDepthStencilView);
 	SAFE_RELEASE(g_pTempDepthStencilSRV);
 	SAFE_RELEASE(g_pTempDepthStencilTexture);
+
+	SAFE_RELEASE(g_pDecalTexture);
+	SAFE_RELEASE(g_pDecalTextureSRV);
 
 	//s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
 	s_ForwardPlusRender.OnDestroyDevice(pUserContext);
@@ -593,6 +605,8 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
 			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
 
+		ID3D11RenderTargetView* pNullRTV = nullptr;
+		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
 		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
 
 		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pTempDepthStencilView,g_pDepthStencilSRV);
