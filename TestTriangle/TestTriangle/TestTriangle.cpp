@@ -6,34 +6,17 @@
 #include "../../DXUT/Core/DXUT.h"
 #include "../../DXUT/Optional/DXUTcamera.h"
 #include "../../DXUT/Optional/SDKmisc.h"
-#include "TriangleRender.h"
+#include "../source/DeferredDecalRender.h"
+#include "../source/TriangleRender.h"
 #include <algorithm>
 
 using namespace DirectX;
 
-
-//--------------------------------
-// Constant buffers
-//--------------------------------
-#pragma pack(push,1)
-struct CB_PER_OBJECT
-{
-	XMMATRIX mWorldViewProjection;
-	XMMATRIX mWolrd;
-};
-
-struct CB_PER_FRAME
-{
-	XMVECTOR vCameraPos3AndAlphaTest;
-};
-
-#pragma pack(pop)
-
+#ifdef Triangle
 static TriangleRender s_TriangleRender;
-
-
-ID3D11Buffer* g_pConstantBufferPerObject = nullptr;
-ID3D11Buffer* g_pConstantBufferPerFrame = nullptr;
+#else
+static PostProcess::DeferredDecalRender s_TriangleRender;
+#endif
 
 
 //-------------------------------------
@@ -254,20 +237,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &g_pSamplerLinear));
 	DXUT_SetDebugName(g_pSamplerLinear, "Linear");
 
-	//  Create constant buffers
-	D3D11_BUFFER_DESC ConstantBufferDesc;
-	ZeroMemory(&ConstantBufferDesc, sizeof(ConstantBufferDesc));
-	ConstantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	ConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	
-	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_OBJECT);
-	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &g_pConstantBufferPerObject));
-	DXUT_SetDebugName(g_pConstantBufferPerObject, "CB_PER_OBJECT");
 
-	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_FRAME);
-	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &g_pConstantBufferPerFrame));
-	DXUT_SetDebugName(g_pConstantBufferPerFrame, "CB_PER_FRAME");
 
 
 	// Create blend states
@@ -385,7 +355,7 @@ HRESULT AddShadersToCache()
 {
 	HRESULT hr = E_FAIL;
 
-	s_TriangleRender.AddShadersToCache(g_ShaderCache);
+	s_TriangleRender.AddShadersToCache(&g_ShaderCache);
 
 	return hr;
 }
@@ -426,8 +396,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	g_ShaderCache.OnDestroyDevice();
 
 
-	SAFE_RELEASE(g_pConstantBufferPerObject);
-	SAFE_RELEASE(g_pConstantBufferPerFrame);
+
 
 	SAFE_RELEASE(g_pOpaqueState);
 	SAFE_RELEASE(g_pDepthOnlyState);
@@ -538,40 +507,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 	pD3dImmediateContext->ClearRenderTargetView(pRTV, ClearColor);
 	pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	XMMATRIX mWorld = XMMatrixIdentity();
 
-	//Get the projection & view matrix from the camera class
-	XMMATRIX mView = g_Camera.GetViewMatrix();
-	XMMATRIX mProj = g_Camera.GetProjMatrix();
-	XMMATRIX mWorldViewPrjection = mWorld*mView*mProj;
-
-	XMFLOAT4 CameraPosAndAlphaTest;
-	XMStoreFloat4(&CameraPosAndAlphaTest, g_Camera.GetEyePt());
-	//different alpha test for msaa vs diabled
-	CameraPosAndAlphaTest.w = 0.003f;
-
-	//Set the constant buffers
-	HRESULT hr;
-	D3D11_MAPPED_SUBRESOURCE MappedResource;
-
-
-	V(pD3dImmediateContext->Map(g_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
-	CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
-	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
-	pPerObject->mWolrd = mWorld;
-	pD3dImmediateContext->Unmap(g_pConstantBufferPerObject, 0);
-	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
-	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
-//	pD3dImmediateContext->CSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
-
-
-	V(pD3dImmediateContext->Map(g_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD,0, &MappedResource));
-	CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
-	/////////////////////////////////////////////////////////
-	pD3dImmediateContext->Unmap(g_pConstantBufferPerFrame, 0);
-	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
-	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
-//	pD3dImmediateContext->CSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
 
 
 	// Switch off alpha blending
@@ -585,7 +521,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		pD3dImmediateContext->OMSetDepthStencilState(g_pDepthStencilDefaultDS, 0x00);
 		pD3dImmediateContext->RSSetState(g_pCullingBackRS);
 
-		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, fTime, fElapsedTime, pUserContext);
+		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera,pRTV,g_pDepthStencilView);
 	
 	}
 	else

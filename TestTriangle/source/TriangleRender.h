@@ -4,10 +4,35 @@
 #include <d3d11.h>
 #include "../../DXUT/Core/DXUT.h"
 #include "../../amd_sdk/inc/AMD_SDK.h"
+#include "../../DXUT/Core/DXUT.h"
+#include "../../DXUT/Optional/DXUTcamera.h"
 
 class TriangleRender
 {
+	
 public:
+
+	//--------------------------------
+	// Constant buffers
+	//--------------------------------
+#pragma pack(push,1)
+	struct CB_PER_OBJECT
+	{
+		DirectX::XMMATRIX mWorldViewProjection;
+		DirectX::XMMATRIX mWolrd;
+	};
+
+	struct CB_PER_FRAME
+	{
+		DirectX::XMVECTOR vCameraPos3AndAlphaTest;
+	};
+
+#pragma pack(pop)
+
+
+	ID3D11Buffer* g_pConstantBufferPerObject = nullptr;
+	ID3D11Buffer* g_pConstantBufferPerFrame = nullptr;
+
 	TriangleRender();
 	~TriangleRender();
 
@@ -17,7 +42,7 @@ public:
 
 	static void CalculateSceneMinMax(GeometryHelper::MeshData& meshData, DirectX::XMVECTOR* pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
 
-	void AddShadersToCache(AMD::ShaderCache& shaderCache);
+	void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 
 	HRESULT  OnD3DDeviceCreated(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
 		void* pUserContext);
@@ -25,7 +50,7 @@ public:
 	void OnD3D11DestroyDevice(void * pUserContext);
 	void OnReleasingSwapChain();
 	HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, double fTime, float fElapsedTime, void* pUserContext);
+	void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext,CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr);
 
 	ID3D11Buffer* m_pMeshIB;
 	ID3D11Buffer* m_pMeshVB;

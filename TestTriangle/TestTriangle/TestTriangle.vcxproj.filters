@@ -33,10 +33,13 @@
     <ClInclude Include="TestTriangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GeometryHelper.h">
+    <ClInclude Include="..\source\DeferredDecalRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TriangleRender.h">
+    <ClInclude Include="..\source\GeometryHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\TriangleRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,10 +50,13 @@
     <ClCompile Include="TestTriangle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeometryHelper.cpp">
+    <ClCompile Include="..\source\DeferredDecalRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TriangleRender.cpp">
+    <ClCompile Include="..\source\GeometryHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\TriangleRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,7 +74,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\Shaders\DrawBasicGeometry.hlsl">
+    <None Include="..\source\Shaders\DrawBasicGeometry.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

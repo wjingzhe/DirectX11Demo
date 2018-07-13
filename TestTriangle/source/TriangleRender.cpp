@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "TriangleRender.h"
 
+using namespace DirectX;
+
 TriangleRender::TriangleRender()
 	:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr), m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNomralAndTexturePS(nullptr)
 {
@@ -29,7 +31,7 @@ void TriangleRender::CalculateSceneMinMax(GeometryHelper::MeshData &meshData, Di
 	*pBBoxMaxOut = DirectX::XMVectorSet(+0.5, +0.5, +0.5, 1.0f); 
 }
 
-void TriangleRender::AddShadersToCache(AMD::ShaderCache& shaderCache)
+void TriangleRender::AddShadersToCache(AMD::ShaderCache* pShaderCache)
 {
 	//Ensure all shaders(and input layouts) are released
 	SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
@@ -50,12 +52,12 @@ void TriangleRender::AddShadersToCache(AMD::ShaderCache& shaderCache)
 	};
 
 	//Add vertex shader
-	shaderCache.AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTextureVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
+	pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTextureVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
 		L"vs_5_0", L"BaseGeometryVS", L"DrawBasicGeometry.hlsl", 0, nullptr, &m_pPosAndNormalAndTextureInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
 	//Add pixel shader
 
-	shaderCache.AddShader((ID3D11DeviceChild**)&m_pScenePosAndNomralAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+	pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNomralAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 		L"ps_5_0", L"BaseGeometryPS", L"DrawBasicGeometry.hlsl", 0, nullptr, nullptr, nullptr, 0);
 }
 
@@ -85,6 +87,25 @@ HRESULT  TriangleRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXG
 	V_RETURN(pD3dDevice->CreateBuffer(&vertexBufferDesc, &InitData, &m_pMeshVB));
 	DXUT_SetDebugName(m_pMeshVB, "TriangleVB");
 
+
+	//  Create constant buffers
+	D3D11_BUFFER_DESC ConstantBufferDesc;
+	ZeroMemory(&ConstantBufferDesc, sizeof(ConstantBufferDesc));
+	ConstantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	ConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	ConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+
+
+	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_OBJECT);
+	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &g_pConstantBufferPerObject));
+	DXUT_SetDebugName(g_pConstantBufferPerObject, "CB_PER_OBJECT");
+
+	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_FRAME);
+	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &g_pConstantBufferPerFrame));
+	DXUT_SetDebugName(g_pConstantBufferPerFrame, "CB_PER_FRAME");
+
+
 	return hr;
 }
 
@@ -97,6 +118,9 @@ void TriangleRender::OnD3D11DestroyDevice(void * pUserContext)
 
 	SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
 	SAFE_RELEASE(m_pScenePosAndNomralAndTexturePS);
+
+	SAFE_RELEASE(g_pConstantBufferPerObject);
+	SAFE_RELEASE(g_pConstantBufferPerFrame);
 }
 
 void TriangleRender::OnReleasingSwapChain()
@@ -110,7 +134,8 @@ HRESULT TriangleRender::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI
 
 
 
-void TriangleRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, double fTime, float fElapsedTime, void* pUserContext)
+void TriangleRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera,
+	ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView)
 {
 	//ID3D11RenderTargetView* pRTV = DXUTGetD3D11RenderTargetView();
 
@@ -127,6 +152,43 @@ void TriangleRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * p
 
 
 	//Save RS
+
+
+	XMMATRIX mWorld = XMMatrixIdentity();
+
+	//Get the projection & view matrix from the camera class
+	XMMATRIX mView = pCamera->GetViewMatrix();
+	XMMATRIX mProj = pCamera->GetProjMatrix();
+	XMMATRIX mWorldViewPrjection = mWorld*mView*mProj;
+
+	XMFLOAT4 CameraPosAndAlphaTest;
+	XMStoreFloat4(&CameraPosAndAlphaTest, pCamera->GetEyePt());
+	//different alpha test for msaa vs diabled
+	CameraPosAndAlphaTest.w = 0.003f;
+
+	//Set the constant buffers
+	HRESULT hr;
+	D3D11_MAPPED_SUBRESOURCE MappedResource;
+
+
+	V(pD3dImmediateContext->Map(g_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
+	CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
+	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
+	pPerObject->mWolrd = mWorld;
+	pD3dImmediateContext->Unmap(g_pConstantBufferPerObject, 0);
+	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
+	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
+	//	pD3dImmediateContext->CSSetConstantBuffers(0, 1, &g_pConstantBufferPerObject);
+
+
+	V(pD3dImmediateContext->Map(g_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
+	CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
+	/////////////////////////////////////////////////////////
+	pD3dImmediateContext->Unmap(g_pConstantBufferPerFrame, 0);
+	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
+	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
+	//	pD3dImmediateContext->CSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
+
 
 	pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pD3dImmediateContext->IASetIndexBuffer(m_pMeshIB,DXGI_FORMAT_R32_UINT,0);
