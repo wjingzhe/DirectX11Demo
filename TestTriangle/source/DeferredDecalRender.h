@@ -60,6 +60,7 @@ namespace PostProcess
 	private:
 
 		ID3D11DepthStencilState* m_pDepthAlwaysAndStencilOnlyOneTime;
+		ID3D11RasterizerState* m_pRasterizerState;
 
 		ID3D11Buffer* m_pConstantBufferPerObject;
 		ID3D11Buffer* m_pConstantBufferPerFrame;

@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "DeferredDecalRender.h"
 using namespace DirectX;
 
@@ -8,7 +6,7 @@ namespace PostProcess
 	DeferredDecalRender::DeferredDecalRender()
 		:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr),
 		m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNomralAndTexturePS(nullptr),
-		m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false)
+		m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false), m_pDepthAlwaysAndStencilOnlyOneTime(nullptr), m_pRasterizerState(nullptr)
 	{
 	}
 
@@ -120,6 +118,21 @@ namespace PostProcess
 		V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthAlwaysAndStencilOnlyOneTime));
 
 
+		D3D11_RASTERIZER_DESC RasterizerDesc;
+		RasterizerDesc.FillMode = D3D11_FILL_SOLID;
+		RasterizerDesc.CullMode = D3D11_CULL_NONE;
+		RasterizerDesc.FrontCounterClockwise = FALSE;
+		RasterizerDesc.DepthBias = 0.0f;
+		RasterizerDesc.DepthBiasClamp = 0.0f;
+		RasterizerDesc.SlopeScaledDepthBias = 0.0f;
+		RasterizerDesc.DepthClipEnable = TRUE;
+		RasterizerDesc.ScissorEnable = FALSE;
+		RasterizerDesc.MultisampleEnable = TRUE;
+		RasterizerDesc.AntialiasedLineEnable = FALSE;
+		V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &m_pRasterizerState));
+		
+
+
 		return hr;
 	}
 
@@ -181,7 +194,7 @@ namespace PostProcess
 		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthAlwaysAndStencilOnlyOneTime, 1);
 		float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 		pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
-		pD3dImmediateContext->RSSetState(nullptr);
+		pD3dImmediateContext->RSSetState(m_pRasterizerState);
 
 		pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pD3dImmediateContext->IASetIndexBuffer(m_pMeshIB, DXGI_FORMAT_R32_UINT, 0);
@@ -203,9 +216,6 @@ namespace PostProcess
 
 		pD3dImmediateContext->OMSetDepthStencilState(nullptr, 0x00);
 
-
-		pD3dImmediateContext->Flush();
-
 	}
 
 	void DeferredDecalRender::ReleaseAllD3D11COM(void)
@@ -222,6 +232,7 @@ namespace PostProcess
 		SAFE_RELEASE(m_pConstantBufferPerFrame);
 
 		SAFE_RELEASE(m_pDepthAlwaysAndStencilOnlyOneTime);
+		SAFE_RELEASE(m_pRasterizerState);
 	}
 }
 
