@@ -41,6 +41,11 @@ ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
 ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
 ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 
+ID3D11Texture2D* g_pTempDepthStencilTexture = nullptr;
+ID3D11DepthStencilView* g_pTempDepthStencilView = nullptr;
+ID3D11ShaderResourceView* g_pTempDepthStencilSRV = nullptr;
+
+
 //GUI
 static bool g_bRenderHUD = false;
 static bool g_bCD3DSettingsDlgActive = false;
@@ -393,10 +398,17 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	//create our own depth stencil surface that'bindable as a shader
 	V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
 		DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count));
-
 	g_pDepthStencilTexture->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilTexture"), "DepthStencilTexture");
 	g_pDepthStencilSRV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilSRV"), "DepthStencilSRV");
 	g_pDepthStencilView->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilView"), "DepthStencilView");
+
+	//create our own depth stencil surface that'bindable as a shader
+	V_RETURN(AMD::CreateDepthStencilSurface(&g_pTempDepthStencilTexture, &g_pTempDepthStencilSRV, &g_pTempDepthStencilView,
+		DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count));
+	g_pTempDepthStencilTexture->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilTexture"), "Temp DepthStencilTexture");
+	g_pTempDepthStencilSRV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilSRV"), "Temp DepthStencilSRV");
+	g_pTempDepthStencilView->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilView"), "Temp DepthStencilView");
+
 
 	//jingz todo
 	//s_TriangleRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
@@ -413,6 +425,11 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 	SAFE_RELEASE(g_pDepthStencilView);
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
+
+
+	SAFE_RELEASE(g_pTempDepthStencilView);
+	SAFE_RELEASE(g_pTempDepthStencilSRV);
+	SAFE_RELEASE(g_pTempDepthStencilTexture);
 
 	//s_TriangleRender.OnReleasingSwapChain();
 	s_ForwardPlusRender.OnReleasingSwapChain();
@@ -438,7 +455,9 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
 
-
+	SAFE_RELEASE(g_pTempDepthStencilView);
+	SAFE_RELEASE(g_pTempDepthStencilSRV);
+	SAFE_RELEASE(g_pTempDepthStencilTexture);
 
 	//s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
 	s_ForwardPlusRender.OnDestroyDevice(pUserContext);
@@ -574,8 +593,9 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
 			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
 
+		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
 
-		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pTempDepthStencilView,g_pDepthStencilSRV);
 
 		TIMER_End(); // Render
 

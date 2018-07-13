@@ -155,7 +155,7 @@ namespace PostProcess
 		return S_OK;
 	}
 
-	void DeferredDecalRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView)
+	void DeferredDecalRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView,ID3D11ShaderResourceView* pDepthStencilCopySRV)
 	{
 		XMMATRIX mWorld = XMMatrixIdentity();
 		mWorld.r[3].m128_f32[0] = m_Position4.x;
