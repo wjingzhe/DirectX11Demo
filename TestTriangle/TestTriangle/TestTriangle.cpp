@@ -8,15 +8,19 @@
 #include "../../DXUT/Optional/SDKmisc.h"
 #include "../source/DeferredDecalRender.h"
 #include "../source/TriangleRender.h"
+#include "../../DXUT/Core/DDSTextureLoader.h"
 #include <algorithm>
 
 using namespace DirectX;
 
-//#define TRIANGLE
+#define TRIANGLE
+//#define DECAL
 
 #ifdef TRIANGLE
 static TriangleRender s_TriangleRender;
-#else
+#endif
+
+#ifdef DECAL
 static PostProcess::DeferredDecalRender s_DeferredDecalRender;
 #endif
 
@@ -33,7 +37,12 @@ ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
 ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
 ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 
+ID3D11Texture2D* g_pTempDepthStencilTexture = nullptr;
+ID3D11DepthStencilView* g_pTempDepthStencilView = nullptr;
+ID3D11ShaderResourceView* g_pTempDepthStencilSRV = nullptr;
 
+ID3D11Texture2D* g_pDecalTexture = nullptr;
+ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
 static float g_fMaxDistance = 500.0f;
 
 //CFirstPersonCamera g_Camera;
@@ -65,6 +74,8 @@ void CALLBACK OnD3D11DestroyDevice(void* pUserContext);
 void CALLBACK OnFrameRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext* pD3dImmediateContext,
 	double fTime, float fElapsedTime, void* pUserContext);
 
+void InitApp();
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -92,9 +103,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DXUTSetCallbackD3D11DeviceDestroyed(OnD3D11DestroyDevice);
 	DXUTSetCallbackD3D11FrameRender(OnFrameRender);
 
-
+	InitApp();
 	DXUTInit(true,true,NULL);//Parse the command line,show msgBoxes on error,no extra command line params
-	DXUTSetCursorSettings(true, true);
+	DXUTSetCursorSettings(true, false);
 	DXUTCreateWindow(L"TestTriangle v1.2");
 
 
@@ -156,7 +167,7 @@ bool ModifyDeviceSettings(DXUTDeviceSettings * pDeviceSettings, void * pUserCont
 		// and that Forward+ uses the hardware MSAA as intended,then default to 4x MSAA
 		else
 		{
-			pDeviceSettings->d3d11.sd.SampleDesc.Count = 4;
+			pDeviceSettings->d3d11.sd.SampleDesc.Count = 1;
 		}
 
 		//Start with sync disabled
@@ -195,8 +206,11 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 {
 	HRESULT hr;
 
-	using namespace DirectX;
-		
+
+	
+
+	V_RETURN(CreateDDSTextureFromFile(pD3dDevice,L"C:/Users/jingzwang/Desktop/DirectX11Demo/ForwardPlus11/media/sponza/sponza_curtain_green_diff.dds",(ID3D11Resource**) &g_pDecalTexture, &g_pDecalTextureSRV));
+	
 	XMVECTOR SceneMin, SceneMax;
 
 	ID3D11DeviceContext* pD3dImmediateContext = DXUTGetD3D11DeviceContext();
@@ -208,7 +222,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	s_TriangleRender.GenerateMeshData();
 	TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
 	V_RETURN(s_TriangleRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
-#else
+#endif
+
+#ifdef DECAL
 	s_DeferredDecalRender.GenerateMeshData();
 	PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
 	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
@@ -239,6 +255,10 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMin, BoundaryMin);
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
+#ifdef DECAL
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, -0.6f, 0.0f, 0.0f));
+#endif // DECAL
+
 
 	}
 
@@ -264,7 +284,9 @@ HRESULT AddShadersToCache()
 
 #ifdef TRIANGLE
 	s_TriangleRender.AddShadersToCache(&g_ShaderCache);
-#else
+#endif
+
+#ifdef DECAL
 	s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
 #endif
 
@@ -283,11 +305,22 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	//create our own depth stencil surface that'bindable as a shader
 	V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
 		DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count));
+	g_pDepthStencilTexture->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilTexture"), "DepthStencilTexture");
+	g_pDepthStencilSRV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilSRV"), "DepthStencilSRV");
+	g_pDepthStencilView->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("DepthStencilView"), "DepthStencilView");
 
+	//create our own depth stencil surface that'bindable as a shader
+	V_RETURN(AMD::CreateDepthStencilSurface(&g_pTempDepthStencilTexture, &g_pTempDepthStencilSRV, &g_pTempDepthStencilView,
+		DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count));
+	g_pTempDepthStencilTexture->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilTexture"), "Temp DepthStencilTexture");
+	g_pTempDepthStencilSRV->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilSRV"), "Temp DepthStencilSRV");
+	g_pTempDepthStencilView->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Temp DepthStencilView"), "Temp DepthStencilView");
 
 #ifdef TRIANGLE
 	s_TriangleRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
-#else
+#endif
+
+#ifdef DECAL
 	s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 #endif
 
@@ -303,9 +336,16 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 	SAFE_RELEASE(g_pDepthStencilView);
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
+
+
+	SAFE_RELEASE(g_pTempDepthStencilView);
+	SAFE_RELEASE(g_pTempDepthStencilSRV);
+	SAFE_RELEASE(g_pTempDepthStencilTexture);
+
 #ifdef TRIANGLE
 	s_TriangleRender.OnReleasingSwapChain();
-#else
+#endif
+#ifdef DECAL
 	s_DeferredDecalRender.OnReleasingSwapChain();
 #endif
 
@@ -321,10 +361,17 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	SAFE_RELEASE(g_pDepthStencilSRV);
 	SAFE_RELEASE(g_pDepthStencilTexture);
 
+	SAFE_RELEASE(g_pTempDepthStencilView);
+	SAFE_RELEASE(g_pTempDepthStencilSRV);
+	SAFE_RELEASE(g_pTempDepthStencilTexture);
+
+	SAFE_RELEASE(g_pDecalTexture);
+	SAFE_RELEASE(g_pDecalTextureSRV);
 
 #ifdef TRIANGLE
 	s_TriangleRender.OnD3D11DestroyDevice(pUserContext);
-#else
+#endif
+#ifdef DECAL
 	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
 #endif
 	
@@ -429,8 +476,14 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 #ifdef TRIANGLE
 		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
-#else
-		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
+#endif
+
+		ID3D11RenderTargetView* pNullRTV = nullptr;
+		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
+		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
+
+#ifdef DECAL
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 #endif
 
 	
@@ -444,4 +497,8 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		Sleep(1);
 	}
 
+}
+
+void InitApp()
+{
 }

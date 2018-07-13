@@ -16,7 +16,9 @@ namespace PostProcess
 	struct CB_PER_OBJECT
 	{
 		DirectX::XMMATRIX mWorldViewProjection;
-		DirectX::XMMATRIX mWolrd;
+		DirectX::XMMATRIX mWorld;
+		DirectX::XMMATRIX mWorldViewProjectionInv;
+		DirectX::XMFLOAT4 boxExtend;
 	};
 
 	struct CB_PER_FRAME
@@ -34,7 +36,7 @@ namespace PostProcess
 
 		GeometryHelper::MeshData m_MeshData;
 
-		void GenerateMeshData();
+		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f,unsigned int numSubdivision = 6);
 
 		static void CalculateSceneMinMax(GeometryHelper::MeshData& meshData, DirectX::XMVECTOR* pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
 
@@ -46,7 +48,7 @@ namespace PostProcess
 		void OnD3D11DestroyDevice(void * pUserContext);
 		void OnReleasingSwapChain();
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr);
+		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV);
 
 		ID3D11Buffer* m_pMeshIB;
 		ID3D11Buffer* m_pMeshVB;
@@ -54,13 +56,39 @@ namespace PostProcess
 		ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
 		ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
 
+		void SetDecalPosition(const DirectX::XMVECTOR& position)
+		{
+			XMStoreFloat4(&m_Position4, position);
+		}
+
+		void SetDecalPosition(const DirectX::XMFLOAT4& position)
+		{
+			m_Position4 = position;
+		}
+
+		void SetDecalTextureSRV(ID3D11ShaderResourceView* pDecalTextureSRV)
+		{
+			SAFE_RELEASE(m_pDecalTextureSRV);
+			m_pDecalTextureSRV = pDecalTextureSRV;
+			m_pDecalTextureSRV->AddRef();
+		}
+
+	//	ID3D11ShaderResourceView* const * GetDecalTextureSRV() { return &m_pDecalTextureSRV; }
+
 	protected:
 		void ReleaseAllD3D11COM(void);
 
 	private:
+		ID3D11ShaderResourceView* m_pDecalTextureSRV;
+
+		DirectX::XMFLOAT4 m_Position4;
+
+		DirectX::XMFLOAT4 m_BoxExtend;
 
 		ID3D11DepthStencilState* m_pDepthAlwaysAndStencilOnlyOneTime;
 		ID3D11RasterizerState* m_pRasterizerState;
+		//SamplerState
+		ID3D11SamplerState* m_pSamAnisotropic;
 
 		ID3D11Buffer* m_pConstantBufferPerObject;
 		ID3D11Buffer* m_pConstantBufferPerFrame;
