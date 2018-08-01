@@ -13,8 +13,8 @@
 #include "../../DXUT/Core/WICTextureLoader.h"
 
 
-//#define FORWARDPLUS
-#define TRIANGLE
+#define FORWARDPLUS
+//#define TRIANGLE
 #define DECAL
 
 using namespace DirectX;
@@ -102,8 +102,7 @@ static int g_iNumActiveSpotLights = 0;
 
 static float g_fMaxDistance = 1000.0f;
 
-//CFirstPersonCamera g_Camera;
-static CModelViewerCamera	g_Camera;
+CFirstPersonCamera g_Camera;
 static AMD::HUD             g_HUD;
 static CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
 static CDXUTTextHelper*			g_pTextHelper = nullptr;
@@ -358,7 +357,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #ifdef TRIANGLE
 
 #ifdef FORWARDPLUS
-	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, 0.0f, 0.0f);
+	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, 200.0f, 300.0f);
 #else
 	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, -100.0f, 500.0f);
 #endif // FORWARDPLUS
@@ -415,9 +414,10 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
 
 		g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
-		XMVECTOR vEye = SceneCenter - XMVectorSet(0.67f*XMVectorGetX(SceneExtents), 0.5f*XMVectorGetY(SceneExtents), 0.0f, 0.0f);
-		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, 0.5f*XMVectorGetY(SceneExtents), 0.0f, 0.0f);
-		g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
+		XMVECTOR vEye = XMVectorSet(0.0f, 200.0f, 0.0f, 0.0f);
+		XMVECTOR vLookAtPos = XMVectorSet(0.0f, 200.0f, 100.0f, 0.0f);
+		g_Camera.SetRotateButtons(true, false, false);
+		//g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
 		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
@@ -446,7 +446,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 #ifdef DECAL
 #ifdef FORWARDPLUS
-		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
+		s_DeferredDecalRender.SetDecalPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
 #else
 		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
 #endif
