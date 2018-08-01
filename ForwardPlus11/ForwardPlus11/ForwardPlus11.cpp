@@ -430,9 +430,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 40.0f*SceneExtends;
 
 
-		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 0.0f);
-		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, 0.0f, -10.0f, 0.0f);//要看到前面的剑法
-		g_Camera.SetButtonMasks();//left_button can rotate camera
+		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f,0.0f);
+		XMVECTOR vLookAtPos = SceneCenter + XMVectorSet(0.0f,0.0f, 10.0f, 0.0f);//要看到前面的剑法
+		g_Camera.SetRotateButtons(true, false, false);
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
 		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
@@ -448,7 +448,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #ifdef FORWARDPLUS
 		s_DeferredDecalRender.SetDecalPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
 #else
-		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter);
 #endif
 #endif // DECAL
 
@@ -471,6 +471,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(g_DialogResourceManager.OnD3D11CreateDevice(pD3dDevice, pD3dImmediateContext));
 	V_RETURN(g_D3dSettingsGUI.OnD3D11CreateDevice(pD3dDevice));
+	SAFE_DELETE(g_pTextHelper);
 	g_pTextHelper = new CDXUTTextHelper(pD3dDevice, pD3dImmediateContext, &g_DialogResourceManager, TEXT_LINE_HEIGHT);
 
 	return hr;
