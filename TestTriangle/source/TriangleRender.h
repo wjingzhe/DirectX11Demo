@@ -63,6 +63,11 @@ namespace Triangle
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr);
 
+		void SetPosition(const DirectX::XMVECTOR& position)
+		{
+			XMStoreFloat4(&m_Position4, position);
+		}
+
 		ID3D11Buffer* m_pMeshIB;
 		ID3D11Buffer* m_pMeshVB;
 		ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
@@ -77,6 +82,8 @@ namespace Triangle
 		void ReleaseAllD3D11COM(void);
 
 	private:
+
+		DirectX::XMFLOAT4 m_Position4;
 	};
 }
 

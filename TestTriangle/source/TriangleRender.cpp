@@ -1,5 +1,4 @@
 #include "TriangleRender.h"
-
 using namespace DirectX;
 
 namespace Triangle
@@ -9,7 +8,8 @@ namespace Triangle
 		:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr), m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNomralAndTexturePS(nullptr),
 		m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_pSamplerLinear(nullptr),
 		m_pCullingBackRS(nullptr), m_pDepthStencilDefaultDS(nullptr),
-		m_pOpaqueState(nullptr), m_pDepthOnlyState(nullptr), m_pDepthOnlyAndAlphaToCoverageState(nullptr)
+		m_pOpaqueState(nullptr), m_pDepthOnlyState(nullptr), m_pDepthOnlyAndAlphaToCoverageState(nullptr),
+		m_Position4(0.0f, 0.0f, 0.0f, 1.0f)
 	{
 	}
 
@@ -222,6 +222,9 @@ namespace Triangle
 
 
 		XMMATRIX mWorld = XMMatrixIdentity();
+		mWorld.r[3].m128_f32[0] = m_Position4.x;
+		mWorld.r[3].m128_f32[1] = m_Position4.y;
+		mWorld.r[3].m128_f32[2] = m_Position4.z;
 
 		//Get the projection & view matrix from the camera class
 		XMMATRIX mView = pCamera->GetViewMatrix();
@@ -284,7 +287,6 @@ namespace Triangle
 		SAFE_RELEASE(pBlendStateStored11);
 		SAFE_RELEASE(pDepthStencilStateStored11);
 
-		//	pD3dImmediateContext->Flush();
 	}
 
 	void TriangleRender::ReleaseAllD3D11COM(void)
