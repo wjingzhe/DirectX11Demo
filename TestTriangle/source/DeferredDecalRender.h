@@ -17,13 +17,17 @@ namespace PostProcess
 	{
 		DirectX::XMMATRIX mWorldViewProjection;
 		DirectX::XMMATRIX mWorld;
-		DirectX::XMMATRIX mWorldViewProjectionInv;
+		DirectX::XMMATRIX mWorldViewInv;
 		DirectX::XMFLOAT4 boxExtend;
 	};
 
 	struct CB_PER_FRAME
 	{
 		DirectX::XMVECTOR vCameraPos3AndAlphaTest;
+		DirectX::XMMATRIX m_mProjection;
+		DirectX::XMMATRIX m_mProjectionInv;
+		DirectX::XMFLOAT4 ProjParams;
+		DirectX::XMFLOAT4 RenderTargetHalfSize;
 	};
 
 #pragma pack(pop)
@@ -48,7 +52,8 @@ namespace PostProcess
 		void OnD3D11DestroyDevice(void * pUserContext);
 		void OnReleasingSwapChain();
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV);
+		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
+			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV);
 
 		ID3D11Buffer* m_pMeshIB;
 		ID3D11Buffer* m_pMeshVB;

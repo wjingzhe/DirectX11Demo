@@ -7,11 +7,8 @@
 #include "../../DXUT/Core/DXUT.h"
 #include "../../DXUT/Optional/DXUTcamera.h"
 
-class TriangleRender
+namespace Triangle
 {
-	
-public:
-
 	//--------------------------------
 	// Constant buffers
 	//--------------------------------
@@ -29,50 +26,57 @@ public:
 
 #pragma pack(pop)
 
-	// Direct3D 11 resources
+	class TriangleRender
+	{
 
-	//Rasterize states
-	ID3D11RasterizerState* m_pCullingBackRS = nullptr;
+	public:
 
-	// Depth stencil states
-	ID3D11DepthStencilState* m_pDepthStencilDefaultDS = nullptr;
+		// Direct3D 11 resources
 
-	// Blend states 
-	ID3D11BlendState* m_pOpaqueState = nullptr;
-	ID3D11BlendState* m_pDepthOnlyState = nullptr;//No color pass can be writen
-	ID3D11BlendState* m_pDepthOnlyAndAlphaToCoverageState = nullptr;
+		//Rasterize states
+		ID3D11RasterizerState* m_pCullingBackRS = nullptr;
 
-	TriangleRender();
-	~TriangleRender();
+		// Depth stencil states
+		ID3D11DepthStencilState* m_pDepthStencilDefaultDS = nullptr;
 
-	GeometryHelper::MeshData m_MeshData;
+		// Blend states 
+		ID3D11BlendState* m_pOpaqueState = nullptr;
+		ID3D11BlendState* m_pDepthOnlyState = nullptr;//No color pass can be writen
+		ID3D11BlendState* m_pDepthOnlyAndAlphaToCoverageState = nullptr;
 
-	void GenerateMeshData();
+		TriangleRender();
+		~TriangleRender();
 
-	static void CalculateSceneMinMax(GeometryHelper::MeshData& meshData, DirectX::XMVECTOR* pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
+		GeometryHelper::MeshData m_MeshData;
 
-	void AddShadersToCache(AMD::ShaderCache* pShaderCache);
+		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6, float centerX = 0.0f, float centerY = 0.0f, float centerZ = 0.0f);
 
-	HRESULT  OnD3DDeviceCreated(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-		void* pUserContext);
+		static void CalculateSceneMinMax(GeometryHelper::MeshData& meshData, DirectX::XMVECTOR* pBBoxMinOut, DirectX::XMVECTOR* pBBoxMaxOut);
 
-	void OnD3D11DestroyDevice(void * pUserContext);
-	void OnReleasingSwapChain();
-	HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
-	void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext,CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr);
+		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 
-	ID3D11Buffer* m_pMeshIB;
-	ID3D11Buffer* m_pMeshVB;
-	ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
-	ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
-	ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
-	ID3D11Buffer* m_pConstantBufferPerObject = nullptr;
-	ID3D11Buffer* m_pConstantBufferPerFrame = nullptr;
-	ID3D11SamplerState* m_pSamplerLinear = nullptr;
+		HRESULT  OnD3DDeviceCreated(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
+			void* pUserContext);
 
-protected:
+		void OnD3D11DestroyDevice(void * pUserContext);
+		void OnReleasingSwapChain();
+		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
+		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr);
 
-	void ReleaseAllD3D11COM(void);
+		ID3D11Buffer* m_pMeshIB;
+		ID3D11Buffer* m_pMeshVB;
+		ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
+		ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
+		ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
+		ID3D11Buffer* m_pConstantBufferPerObject = nullptr;
+		ID3D11Buffer* m_pConstantBufferPerFrame = nullptr;
+		ID3D11SamplerState* m_pSamplerLinear = nullptr;
 
-private:
-};
+	protected:
+
+		void ReleaseAllD3D11COM(void);
+
+	private:
+	};
+}
+

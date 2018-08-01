@@ -11,7 +11,7 @@ namespace PostProcess
 		m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
 		//SamplerState
 		m_pSamAnisotropic(nullptr),
-		m_BoxExtend(100.0f, 100.0f, 100.0f,0.0f)
+		m_BoxExtend(100.0f, 100.0f, 100.0f,1.0f)
 	{
 	}
 
@@ -22,14 +22,26 @@ namespace PostProcess
 
 	void DeferredDecalRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
 	{
-		m_MeshData = GeometryHelper::CreateBox(m_BoxExtend.x, m_BoxExtend.y, m_BoxExtend.z, numSubdivision);
+		m_BoxExtend.x = width;
+		m_BoxExtend.y = height;
+		m_BoxExtend.z = depth;
+
+		m_MeshData = GeometryHelper::CreateBox(width, height, depth, numSubdivision);
 	}
 
 	void DeferredDecalRender::CalculateSceneMinMax(GeometryHelper::MeshData &meshData, DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut)
 	{
+		auto temp = meshData.Vertices[0].Position;
+		*pBBoxMinOut = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
+		*pBBoxMaxOut = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
 
-		*pBBoxMinOut = DirectX::XMVectorSet(-0.5, -0.5, -0.5, 1.0f);
-		*pBBoxMaxOut = DirectX::XMVectorSet(+0.5, +0.5, +0.5, 1.0f);
+		for (int i = 1; i < meshData.Vertices.size(); ++i)
+		{
+			auto temp = meshData.Vertices[i].Position;
+			DirectX::XMVECTOR vNew = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
+			*pBBoxMaxOut = XMVectorMax(*pBBoxMaxOut, vNew);
+			*pBBoxMinOut = XMVectorMin(*pBBoxMinOut, vNew);
+		}
 	}
 
 	void DeferredDecalRender::AddShadersToCache(AMD::ShaderCache* pShaderCache)
@@ -51,12 +63,12 @@ namespace PostProcess
 
 			//Add vertex shader
 			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTextureVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
-				L"vs_5_0", L"BaseGeometryVS", L"DeferredDecal.hlsl", 0, nullptr, &m_pPosAndNormalAndTextureInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+				L"vs_5_0", L"DeferredDecalVS", L"DeferredDecal.hlsl", 0, nullptr, &m_pPosAndNormalAndTextureInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
 			//Add pixel shader
 
 			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNomralAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
-				L"ps_5_0", L"BaseGeometryPS", L"DeferredDecal.hlsl", 0, nullptr, nullptr, nullptr, 0);
+				L"ps_5_0", L"DeferredDecalPS", L"DeferredDecal.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
 			m_bShaderInited = true;
 		}
@@ -66,7 +78,6 @@ namespace PostProcess
 
 	HRESULT  DeferredDecalRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 	{
-		this->GenerateMeshData(m_BoxExtend.x, m_BoxExtend.y, m_BoxExtend.z);
 
 		HRESULT hr;
 		D3D11_SUBRESOURCE_DATA InitData;
@@ -108,20 +119,20 @@ namespace PostProcess
 
 		//Create DepthStencilState
 		D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
-		DepthStencilDesc.DepthEnable = true;
+		DepthStencilDesc.DepthEnable = TRUE;
 		DepthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 		DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-		DepthStencilDesc.StencilEnable = true;
+		DepthStencilDesc.StencilEnable = TRUE;
 		DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 		DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_GREATER;
+		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 		DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_INCR;
 		DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
-		DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-		DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+		DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_INCR;
+		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 		V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthAlwaysAndStencilOnlyOneTime));
 
 
@@ -168,8 +179,26 @@ namespace PostProcess
 		return S_OK;
 	}
 
-	void DeferredDecalRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView,ID3D11ShaderResourceView* pDepthStencilCopySRV)
+	void DeferredDecalRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
+		CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView,ID3D11ShaderResourceView* pDepthStencilCopySRV)
 	{
+		// save Rasterizer State (for later restore)
+		ID3D11RasterizerState* pPreRasterizerState = nullptr;
+		pD3dImmediateContext->RSGetState(&pPreRasterizerState);
+
+		// save blend state(for later restore)
+		ID3D11BlendState* pPreBlendStateStored11 = nullptr;
+		FLOAT afBlendFactorStored11[4];
+		UINT uSampleMaskStored11;
+		pD3dImmediateContext->OMGetBlendState(&pPreBlendStateStored11, afBlendFactorStored11, &uSampleMaskStored11);
+
+		// save depth state (for later restore)
+		ID3D11DepthStencilState* pPreDepthStencilStateStored11 = nullptr;
+		UINT uStencilRefStored11;
+		pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
+
+
+
 		XMMATRIX mWorld = XMMatrixIdentity();
 		mWorld.r[3].m128_f32[0] = m_Position4.x;
 		mWorld.r[3].m128_f32[1] = m_Position4.y;
@@ -192,27 +221,52 @@ namespace PostProcess
 
 
 		XMVECTOR det;
-		XMMATRIX mWorldViewPrjectionInv = XMMatrixInverse(&det, mWorldViewPrjection);
+		XMMATRIX mWorldViewInv = XMMatrixInverse(&det, mWorld*mView);
 
 		V(pD3dImmediateContext->Map(m_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 		CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
 		pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 		pPerObject->mWorld = XMMatrixTranspose(mWorld);
-		pPerObject->mWorldViewProjectionInv = XMMatrixTranspose(mWorldViewPrjectionInv);
+		pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
 		pPerObject->boxExtend = m_BoxExtend;
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		//	pD3dImmediateContext->CSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 
+		{
+			// we need the inverse proj matrix in the per-tile light culling compute shader
+			XMVECTOR det;
+			XMMATRIX mInvProj = XMMatrixInverse(&det, mProj);
 
-		V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
-		CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
-		pPerFrame->vCameraPos3AndAlphaTest = XMLoadFloat4(&CameraPosAndAlphaTest);
-		pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
-		pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
-		pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
-		//	pD3dImmediateContext->CSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
+			float nearZ = pCamera->GetNearClip();
+			float farZ = pCamera->GetFarClip();
+			float fRange = farZ / (farZ - nearZ);
+
+			float FovRadY = pCamera->GetFOV();
+			float tanHalfFovY = std::tanf(FovRadY*0.5f);
+
+
+			V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
+			CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
+			pPerFrame->vCameraPos3AndAlphaTest = XMLoadFloat4(&CameraPosAndAlphaTest);
+			pPerFrame->m_mProjection = XMMatrixTranspose(mProj);
+			pPerFrame->m_mProjectionInv = XMMatrixTranspose(mInvProj);
+
+			pPerFrame->ProjParams.x = tanHalfFovY;
+			pPerFrame->ProjParams.y = pCamera->GetAspect();
+			pPerFrame->ProjParams.z = nearZ;
+			pPerFrame->ProjParams.w = fRange;
+			pPerFrame->RenderTargetHalfSize.x = pBackBufferDesc->Width/2.0f;
+			pPerFrame->RenderTargetHalfSize.y = pBackBufferDesc->Height/2.0f;
+			pPerFrame->RenderTargetHalfSize.z = farZ;
+
+			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
+			pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
+			pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
+			//	pD3dImmediateContext->CSSetConstantBuffers(1, 1, &g_pConstantBufferPerFrame);
+		}
+
 
 
 		pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
@@ -244,7 +298,13 @@ namespace PostProcess
 		pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 
-		pD3dImmediateContext->OMSetDepthStencilState(nullptr, 0x00);
+		pD3dImmediateContext->RSSetState(pPreRasterizerState);
+		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, afBlendFactorStored11, uSampleMaskStored11);
+		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
+	
+		SAFE_RELEASE(pPreRasterizerState);
+		SAFE_RELEASE(pPreBlendStateStored11);
+		SAFE_RELEASE(pPreDepthStencilStateStored11);
 
 	}
 

@@ -9,15 +9,16 @@
 #include "../source/DeferredDecalRender.h"
 #include "../source/TriangleRender.h"
 #include "../../DXUT/Core/DDSTextureLoader.h"
+#include "../../DXUT/Core/WICTextureLoader.h"
 #include <algorithm>
 
 using namespace DirectX;
 
 #define TRIANGLE
-//#define DECAL
+#define DECAL
 
 #ifdef TRIANGLE
-static TriangleRender s_TriangleRender;
+static Triangle::TriangleRender s_TriangleRender;
 #endif
 
 #ifdef DECAL
@@ -43,10 +44,12 @@ ID3D11ShaderResourceView* g_pTempDepthStencilSRV = nullptr;
 
 ID3D11Texture2D* g_pDecalTexture = nullptr;
 ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
-static float g_fMaxDistance = 500.0f;
-
+static float g_fMaxDistance = 1000.0f;
 //CFirstPersonCamera g_Camera;
 CModelViewerCamera g_Camera;
+
+// Depth stencil states
+ID3D11DepthStencilState* g_pDepthStencilDefaultDS = nullptr;
 
 
 LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
@@ -110,7 +113,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, 1920, 1080);
-
+	
 	DXUTMainLoop();
 
 	//Ensure the shaderCache aborts if in a lengthy generation process
@@ -206,10 +209,27 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 {
 	HRESULT hr;
 
-
+	// Create depth stencil states
+	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
+	DepthStencilDesc.DepthEnable = TRUE;
+	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;//jingz leave it as default in Direct3D
+	DepthStencilDesc.StencilEnable = TRUE;
+	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+	DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo
+	DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;//jingz todo stencil test passed but failed in depth tests
+	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;//jingz todo
+	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;//jingz todo
+																	 //jingz backface usually was culled
+	DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
 	
 
-	V_RETURN(CreateDDSTextureFromFile(pD3dDevice,L"C:/Users/jingzwang/Desktop/DirectX11Demo/ForwardPlus11/media/sponza/sponza_curtain_green_diff.dds",(ID3D11Resource**) &g_pDecalTexture, &g_pDecalTextureSRV));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice,L"../../len_full.jpg",(ID3D11Resource**) &g_pDecalTexture, &g_pDecalTextureSRV));
 	
 	XMVECTOR SceneMin, SceneMax;
 
@@ -219,15 +239,16 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	//load the scene mesh
 
 #ifdef TRIANGLE
-	s_TriangleRender.GenerateMeshData();
-	TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
+	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, -100.0f, 500.0f);
+	Triangle::TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
 	V_RETURN(s_TriangleRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 #endif
 
 #ifdef DECAL
-	s_DeferredDecalRender.GenerateMeshData();
-	PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
+	s_DeferredDecalRender.GenerateMeshData(100, 100, 100, 6);
+	//PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
 	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+	s_DeferredDecalRender.SetDecalTextureSRV(g_pDecalTextureSRV);
 #endif
 
 	static bool bFirstPass = true;
@@ -244,8 +265,8 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 40.0f*SceneExtends;
 
 
-		XMVECTOR vEye = SceneCenter - XMVectorSet(0.0, -0.7f, 7.0f,0.0f);
-		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, -0.5f*XMVectorGetY(SceneCenter), 0.0f, 0.0f);
+		XMVECTOR vEye = SceneCenter - XMVectorSet(0.0, 0.0f, 0.0f,0.0f);
+		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f,0.0f, -10.0f, 0.0f);//要看到前面的剑法
 		g_Camera.SetButtonMasks();//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
@@ -256,7 +277,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 #ifdef DECAL
-		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, -0.6f, 0.0f, 0.0f));
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 100.0f, -500.0f, 0.0f));
 #endif // DECAL
 
 
@@ -356,6 +377,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	DXUTGetGlobalResourceCache().OnDestroyDevice();
 	g_ShaderCache.OnDestroyDevice();
 
+	SAFE_RELEASE(g_pDepthStencilDefaultDS);
 
 	SAFE_RELEASE(g_pDepthStencilView);
 	SAFE_RELEASE(g_pDepthStencilSRV);
@@ -475,15 +497,17 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 	{
 
 #ifdef TRIANGLE
+		pD3dImmediateContext->RSSetState(nullptr);
+		pD3dImmediateContext->OMSetDepthStencilState(g_pDepthStencilDefaultDS, 0x00);
+		
 		s_TriangleRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pDepthStencilView);
 #endif
 
+#ifdef DECAL
 		ID3D11RenderTargetView* pNullRTV = nullptr;
 		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
 		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
-
-#ifdef DECAL
-		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 #endif
 
 	
