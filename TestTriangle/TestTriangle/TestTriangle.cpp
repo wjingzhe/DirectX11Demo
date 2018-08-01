@@ -265,7 +265,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 40.0f*SceneExtends;
 
 
-		XMVECTOR vEye = SceneCenter - XMVectorSet(0.0, 0.0f, 0.0f,0.0f);
+		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f,0.0f);
 		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f,0.0f, -10.0f, 0.0f);//要看到前面的剑法
 		g_Camera.SetButtonMasks();//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
@@ -277,7 +277,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMStoreFloat3(&vBoundaryMax, BoundaryMax);
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 #ifdef DECAL
-		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 100.0f, -500.0f, 0.0f));
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 50.0f, 0.0f, 0.0f));
 #endif // DECAL
 
 

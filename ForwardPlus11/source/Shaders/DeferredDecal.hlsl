@@ -78,35 +78,49 @@ bool IsPointInsideBox(float4 PosL)
 	}
 	return false;
 }
-// convert a depth value from post-projection space into view space
-float3 ConvertProjToView(float3 projPos3)
+
+//float3 ConverProjToView(float3 projPos3)
+//{
+//	float3 viewPos;
+//
+//}
+
+float3 ConvertNdcToProj(float3 ndcPos3)
 {
-	float3 viewPos3;
-	viewPos3.x = projPos3.x*g_tanHalfFovY*g_radioWtoH;
-	viewPos3.y = projPos3.y*g_radioWtoH;
-	viewPos3.z = g_NearZ*g_RangZ / (g_RangZ - projPos3.z);
-	return viewPos3;
+	float3 projPos3;
+	projPos3.x = ndcPos3.x*g_radioWtoH;
+	projPos3.y = ndcPos3.y;
+	projPos3.z = ndcPos3.z;
+	return projPos3;
+}
+
+float3 ConvertScreenToNdc(float2 screenXY)
+{
+	//return float4(1.0f,0.0f,0.0f,1.0f);
+	float tempX = screenXY.x - 0.5f;
+	float tempY = screenXY.y - 0.5f;
+	float tempDepth = g_TextureDepth.Load(uint3(tempX, tempY, 0)).x;
+
+	float ndcX = tempX / g_RenderTargetHalfSize.x - 1.0f;
+	float ndcY = -tempY / g_RenderTargetHalfSize.y + 1.0f;
+
+	return float3(ndcX, ndcY, tempDepth);
+}
+
+
+float2 ConvertLocalToTexture(float2 PosL)
+{
+	float2 uv = (PosL.xy + boxExtend.xy / 2) / boxExtend.xy;
+	uv.y = -uv.y;
+	return uv;
 }
 
 float4 DeferredDecalPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 {
-	//return float4(1.0f,0.0f,0.0f,1.0f);
-	float tempX = pin.PositionH.x - 0.5f;
-	float tempY = pin.PositionH.y - 0.5f;
-	float tempDepth = g_TextureDepth.Load(uint3(tempX, tempY, 0)).x;
-
-	float projMaxX = (tempX - g_RenderTargetHalfSize);
-	float projMaxY = (g_RenderTargetHalfSize.y - tempY);
-
-	float CurZ  = g_NearZ*g_RangZ / (g_RangZ - tempDepth);
-//	float CurZ = 1.f / (tempDepth*g_mProjectionInv._34 + g_mProjectionInv._44);
-
-	float3 projPos3 = float3(projMaxX*CurZ / g_FarZ, projMaxY*CurZ / g_FarZ, tempDepth);
-
-	float3 viewPos3;
-	viewPos3.x = projPos3.x*g_tanHalfFovY*g_radioWtoH;
-	viewPos3.y = projPos3.y*g_radioWtoH;
-	viewPos3.z = CurZ;
+	float3 ndcPos3 = ConvertScreenToNdc(pin.PositionH.xy);
+	float3 projPos3 = ConvertNdcToProj(ndcPos3);
+	float viewdDepth = g_NearZ*g_RangZ / (g_RangZ - projPos3.z);
+	float3 viewPos3 = float3(projPos3.x*viewdDepth*g_tanHalfFovY, projPos3.y*viewdDepth*g_tanHalfFovY, viewdDepth);
 
 	float4 PosL = mul(float4(viewPos3,1.0f), g_mWorldViewInv);
 
@@ -116,11 +130,11 @@ float4 DeferredDecalPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 		discard;
 	}
 
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+//	return float4(1.0f, 0.0f, 0.0f, 1.0f);
 
-	float3 uvw = (PosL.xyz + boxExtend.xyz / 2) / boxExtend.xyz;
-
-	float4 color = g_TextureDecal.Load(uvw);
+	//float3 uvw = (PosL.xyz + boxExtend.xyz / 2) / boxExtend.xyz;
+	float2 uv = ConvertLocalToTexture(PosL.xy);
+	float4 color = g_TextureDecal.Sample(g_Sampler, uv);
 
 	if (color.a < g_fAlphaTest)
 	{

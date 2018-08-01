@@ -15,7 +15,7 @@
 
 //#define FORWARDPLUS
 #define TRIANGLE
-//#define DECAL
+#define DECAL
 
 using namespace DirectX;
 using namespace Triangle;
@@ -337,7 +337,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../len_full.jpg", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../AMD.ico", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
 	
 	XMVECTOR SceneMin, SceneMax;
 
@@ -356,7 +356,15 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #endif // FORWARDPLUS
 
 #ifdef TRIANGLE
+
+#ifdef FORWARDPLUS
+	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, 0.0f, 0.0f);
+#else
 	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, -100.0f, 500.0f);
+#endif // FORWARDPLUS
+
+
+	
 	if (!bIsSceneMinMaxInited)
 	{
 		Triangle::TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
@@ -366,7 +374,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #endif
 
 #ifdef DECAL
-	s_DeferredDecalRender.GenerateMeshData(100, 100, 100, 6);
+	s_DeferredDecalRender.GenerateMeshData(101, 101, 101, 6);
 	if (!bIsSceneMinMaxInited)
 	{
 		PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
@@ -422,7 +430,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 40.0f*SceneExtends;
 
 
-		XMVECTOR vEye = SceneCenter - XMVectorSet(0.0, 0.0f, 0.0f, 0.0f);
+		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 0.0f);
 		XMVECTOR vLookAtPos = SceneCenter - XMVectorSet(0.0f, 0.0f, -10.0f, 0.0f);//要看到前面的剑法
 		g_Camera.SetButtonMasks();//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
@@ -437,7 +445,11 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		g_Camera.SetClipToBoundary(true, &vBoundaryMin, &vBoundaryMax);
 
 #ifdef DECAL
-		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 100.0f, -500.0f, 0.0f));
+#ifdef FORWARDPLUS
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
+#else
+		s_DeferredDecalRender.SetDecalPosition(SceneCenter - XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
+#endif
 #endif // DECAL
 
 

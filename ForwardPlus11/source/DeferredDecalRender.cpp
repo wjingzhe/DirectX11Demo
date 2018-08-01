@@ -125,14 +125,14 @@ namespace PostProcess
 		DepthStencilDesc.StencilEnable = TRUE;
 		DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 		DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_INCR;
+		DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_GREATER;
+		DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 		DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-		DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_INCR;
-		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+		DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
+		DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthAlwaysAndStencilOnlyOneTime));
 
 
