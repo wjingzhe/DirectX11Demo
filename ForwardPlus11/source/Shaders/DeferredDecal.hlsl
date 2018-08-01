@@ -79,11 +79,15 @@ bool IsPointInsideBox(float4 PosL)
 	return false;
 }
 
-//float3 ConverProjToView(float3 projPos3)
-//{
-//	float3 viewPos;
-//
-//}
+float3 ConvertProjToView(float3 projPos3)
+{
+	float viewdDepth = g_NearZ*g_RangZ / (g_RangZ - projPos3.z);
+	float3 viewPos3;
+	float k = viewdDepth*g_tanHalfFovY;
+	viewPos3.xy = projPos3.xy*k;
+	viewPos3.z = viewdDepth;
+	return viewPos3;
+}
 
 float3 ConvertNdcToProj(float3 ndcPos3)
 {
@@ -119,8 +123,7 @@ float4 DeferredDecalPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 {
 	float3 ndcPos3 = ConvertScreenToNdc(pin.PositionH.xy);
 	float3 projPos3 = ConvertNdcToProj(ndcPos3);
-	float viewdDepth = g_NearZ*g_RangZ / (g_RangZ - projPos3.z);
-	float3 viewPos3 = float3(projPos3.x*viewdDepth*g_tanHalfFovY, projPos3.y*viewdDepth*g_tanHalfFovY, viewdDepth);
+	float3 viewPos3 = ConvertProjToView(projPos3);
 
 	float4 PosL = mul(float4(viewPos3,1.0f), g_mWorldViewInv);
 
