@@ -153,9 +153,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\source\BasePostProcessRender.h" />
     <ClInclude Include="..\source\DeferredDecalRender.h" />
     <ClInclude Include="..\source\ForwardPlusRender.h" />
     <ClInclude Include="..\source\GeometryHelper.h" />
+    <ClInclude Include="..\source\DeferredVoxelCutoutRender.h" />
+    <ClInclude Include="..\source\ScreenBlendRender.h" />
     <ClInclude Include="..\source\TriangleRender.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -163,9 +166,12 @@
     <ClInclude Include="ForwardPlus11.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\source\BasePostProcessRender.cpp" />
     <ClCompile Include="..\source\DeferredDecalRender.cpp" />
     <ClCompile Include="..\source\ForwardPlusRender.cpp" />
     <ClCompile Include="..\source\GeometryHelper.cpp" />
+    <ClCompile Include="..\source\DeferredVoxelCutoutRender.cpp" />
+    <ClCompile Include="..\source\ScreenBlendRender.cpp" />
     <ClCompile Include="..\source\TriangleRender.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -217,6 +223,16 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\Shaders\DeferredVoxelCutout.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\Shaders\ScreenBlend.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

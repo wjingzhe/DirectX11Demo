@@ -18,7 +18,7 @@ namespace PostProcess
 		DirectX::XMMATRIX mWorldViewProjection;
 		DirectX::XMMATRIX mWorld;
 		DirectX::XMMATRIX mWorldViewInv;
-		DirectX::XMFLOAT4 boxExtend;
+		DirectX::XMFLOAT4 vBoxExtend;
 	};
 
 	struct CB_PER_FRAME
@@ -27,7 +27,7 @@ namespace PostProcess
 		DirectX::XMMATRIX m_mProjection;
 		DirectX::XMMATRIX m_mProjectionInv;
 		DirectX::XMFLOAT4 ProjParams;
-		DirectX::XMFLOAT4 RenderTargetHalfSize;
+		DirectX::XMFLOAT4 RenderTargetHalfSizeAndFarZ;
 	};
 
 #pragma pack(pop)
@@ -59,7 +59,7 @@ namespace PostProcess
 		ID3D11Buffer* m_pMeshVB;
 		ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
 		ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
-		ID3D11PixelShader* m_pScenePosAndNomralAndTexturePS;
+		ID3D11PixelShader* m_pScenePosAndNormalAndTexturePS;
 
 		void SetDecalPosition(const DirectX::XMVECTOR& position)
 		{

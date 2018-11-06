@@ -5,9 +5,9 @@ namespace PostProcess
 {
 	DeferredDecalRender::DeferredDecalRender()
 		:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr),
-		m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNomralAndTexturePS(nullptr),
+		m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNormalAndTexturePS(nullptr),
 		m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false),
-		m_pRasterizerState(nullptr), m_pDecalTextureSRV(nullptr),
+		m_pRasterizerState(nullptr), m_pDecalTextureSRV(nullptr), m_pDepthAlwaysAndStencilOnlyOneTime(nullptr),
 		m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
 		//SamplerState
 		m_pSamAnisotropic(nullptr),
@@ -50,7 +50,7 @@ namespace PostProcess
 		{
 			SAFE_RELEASE(m_pPosAndNormalAndTextureInputLayout);
 			SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-			SAFE_RELEASE(m_pScenePosAndNomralAndTexturePS);
+			SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
 
 
 			const D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -67,7 +67,7 @@ namespace PostProcess
 
 			//Add pixel shader
 
-			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNomralAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 				L"ps_5_0", L"DeferredDecalPS", L"DeferredDecal.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
 			m_bShaderInited = true;
@@ -228,7 +228,7 @@ namespace PostProcess
 		pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 		pPerObject->mWorld = XMMatrixTranspose(mWorld);
 		pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
-		pPerObject->boxExtend = m_BoxExtend;
+		pPerObject->vBoxExtend = m_BoxExtend;
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
@@ -257,9 +257,9 @@ namespace PostProcess
 			pPerFrame->ProjParams.y = pCamera->GetAspect();
 			pPerFrame->ProjParams.z = nearZ;
 			pPerFrame->ProjParams.w = fRange;
-			pPerFrame->RenderTargetHalfSize.x = pBackBufferDesc->Width/2.0f;
-			pPerFrame->RenderTargetHalfSize.y = pBackBufferDesc->Height/2.0f;
-			pPerFrame->RenderTargetHalfSize.z = farZ;
+			pPerFrame->RenderTargetHalfSizeAndFarZ.x = pBackBufferDesc->Width/2.0f;
+			pPerFrame->RenderTargetHalfSizeAndFarZ.y = pBackBufferDesc->Height/2.0f;
+			pPerFrame->RenderTargetHalfSizeAndFarZ.z = farZ;
 
 			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
 			pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
@@ -287,7 +287,7 @@ namespace PostProcess
 		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-		pD3dImmediateContext->PSSetShader(m_pScenePosAndNomralAndTexturePS, nullptr, 0);
+		pD3dImmediateContext->PSSetShader(m_pScenePosAndNormalAndTexturePS, nullptr, 0);
 		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 		pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);
@@ -316,7 +316,7 @@ namespace PostProcess
 		SAFE_RELEASE(m_pMeshVB);
 
 		SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-		SAFE_RELEASE(m_pScenePosAndNomralAndTexturePS);
+		SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
 
 		SAFE_RELEASE(m_pConstantBufferPerObject);
 		SAFE_RELEASE(m_pConstantBufferPerFrame);

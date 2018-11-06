@@ -95,6 +95,30 @@ GeometryHelper::MeshData GeometryHelper::CreateBox(float width, float height, fl
 	return meshData;
 }
 
+GeometryHelper::MeshData&& GeometryHelper::CreateScreenQuad()
+{
+	MeshData meshData;
+
+	Vertex v[4];
+
+	//Fill int the front face vertex face
+	v[0] = Vertex(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+	v[1] = Vertex(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f);
+	v[2] = Vertex(1.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f);
+	v[3] = Vertex(0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f);
+
+	meshData.Vertices.assign(&v[0], &v[4]);
+
+	uint32 i[6];
+	// Fill in the front face index data
+	i[0] = 0; i[1] = 1; i[2] = 2;
+	i[3] = 0; i[4] = 2; i[5] = 3;
+
+	meshData.Indices32.assign(&i[0], &i[6]);
+
+	return std::move(meshData);
+}
+
 //jingz todo
 void GeometryHelper::Subdivide(MeshData & meshData)
 {

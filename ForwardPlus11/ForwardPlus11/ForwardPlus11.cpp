@@ -8,6 +8,7 @@
 #include "../source/TriangleRender.h"
 #include "../source/ForwardPlusRender.h"
 #include "../source/DeferredDecalRender.h"
+#include "../source/DeferredVoxelCutoutRender.h"
 #include <algorithm>
 #include "../../DXUT/Optional/DXUTSettingsDlg.h"
 #include "../../DXUT/Core/WICTextureLoader.h"

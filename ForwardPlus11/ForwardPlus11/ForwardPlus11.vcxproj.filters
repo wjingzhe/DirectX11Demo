@@ -45,6 +45,15 @@
     <ClInclude Include="..\source\TriangleRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\DeferredVoxelCutoutRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\BasePostProcessRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ScreenBlendRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,6 +72,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\TriangleRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\DeferredVoxelCutoutRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\BasePostProcessRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ScreenBlendRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,6 +111,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="..\source\Shaders\DeferredDecal.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\DeferredVoxelCutout.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\ScreenBlend.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

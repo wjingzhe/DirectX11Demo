@@ -61,6 +61,8 @@ public:
 
 	static MeshData CreateBox(float width=1.0f,float height=1.0f,float depth=1.0f,uint32 numSubdivision=6,float centerX=0.0f, float centerY=0.0f, float centerZ=0.0f);
 
+	static MeshData&& CreateScreenQuad();
+
 	static void Subdivide(MeshData& meshData);
 
 protected:
