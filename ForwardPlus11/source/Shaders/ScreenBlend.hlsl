@@ -12,12 +12,12 @@ struct VS_INPUT
 
 struct VS_OUTPUT
 {
-	float3 PositionH:SV_POSITION;
+	float4 PositionH:SV_POSITION;
 	float2 TextureUV:TEXCOORD0;
 };
 
 
-VS_INPUT ScreenBlendVS(VS_INPUT vin)
+VS_OUTPUT ScreenBlendVS(VS_INPUT vin)
 {
 	VS_OUTPUT vout;
 	vout.PositionH = float4(vin.PositionL, 0.0f);
@@ -26,7 +26,7 @@ VS_INPUT ScreenBlendVS(VS_INPUT vin)
 	return vout;
 }
 
-float4 ScreenBlendPS(VS_OUTPUT pin)
+float4 ScreenBlendPS(VS_OUTPUT pin):SV_TARGET
 {
-	return g_TextureBlendSrc.Sample(g_Sampler, pin.uv);
+	return g_TextureBlendSrc.Sample(g_Sampler, pin.TextureUV);
 }

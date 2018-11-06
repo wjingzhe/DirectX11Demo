@@ -129,10 +129,10 @@ HRESULT PostProcess::BasePostProcessRender::CreateCommonBuffers(ID3D11Device * p
 	ConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	ConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-	ConstantBufferDesc.ByteWidth = constBufferPerObjectSize;
+	ConstantBufferDesc.ByteWidth = constBufferPerObjectSize>4? constBufferPerObjectSize :16;
 	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerObject));
 
-	ConstantBufferDesc.ByteWidth = constBufferPerFrameSize;
+	ConstantBufferDesc.ByteWidth = constBufferPerFrameSize>4 ? constBufferPerFrameSize : 16; 
 	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerFrame));
 
 	return hr;

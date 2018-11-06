@@ -9,6 +9,7 @@
 #include "../source/ForwardPlusRender.h"
 #include "../source/DeferredDecalRender.h"
 #include "../source/DeferredVoxelCutoutRender.h"
+#include "../source/ScreenBlendRender.h"
 #include <algorithm>
 #include "../../DXUT/Optional/DXUTSettingsDlg.h"
 #include "../../DXUT/Core/WICTextureLoader.h"
@@ -37,6 +38,7 @@ static Triangle::TriangleRender s_TriangleRender;
 
 #ifdef DECAL
 static PostProcess::DeferredDecalRender s_DeferredDecalRender;
+static PostProcess::ScreenBlendRender s_ScreenBlendRender;
 #endif
 
 // Direct3D 11 resources
@@ -383,6 +385,10 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	s_DeferredDecalRender.SetDecalTextureSRV(g_pDecalTextureSRV);
+
+	V_RETURN(s_ScreenBlendRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+	s_ScreenBlendRender.SetDecalTextureSRV(g_pDecalTextureSRV);
+
 #endif
 
 	//Create state objects
@@ -493,6 +499,7 @@ HRESULT AddShadersToCache()
 
 #ifdef DECAL
 	s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
+	s_ScreenBlendRender.AddShadersToCache(&g_ShaderCache);
 #endif
 
 	return hr;
@@ -542,6 +549,8 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 
 #ifdef DECAL
 	s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+	s_ScreenBlendRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+
 #endif
 
 	return hr;
@@ -570,6 +579,7 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 #endif
 #ifdef DECAL
 	s_DeferredDecalRender.OnReleasingSwapChain();
+	s_ScreenBlendRender.OnReleasingSwapChain();
 #endif
 
 
@@ -609,6 +619,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 #endif
 #ifdef DECAL
 	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
+	s_ScreenBlendRender.OnD3D11DestroyDevice(pUserContext);
 #endif
 	
 	//AMD
@@ -756,6 +767,11 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
 		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
 		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+
+
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+
+
 #endif
 
 		TIMER_End(); // Render

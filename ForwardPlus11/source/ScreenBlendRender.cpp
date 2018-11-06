@@ -17,10 +17,12 @@ void PostProcess::ScreenBlendRender::AddShadersToCache(AMD::ShaderCache * pShade
 	const D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,24,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 
-	INT32 size = ARRAYSIZE(layout);
+	UINT size = ARRAYSIZE(layout);
 
 	BasePostProcessRender::AddShadersToCache(pShaderCache, L"ScreenBlendVS", L"ScreenBlendPS", L"ScreenBlend.hlsl", layout, size);
 }
@@ -103,7 +105,7 @@ HRESULT PostProcess::ScreenBlendRender::CreateOtherRenderStateResources(ID3D11De
 	RasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	RasterizerDesc.CullMode = D3D11_CULL_NONE;
 	RasterizerDesc.FrontCounterClockwise = FALSE;
-	RasterizerDesc.DepthBias = 0.0f;
+	RasterizerDesc.DepthBias = 0;
 	RasterizerDesc.DepthBiasClamp = 0.0f;
 	RasterizerDesc.SlopeScaledDepthBias = 0.0f;
 	RasterizerDesc.DepthClipEnable = TRUE;
@@ -134,7 +136,7 @@ HRESULT PostProcess::ScreenBlendRender::CreateOtherRenderStateResources(ID3D11De
 
 	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
 	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &m_pBlendState));
 

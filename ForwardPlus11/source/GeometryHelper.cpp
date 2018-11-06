@@ -95,7 +95,7 @@ GeometryHelper::MeshData GeometryHelper::CreateBox(float width, float height, fl
 	return meshData;
 }
 
-GeometryHelper::MeshData&& GeometryHelper::CreateScreenQuad()
+GeometryHelper::MeshData GeometryHelper::CreateScreenQuad()
 {
 	MeshData meshData;
 
@@ -116,7 +116,7 @@ GeometryHelper::MeshData&& GeometryHelper::CreateScreenQuad()
 
 	meshData.Indices32.assign(&i[0], &i[6]);
 
-	return std::move(meshData);
+	return meshData;
 }
 
 //jingz todo
