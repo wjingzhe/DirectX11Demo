@@ -160,6 +160,7 @@
     <ClInclude Include="..\source\DeferredVoxelCutoutRender.h" />
     <ClInclude Include="..\source\RadialBlurRender.h" />
     <ClInclude Include="..\source\ScreenBlendRender.h" />
+    <ClInclude Include="..\source\SphereRender.h" />
     <ClInclude Include="..\source\TriangleRender.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -174,6 +175,7 @@
     <ClCompile Include="..\source\DeferredVoxelCutoutRender.cpp" />
     <ClCompile Include="..\source\RadialBlurRender.cpp" />
     <ClCompile Include="..\source\ScreenBlendRender.cpp" />
+    <ClCompile Include="..\source\SphereRender.cpp" />
     <ClCompile Include="..\source\TriangleRender.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

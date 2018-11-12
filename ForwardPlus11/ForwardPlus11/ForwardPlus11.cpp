@@ -11,6 +11,7 @@
 #include "../source/ScreenBlendRender.h"
 #include "../source/RadialBlurRender.h"
 #include "../source/DeferredVoxelCutoutRender.h"
+#include "../source/SphereRender.h"
 #include <algorithm>
 #include "../../DXUT/Optional/DXUTSettingsDlg.h"
 #include "../../DXUT/Core/WICTextureLoader.h"
@@ -43,6 +44,8 @@ static Triangle::TriangleRender s_TriangleRender;
 #ifdef DECAL
 static PostProcess::DeferredDecalRender s_DeferredDecalRender;
 static PostProcess::DeferredVoxelCutoutRender s_DeferredVoxelCutoutRender;
+
+static PostProcess::SphereRender s_SphereRender;
 static PostProcess::RadialBlurRender s_RadialBlurRender;
 static PostProcess::ScreenBlendRender s_ScreenBlendRender;
 
@@ -399,12 +402,13 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(s_DeferredVoxelCutoutRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 
+	V_RETURN(s_SphereRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+
 	V_RETURN(s_RadialBlurRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	//s_RadialBlurRender.SetRadialBlurTextureSRV(g_pDecalTextureSRV);
 
 	V_RETURN(s_ScreenBlendRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	//s_ScreenBlendRender.SetSrcTextureSRV(g_pDecalTextureSRV);
-
 
 
 
@@ -524,6 +528,7 @@ HRESULT AddShadersToCache()
 #ifdef DECAL
 	s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
 	s_DeferredVoxelCutoutRender.AddShadersToCache(&g_ShaderCache);
+	s_SphereRender.AddShadersToCache(&g_ShaderCache);
 	s_RadialBlurRender.AddShadersToCache(&g_ShaderCache);
 	s_ScreenBlendRender.AddShadersToCache(&g_ShaderCache);
 
@@ -602,6 +607,7 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 #ifdef DECAL
 	s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_DeferredVoxelCutoutRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+	s_SphereRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_RadialBlurRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_ScreenBlendRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 
@@ -641,6 +647,7 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 #ifdef DECAL
 	s_DeferredDecalRender.OnReleasingSwapChain();
 	s_DeferredVoxelCutoutRender.OnReleasingSwapChain();
+	s_SphereRender.OnReleasingSwapChain();
 	s_RadialBlurRender.OnReleasingSwapChain();
 	s_ScreenBlendRender.OnReleasingSwapChain();
 
@@ -691,6 +698,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 #ifdef DECAL
 	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
 	s_DeferredVoxelCutoutRender.OnD3D11DestroyDevice(pUserContext);
+	s_SphereRender.OnD3D11DestroyDevice(pUserContext);
 	s_RadialBlurRender.OnD3D11DestroyDevice(pUserContext);
 	s_ScreenBlendRender.OnD3D11DestroyDevice(pUserContext);
 
@@ -844,7 +852,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 		s_DeferredVoxelCutoutRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
 
-		
+//		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
 
 		s_RadialBlurRender.SetRadialBlurTextureSRV(g_pTempTextureSRV[0]);
 		s_RadialBlurRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[1], g_pTempDepthStencilView, g_pDepthStencilSRV);
