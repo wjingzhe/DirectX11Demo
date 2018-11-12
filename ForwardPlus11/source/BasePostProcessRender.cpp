@@ -7,6 +7,7 @@ PostProcess::BasePostProcessRender::BasePostProcessRender()
 	m_pConstantBufferPerObject(nullptr),m_pConstantBufferPerFrame(nullptr),
 	m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),
 	m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
+	m_pSrcTextureSRV(nullptr),
 	m_bShaderInited(false)
 {
 }
@@ -196,7 +197,7 @@ HRESULT PostProcess::BasePostProcessRender::CreateOtherRenderStateResources(ID3D
 
 	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
 	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &m_pBlendState));
 
@@ -212,7 +213,7 @@ void PostProcess::BasePostProcessRender::ReleaseAllD3D11COM(void)
 
 void PostProcess::BasePostProcessRender::ReleaseSwapChainAssociatedCOM(void)
 {
-
+	SAFE_RELEASE(m_pSrcTextureSRV);
 }
 
 void PostProcess::BasePostProcessRender::ReleaseOneTimeInitedCOM(void)

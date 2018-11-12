@@ -5,15 +5,17 @@ PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr),
 	m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNormalAndTexturePS(nullptr),
 	m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false),
-	m_pRasterizerState(nullptr), m_pDepthAlwaysAndStencilOnlyOneTime(nullptr),
+	m_pRasterizerState(nullptr), m_pDepthLessAndStencilOnlyOneTime(nullptr),
 
 	m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
 	m_pSamAnisotropic(nullptr),
-	m_BoxExtend(100.0f, 100.0f, 100.0f, 1.0f),
-	m_CommonColor4(1.0f,1.0f,1.0f,1.0f),
-	m_MaskedColor4(0.0f,0.0f,0.0f,1.0f)
+	m_VoxelExtend(100.0f, 100.0f, 100.0f, 1.0f),
+	m_CommonColor(0.7f,0.7f,0.7f,0.4f),
+	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.1f)
 {
+	GenerateMeshData(100, 200, 200, 6);
+
 }
 
 PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
@@ -23,11 +25,10 @@ PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
 
 void PostProcess::DeferredVoxelCutoutRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
 {
-	m_BoxExtend.x = width;
-	m_BoxExtend.y = height;
-	m_BoxExtend.z = depth;
+	m_VoxelExtend = DirectX::XMFLOAT4(150.0f, 0.0f, 0.0f, width);
+	//m_VoxelExtend.w = width;
 
-	m_MeshData = GeometryHelper::CreateBox(width, height, depth, numSubdivision);
+	m_MeshData = GeometryHelper::CreateSphere(width,20,20, DirectX::XMFLOAT3(150.0f, 0.0f, 0.0f));
 }
 
 void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
@@ -106,7 +107,7 @@ HRESULT PostProcess::DeferredVoxelCutoutRender::OnD3DDeviceCreated(ID3D11Device 
 	//Create DepthStencilState
 	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
 	DepthStencilDesc.DepthEnable = TRUE;
-	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	DepthStencilDesc.StencilEnable = TRUE;
 	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
@@ -119,7 +120,7 @@ HRESULT PostProcess::DeferredVoxelCutoutRender::OnD3DDeviceCreated(ID3D11Device 
 	DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthAlwaysAndStencilOnlyOneTime));
+	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthLessAndStencilOnlyOneTime));
 
 
 	D3D11_RASTERIZER_DESC RasterizerDesc;
@@ -189,9 +190,9 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
 
 	//清理背景颜色
-	float ClearColor[4] = { 0.0f,0.0f,0.0f,1.0f, };
+	float ClearColor[4] = { 0.0f,0.0f,0.0f,0.0f, };
 	pD3dImmediateContext->ClearRenderTargetView(pRTV, ClearColor);
-
+	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	//开始绘制在体素盒中的元素颜色
 
@@ -225,7 +226,7 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 	pPerObject->mWorld = XMMatrixTranspose(mWorld);
 	pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
-	pPerObject->vBoxExtend = m_BoxExtend;
+	pPerObject->vBoxExtend = m_VoxelExtend;
 	pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
@@ -258,8 +259,8 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 		pPerFrame->RenderTargetHalfSizeAndFarZ.y = pBackBufferDesc->Height / 2.0f;
 		pPerFrame->RenderTargetHalfSizeAndFarZ.z = farZ;
 		
-		pPerFrame->vCommonColor4 = m_CommonColor4;
-		pPerFrame->vMaskedColor4 = m_MaskedColor4;
+		pPerFrame->vCommonColor4 = m_CommonColor;
+		pPerFrame->vMaskedColor4 = m_OverlapMaskedColor;
 
 
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
@@ -271,8 +272,7 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 
 
 	pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
-	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
-	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthAlwaysAndStencilOnlyOneTime, 1);
+	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthLessAndStencilOnlyOneTime, 1);
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 	pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
 	pD3dImmediateContext->RSSetState(m_pRasterizerState);
@@ -331,7 +331,7 @@ void PostProcess::DeferredVoxelCutoutRender::ReleaseOneTimeInitedCOM(void)
 	SAFE_RELEASE(m_pConstantBufferPerObject);
 	SAFE_RELEASE(m_pConstantBufferPerFrame);
 
-	SAFE_RELEASE(m_pDepthAlwaysAndStencilOnlyOneTime);
+	SAFE_RELEASE(m_pDepthLessAndStencilOnlyOneTime);
 	SAFE_RELEASE(m_pRasterizerState);
 
 	//SAFE_RELEASE(m_pDecalTextureSRV);

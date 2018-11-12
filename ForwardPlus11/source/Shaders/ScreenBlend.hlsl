@@ -1,5 +1,5 @@
 
-Texture2D<float4> g_TextureBlendSrc:register(t1);
+Texture2D<float4> g_TextureBlendSrc:register(t0);
 SamplerState g_Sampler:register(s0);
 
 struct VS_INPUT
@@ -20,7 +20,7 @@ struct VS_OUTPUT
 VS_OUTPUT ScreenBlendVS(VS_INPUT vin)
 {
 	VS_OUTPUT vout;
-	vout.PositionH = float4(vin.PositionL, 0.0f);
+	vout.PositionH = float4(vin.PositionL, 1.0f);
 	vout.TextureUV = vin.TextureUV;
 
 	return vout;

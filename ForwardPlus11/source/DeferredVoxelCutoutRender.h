@@ -91,10 +91,10 @@ namespace PostProcess
 	private:
 		DirectX::XMFLOAT4 m_Position4;
 
-		DirectX::XMFLOAT4 m_BoxExtend;
+		DirectX::XMFLOAT4 m_VoxelExtend;
 
 
-		ID3D11DepthStencilState* m_pDepthAlwaysAndStencilOnlyOneTime;
+		ID3D11DepthStencilState* m_pDepthLessAndStencilOnlyOneTime;
 		ID3D11RasterizerState* m_pRasterizerState;
 		//SamplerState
 		ID3D11SamplerState* m_pSamAnisotropic;
@@ -102,8 +102,8 @@ namespace PostProcess
 		ID3D11Buffer* m_pConstantBufferPerObject;
 		ID3D11Buffer* m_pConstantBufferPerFrame;
 
-		DirectX::XMFLOAT4 m_CommonColor4;
-		DirectX::XMFLOAT4 m_MaskedColor4;
+		DirectX::XMFLOAT4 m_CommonColor;
+		DirectX::XMFLOAT4 m_OverlapMaskedColor;
 
 		bool m_bShaderInited;
 	};

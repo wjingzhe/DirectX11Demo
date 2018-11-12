@@ -26,8 +26,8 @@ cbuffer cbPerFrame : register(b1)
 	float2 g_RenderTargetHalfSize : packoffset(c10);
 	float g_FarZ:packoffset(c10.z);
 
-	float4 g_CommonColor4:packoffset(c11);
-	float4 g_MaskedColor4:packoffset(c12);
+	float4 g_CommonColor:packoffset(c11);
+	float4 g_OverlapMaskedColor:packoffset(c12);
 };
 
 struct VS_INPUT_SCENE
@@ -81,6 +81,25 @@ bool IsPointInsideBox(float4 PosL)
 	return false;
 }
 
+
+bool IsPointInsidePhere(float4 PosL)
+{
+	float radius = g_vBoxExtend.w;
+
+	PosL.w = 0.0f;
+
+	float4 center = PosL - g_vBoxExtend;
+
+	center.w = 0.0f;
+
+	if(length(center)<radius)
+	{
+		return true;
+	}
+	return false;
+}
+
+
 float3 ConvertProjToView(float3 projPos3)
 {
 	float viewdDepth = g_NearZ*g_RangZ / (g_RangZ - projPos3.z);
@@ -129,13 +148,13 @@ float4 DeferVoxelCutoutPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 
 	float4 PosL = mul(float4(viewPos3,1.0f), g_mWorldViewInv);
 
-	bool flag = IsPointInsideBox(PosL);
-	if (!flag)
+	bool flag = IsPointInsidePhere(PosL);
+	if (flag)
 	{
-		return g_CommonColor4;
+		return g_OverlapMaskedColor;
 	}
 
-	return g_MaskedColor4;
+	return g_CommonColor;
 
 	////float3 uvw = (PosL.xyz + g_vBoxExtend.xyz / 2) / g_vBoxExtend.xyz;
 	//float2 uv = ConvertLocalToTexture(PosL.xy);

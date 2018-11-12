@@ -67,6 +67,13 @@ namespace PostProcess
 			m_Position4 = position;
 		}
 
+		void SetSrcTextureSRV(ID3D11ShaderResourceView* pNewSRV)
+		{
+			SAFE_RELEASE(m_pSrcTextureSRV);
+			m_pSrcTextureSRV = pNewSRV;
+			m_pSrcTextureSRV->AddRef();
+		}
+
 
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
@@ -102,6 +109,8 @@ namespace PostProcess
 
 		UINT m_uSizeConstantBufferPerObject;
 		UINT m_uSizeConstantBufferPerFrame;
+
+		ID3D11ShaderResourceView* m_pSrcTextureSRV;
 
 		bool m_bShaderInited;
 	};
