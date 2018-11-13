@@ -92,7 +92,7 @@ bool IsPointInsidePhere(float4 PosL)
 
 	center.w = 0.0f;
 
-	if(length(center)<radius)
+	if(length(center)<=(radius+0.1f))
 	{
 		return true;
 	}
@@ -149,7 +149,7 @@ float4 DeferVoxelCutoutPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 	float4 PosL = mul(float4(viewPos3,1.0f), g_mWorldViewInv);
 
 	bool flag = IsPointInsidePhere(PosL);
-	if (flag)
+	if (flag || (abs(pin.PositionH.z - ndcPos3.z)<=0.003f))
 	{
 		return g_OverlapMaskedColor;
 	}

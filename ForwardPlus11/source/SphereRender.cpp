@@ -3,7 +3,7 @@ using namespace DirectX;
 
 PostProcess::SphereRender::SphereRender():BasePostProcessRender()
 {
-	m_MeshData = GeometryHelper::CreateSphere(150,20,20, DirectX::XMFLOAT3(150.0f, 0.0f, 0.0f));
+	m_MeshData = GeometryHelper::CreateSphere(160,20,20, DirectX::XMFLOAT3(130.0f, 0.0f, 0.0f));
 }
 
 PostProcess::SphereRender::~SphereRender()
@@ -117,7 +117,7 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 
 
 
-	pD3dImmediateContext->OMSetRenderTargets(1, nullptr, pDepthStencilView);
+	pD3dImmediateContext->OMSetRenderTargets(0, nullptr, pDepthStencilView);
 	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
@@ -162,7 +162,7 @@ HRESULT PostProcess::SphereRender::CreateOtherRenderStateResources(ID3D11Device 
 	//Create DepthStencilState
 	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
 	DepthStencilDesc.DepthEnable = TRUE;
-	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	DepthStencilDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
 	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	DepthStencilDesc.StencilEnable = TRUE;
 	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;

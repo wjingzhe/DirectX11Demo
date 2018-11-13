@@ -11,8 +11,8 @@ PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	//SamplerState
 	m_pSamAnisotropic(nullptr),
 	m_VoxelExtend(100.0f, 100.0f, 100.0f, 1.0f),
-	m_CommonColor(0.7f,0.7f,0.7f,0.4f),
-	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.1f)
+	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
+	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.0f)
 {
 	GenerateMeshData(100, 200, 200, 6);
 
@@ -25,10 +25,10 @@ PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
 
 void PostProcess::DeferredVoxelCutoutRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
 {
-	m_VoxelExtend = DirectX::XMFLOAT4(150.0f, 0.0f, 0.0f, width);
+	m_VoxelExtend = DirectX::XMFLOAT4(130.0f, 0.0f, 0.0f, width);
 	//m_VoxelExtend.w = width;
 
-	m_MeshData = GeometryHelper::CreateSphere(width,20,20, DirectX::XMFLOAT3(150.0f, 0.0f, 0.0f));
+	m_MeshData = GeometryHelper::CreateSphere(width,20,20, DirectX::XMFLOAT3(130.0f, 0.0f, 0.0f));
 }
 
 void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)

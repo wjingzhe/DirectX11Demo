@@ -11,6 +11,7 @@ namespace PostProcess
 {
 	class BasePostProcessRender
 	{
+	protected:
 		//--------------------------------
 		// Constant buffers
 		//--------------------------------
@@ -57,12 +58,12 @@ namespace PostProcess
 			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV) = 0;
 
 
-		void SetMeshOffset(const DirectX::XMVECTOR& position)
+		void SetMeshCenterOffset(const DirectX::XMVECTOR& position)
 		{
 			XMStoreFloat4(&m_Position4, position);
 		}
 
-		void SetMeshOffset(const DirectX::XMFLOAT4& position)
+		void SetMeshCenterOffset(const DirectX::XMFLOAT4& position)
 		{
 			m_Position4 = position;
 		}

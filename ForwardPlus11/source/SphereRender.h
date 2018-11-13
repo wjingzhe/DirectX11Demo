@@ -9,25 +9,6 @@ namespace PostProcess
 		//--------------------------------
 		// Constant buffers
 		//--------------------------------
-#pragma pack(push,1)
-		struct CB_PER_OBJECT
-		{
-			DirectX::XMMATRIX mWorldViewProjection;
-			DirectX::XMMATRIX mWorld;
-			DirectX::XMMATRIX mWorldViewInv;
-			DirectX::XMFLOAT4 vBoxExtend;
-		};
-
-		struct CB_PER_FRAME
-		{
-			DirectX::XMVECTOR vCameraPos3AndAlphaTest;
-			DirectX::XMMATRIX m_mProjection;
-			DirectX::XMMATRIX m_mProjectionInv;
-			DirectX::XMFLOAT4 ProjParams;
-			DirectX::XMFLOAT4 RenderTargetHalfSizeAndFarZ;
-		};
-
-#pragma pack(pop)
 	public:
 		SphereRender();
 		~SphereRender();

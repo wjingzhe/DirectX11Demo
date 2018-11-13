@@ -48,7 +48,7 @@ void PostProcess::ScreenBlendRender::OnRender(ID3D11Device * pD3dDevice, ID3D11D
 
 	pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
-	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	//pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
@@ -93,7 +93,7 @@ HRESULT PostProcess::ScreenBlendRender::CreateOtherRenderStateResources(ID3D11De
 	DepthStencilDesc.StencilEnable = FALSE;
 	DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
 	DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_GREATER;
+	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
 	DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;

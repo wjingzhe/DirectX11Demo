@@ -7,8 +7,8 @@ PostProcess::RadialBlurRender::RadialBlurRender():BasePostProcessRender(), m_pRa
 	m_MeshData = GeometryHelper::CreateScreenQuad();
 	m_uSizeConstantBufferPerObject = sizeof(CB_PER_OBJECT);
 	m_uSizeConstantBufferPerFrame = sizeof(CB_PER_FRAME);
-	m_fRadialBlurLength = 0.1f;
-	m_iSampleCount = 30;
+	m_fRadialBlurLength = 0.8f;
+	m_iSampleCount = 100;
 }
 
 PostProcess::RadialBlurRender::~RadialBlurRender()
@@ -125,7 +125,7 @@ HRESULT PostProcess::RadialBlurRender::CreateOtherRenderStateResources(ID3D11Dev
 	DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
 	DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+	DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_NEVER;
 	DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
