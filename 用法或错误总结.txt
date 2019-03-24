@@ -1,4 +1,4 @@
-1.BasePostProcessRender使用通用的D3D11_INPUT_ELEMENT_DESC
+﻿1.BasePostProcessRender使用通用的D3D11_INPUT_ELEMENT_DESC
 	{
 		{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
@@ -9,4 +9,4 @@
 	并且要求和hlsl文件中的VS_INPUT对应，要不然ShaderCache编译流程会报错。
 	如果需要更改相关，则重载AddShadersToCache相关函数
 	
-2.屏幕坐标从[-1,1]，直接使用作为pixel坐标时候要注意，另外要注意不要将怕position4.zw两个值混淆，否则出现归一化异常的无显示效果的绘制。原因是：uv在错误的position插值下产生异常数据，采样不到正确的纹理数据
+2.屏幕坐标从[-1,1]，直接使用作为pixel坐标时候要注意，另外要注意不要将position4.zw两个值混淆，否则出现归一化异常的无显示效果的绘制。原因是：uv在错误的position插值下产生异常数据，采样不到正确的纹理数据
