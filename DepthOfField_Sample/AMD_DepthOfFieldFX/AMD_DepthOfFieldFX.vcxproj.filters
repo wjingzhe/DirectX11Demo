@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{188a1d39-ec99-48e0-80f2-2e3ccf1bfe37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders\inc">
+      <UniqueIdentifier>{3edf6d3e-430c-45b0-b4bd-06666953c7fb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\AMD_DepthOfFieldFX.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AMD_DepthOfFieldFX_Precompiled.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AMD_DepthOfFieldFX_Opaque.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="inc\AMD_Types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\AMD_DepthOfFieldFX.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AMD_DepthOfFieldFX_Opaque.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Shaders\inc\CS_BOX_FAST_FILTER_SETUP.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+    <None Include="src\Shaders\inc\CS_DOUBLE_VERTICAL_INTEGRATE.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+    <None Include="src\Shaders\inc\CS_FAST_FILTER_SETUP.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+    <None Include="src\Shaders\inc\CS_FAST_FILTER_SETUP_QUARTER_RES.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+    <None Include="src\Shaders\inc\CS_READ_FINAL_RESULT.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+    <None Include="src\Shaders\inc\CS_VERTICAL_INTEGRATE.inc">
+      <Filter>Source Files\Shaders\inc</Filter>
+    </None>
+  </ItemGroup>
+</Project>

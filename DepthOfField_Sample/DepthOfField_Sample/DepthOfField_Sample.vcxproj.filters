@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{9b04a62b-0618-4057-abd1-e4a98a55906a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\inc">
+      <UniqueIdentifier>{3c8e2d9b-a15a-435b-9d94-f6bc747af64b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AMD_Lib">
+      <UniqueIdentifier>{1cbce8af-3e08-48ce-a91f-2196fe8c449e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\DeferredDecalRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ForwardPlusRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\GeometryHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\TriangleRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\DeferredVoxelCutoutRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\BasePostProcessRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\ScreenBlendRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\RadialBlurRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\SphereRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthOfField_Sample.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\AMD_Lib\AMD_Texture2D.h">
+      <Filter>Source Files\AMD_Lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\DeferredDecalRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ForwardPlusRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\GeometryHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\TriangleRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\DeferredVoxelCutoutRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\BasePostProcessRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\ScreenBlendRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\RadialBlurRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\SphereRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthOfField_Sample.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\AMD_Lib\AMD_Texture2D.cpp">
+      <Filter>Source Files\AMD_Lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DepthOfField_Sample.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="DepthOfField_Sample.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\Shaders\DrawBasicGeometry.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\ForwardPlus11.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\ForwardPlus11Common.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\ForwardPlus11Tiling.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\DeferredDecal.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\DeferredVoxelCutout.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\ScreenBlend.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\RadialBlur.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\DepthOfFieldFX_Sample.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\DepthOfField_CsCalcDOF.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\GS_FULLSCREEN_INDEX_RT.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\PS_FULLSCREEN.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\PS_UNIT_CUBE.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\VS_CLIP_SPACE_CUBE.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\VS_FULLSCREEN.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\VS_FULLSCREEN_INDEX_RT.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\VS_SCREENQUAD.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\inc\VS_UNIT_CUBE.inc">
+      <Filter>Shaders\inc</Filter>
+    </None>
+    <None Include="..\source\Shaders\DepthOfFieldFX_FastFilterDOF.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>
