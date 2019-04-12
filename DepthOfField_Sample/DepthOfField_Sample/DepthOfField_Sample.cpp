@@ -1347,6 +1347,7 @@ void SetCameraConstantBuffer(ID3D11DeviceContext* pD3DContext, ID3D11Buffer* pD3
 		cameraDesc.m_Projection = XMMatrixTranspose(proj);
 		cameraDesc.m_View_Inv = XMMatrixTranspose(viewInv);
 		cameraDesc.m_Projection_Inv = XMMatrixTranspose(projInv);
+		cameraDesc.m_ViewProjection = XMMatrixTranspose(viewProj);
 		cameraDesc.m_ViewProjection_Inv = XMMatrixTranspose(viewProjInv);
 		cameraDesc.m_Fov = camera.GetFOV();
 		cameraDesc.m_Aspect = camera.GetAspect();
@@ -1361,7 +1362,7 @@ void SetCameraConstantBuffer(ID3D11DeviceContext* pD3DContext, ID3D11Buffer* pD3
 	}
 
 	HRESULT hr = pD3DContext->Map(pD3DCameraConstBufer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
-	if (hr = S_OK && MappedResource.pData)
+	if (hr == S_OK && MappedResource.pData != NULL)
 	{
 		memcpy(MappedResource.pData, pCameraDesc, sizeof(S_CAMERA_DESC)*nCount);
 		pD3DContext->Unmap(pD3DCameraConstBufer, 0);
@@ -1639,7 +1640,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 		pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, NULL);
 		pD3dImmediateContext->CSSetShaderResources(0, 1, &pNullSRV);
-
+		pD3dImmediateContext->CSSetShader(nullptr, NULL, 0);
 
 
 

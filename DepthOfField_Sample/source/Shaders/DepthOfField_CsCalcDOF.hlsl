@@ -1,5 +1,5 @@
 Texture2D<float> tDepth:register(t0);
-Texture2D<float> tCircleOfConfusion:register(t0);
+Texture2D<float> tCircleOfConfusion:register(t0);//debug
 RWTexture2D<float> uCircleOfConfusion:register(u0);
 RWTexture2D<float4> uDebugVisCircleOfConfusion:register(u0);
 
@@ -25,7 +25,7 @@ float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float fS
 	const float distanceToFocusPlane = distanceToLense - focusDistance;
 	float circleOfConfusion = (distanceToLense > 0.0f) ? (circleOfConfusionScale*(distanceToFocusPlane / distanceToLense)) : 0.0;
 
-	circleOfConfusion = clamp(circleOfConfusionScale* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
+	circleOfConfusion = clamp(circleOfConfusion* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
 
 	return circleOfConfusion;
 }
