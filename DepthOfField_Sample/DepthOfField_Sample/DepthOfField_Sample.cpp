@@ -412,7 +412,7 @@ void SetCameraProjectionParameters()
 	float fov = 2 * atan(0.5f* g_SensorWidth / g_FocalLength);
 
 	FLOAT fApsectRatio = (float)g_ScreenWidth / (float)g_ScreenHeight;
-	g_Camera.SetProjParams(AMD_PI/4, fApsectRatio, 1.0f, 1000.0f);
+	g_Camera.SetProjParams(XM_PI / 4, fApsectRatio, 1.0f, 1000.0f);
 
 }
 
@@ -1608,7 +1608,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		{
 			ID3D11Buffer* pCB[] = { g_pD3DModelConstBuffer,g_pD3DViewerConsterBuffer };
 			ID3D11SamplerState* pSS[] = { g_pSamplerLinearWrap };
-			ID3D11RenderTargetView* pRTVs[] = { pRTV };
+			ID3D11RenderTargetView* pRTVs[] = { g_appColorBuffer._rtv };
 
 			CDXUTSDKMesh* pMeshes[] = { &g_TankMesh };
 
@@ -1617,18 +1617,21 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			RenderScene(pD3dImmediateContext, pMeshes, &g_ModelDesc, 1, &tempViewPort, 1, nullptr, 0,
 				g_pBackCullingSolidRS, g_pOpaqueBS, white.f, g_pDepthLessEqualDS, 0, g_pD3DModelInputLayout,
 				g_pD3DModelVS, pNullHS, pNullDS, pNullGS, g_pD3DModelPS, g_pD3DModelConstBuffer, pCB, 0, AMD_ARRAY_SIZE(pCB),
-				pSS, 0, AMD_ARRAY_SIZE(pSS), &pNullSRV, 1, 0, pRTVs, AMD_ARRAY_SIZE(pRTVs), g_pDepthStencilView, g_pCurrentCamera);
+				pSS, 0, AMD_ARRAY_SIZE(pSS), &pNullSRV, 1, 0, pRTVs, AMD_ARRAY_SIZE(pRTVs), g_appDepthBuffer._dsv, g_pCurrentCamera);
 
 		}
 
+		TIMER_End();
 
-		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
+		TIMER_Begin(0, L"Depth Of Field");
+
+		pD3dImmediateContext->OMSetRenderTargets(1, &pOriginalRTV, pOriginalDSV);
 
 		//¼ÆËã¾°Éî
 		pD3dImmediateContext->CSSetShader(g_pCalcCirlceOfConfusionCS, NULL, 0);
 		pD3dImmediateContext->CSSetConstantBuffers(0, 1, &g_pD3DCalcDofConsterBuffer);
 		pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &g_appCircleOfConfusionTexture._uav, NULL);
-		pD3dImmediateContext->CSSetShaderResources(0, 1, &g_pDepthStencilSRV);
+		pD3dImmediateContext->CSSetShaderResources(0, 1, &g_appDepthBuffer._srv);
 		int threadCountX = (g_ScreenWidth + 7) / 8;
 		int threadCountY = (g_ScreenHeight + 7) / 8;
 		pD3dImmediateContext->Dispatch(threadCountX, threadCountY, 1);
@@ -1637,43 +1640,48 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		pD3dImmediateContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, NULL);
 		pD3dImmediateContext->CSSetShaderResources(0, 1, &pNullSRV);
 
-		TIMER_End();
 
 
 
-		//TIMER_Begin(0, L"Depth Of Field");
-
-		//g_AMD_DofFX_Desc.m_scaleFactor = g_ScaleFactor;
-
-		//switch (g_depthOfFieldMode)
-		//{
-		//case DOF_BoxFastFilterSpread:
-		//	g_AMD_DofFX_Desc.m_scaleFactor = g_BoxScaleFactor;
-		//	AMD::DepthOfFieldFX_RenderBox(g_AMD_DofFX_Desc);
-		//	break;
-		//case DOF_FastFilterSpread:
-		//	AMD::DepthOfFieldFX_Render(g_AMD_DofFX_Desc);
-		//	break;
-		//case DOF_QuarterResFastFilterSpread:
-		//	AMD::DepthOfFieldFX_RenderQuarterRes(g_AMD_DofFX_Desc);
-		//	break;
-		//case DOF_Disabled:
-		//default:
-		//	pD3dImmediateContext->CopyResource(g_appDofSurface._t2d, g_appColorBuffer._t2d);
-		//	break;
-		//}
-		//
-
-		//TIMER_End(); // Render
 
 
-		////Blend DOF To Scene
 
-		//pD3dImmediateContext->OMSetRenderTargets(1, &pOriginalRTV, pOriginalDSV);
-		//pD3dImmediateContext->VSSetShader(g_pFullScreenVS, NULL, 0);
-		//pD3dImmediateContext->PSSetShader(g_pFullScreenPS, NULL, 0);
-		//pD3dImmediateContext->PSSetShaderResources(0, 1, g_bShowDepthOfFieldResult ? &g_appDofSurface._srv : &g_appColorBuffer._srv);
+		g_AMD_DofFX_Desc.m_scaleFactor = g_ScaleFactor;
+
+		switch (g_depthOfFieldMode)
+		{
+		case DOF_BoxFastFilterSpread:
+			g_AMD_DofFX_Desc.m_scaleFactor = g_BoxScaleFactor;
+			AMD::DepthOfFieldFX_RenderBox(g_AMD_DofFX_Desc);
+			break;
+		case DOF_FastFilterSpread:
+			AMD::DepthOfFieldFX_Render(g_AMD_DofFX_Desc);
+			break;
+		case DOF_QuarterResFastFilterSpread:
+			AMD::DepthOfFieldFX_RenderQuarterRes(g_AMD_DofFX_Desc);
+			break;
+		case DOF_Disabled:
+		default:
+			pD3dImmediateContext->CopyResource(g_appDofSurface._t2d, g_appColorBuffer._t2d);
+			break;
+		}
+		
+
+		TIMER_End(); // Render
+
+
+		//Blend DOF To Scene
+
+		pD3dImmediateContext->OMSetRenderTargets(1, &pOriginalRTV, pOriginalDSV);
+		pD3dImmediateContext->VSSetShader(g_pFullScreenVS, NULL, 0);
+		pD3dImmediateContext->PSSetShader(g_pFullScreenPS, NULL, 0);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, g_bShowDepthOfFieldResult ? &g_appDofSurface._srv : &g_appColorBuffer._srv);
 		//jingz todo
+		pD3dImmediateContext->PSSetSamplers(0, 1, &g_pSamplerLinearWrap);
+		pD3dImmediateContext->OMSetBlendState(g_pOpaqueBS, white.f, 0xf);
+		pD3dImmediateContext->OMSetDepthStencilState(g_pDepthLessEqualDS, 0);
+		pD3dImmediateContext->RSSetState(g_pNoCullingSolidRS);
+		pD3dImmediateContext->Draw(6, 0);
 
 
 		SAFE_RELEASE(pOriginalRTV);
