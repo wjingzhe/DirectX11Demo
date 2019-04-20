@@ -44,7 +44,7 @@ void PostProcess::BasePostProcessRender::AddShadersToCache(AMD::ShaderCache * pS
 
 	INT32 size = ARRAYSIZE(layout);
 
-	this->AddShadersToCache(pShaderCache, L"DeferVoxelCutoutVS", L"DeferVoxelCutoutPS", L"DeferredVoxelCutout.hlsl", layout, size);
+	this->AddShadersToCache(pShaderCache, L"DeferVoxelCutoutVS", L"DeferVoxelCutoutPS", L"DeferredVoxelSphereCutout.hlsl", layout, size);
 }
 
 HRESULT PostProcess::BasePostProcessRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)

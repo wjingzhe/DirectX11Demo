@@ -44,7 +44,7 @@ namespace PostProcess
 
 		GeometryHelper::MeshData m_MeshData;
 
-		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
+
 
 		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 
@@ -88,10 +88,15 @@ namespace PostProcess
 
 		HRESULT CreateTempShaderRenderTarget(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc);
 
+
+		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
+
+		void GenerateSphereMeshData(float radius = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
+
 	private:
 		DirectX::XMFLOAT4 m_Position4;
 
-		DirectX::XMFLOAT4 m_VoxelExtend;
+		DirectX::XMFLOAT4 m_VoxelParam;
 
 
 		ID3D11DepthStencilState* m_pDepthLessAndStencilOnlyOneTime;

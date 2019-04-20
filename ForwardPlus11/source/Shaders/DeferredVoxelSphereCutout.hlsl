@@ -10,7 +10,7 @@ cbuffer cbPerObject:register(b0)
 	matrix g_mWolrdViewProjection:packoffset(c0);
 	matrix g_mWolrd:packoffset(c4);
 	matrix g_mWorldViewInv:packoffset(c8);
-	float4 g_vBoxExtend:packoffset(c12);
+	float4 g_vSphereParam:packoffset(c12);
 };
 
 cbuffer cbPerFrame : register(b1)
@@ -67,32 +67,19 @@ float4 ConvertViewToLocal(float4 p)
 	return posL;
 }
 
-bool IsPointInsideBox(float4 PosL)
-{
-	if (PosL.x >= - g_vBoxExtend.x / 2
-		&& PosL.y >= - g_vBoxExtend.y / 2
-		&& PosL.z >= - g_vBoxExtend.z / 2
-		&& PosL.x <= g_vBoxExtend.x / 2
-		&& PosL.y <= g_vBoxExtend.y / 2
-		&& PosL.z <= g_vBoxExtend.z / 2)
-	{
-		return true;
-	}
-	return false;
-}
 
 
 bool IsPointInsidePhere(float4 PosL)
 {
-	float radius = g_vBoxExtend.w;
+	float radius = g_vSphereParam.w;
 
 	PosL.w = 0.0f;
 
-	float4 center = PosL - g_vBoxExtend;
+	float4 leaveCenter = PosL - g_vSphereParam;
 
-	center.w = 0.0f;
+	leaveCenter.w = 0.0f;
 
-	if(length(center)<=(radius+0.1f))
+	if(length(leaveCenter)<=(radius+0.1f))
 	{
 		return true;
 	}
@@ -135,7 +122,7 @@ float3 ConvertScreenToNdc(float2 screenXY)
 
 float2 ConvertLocalToTexture(float2 PosL)
 {
-	float2 uv = (PosL.xy + g_vBoxExtend.xy / 2) / g_vBoxExtend.xy;
+	float2 uv = (PosL.xy + g_vSphereParam.xy / 2) / g_vSphereParam.xy;
 	uv.y = -uv.y;
 	return uv;
 }
@@ -156,7 +143,7 @@ float4 DeferVoxelCutoutPS(VS_OUTPUT_SCENE pin) :SV_TARGET
 
 	return g_CommonColor;
 
-	////float3 uvw = (PosL.xyz + g_vBoxExtend.xyz / 2) / g_vBoxExtend.xyz;
+	////float3 uvw = (PosL.xyz + g_vSphereParam.xyz / 2) / g_vSphereParam.xyz;
 	//float2 uv = ConvertLocalToTexture(PosL.xy);
 	//float4 color = g_TextureDecal.Sample(g_Sampler, uv);
 

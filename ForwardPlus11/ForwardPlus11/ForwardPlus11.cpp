@@ -21,6 +21,7 @@
 #define FORWARDPLUS
 //#define TRIANGLE
 #define DECAL
+#define GodRay
 
 #define MAX_TEMP_SCENE_TEXTURE 2
 
@@ -43,8 +44,11 @@ static Triangle::TriangleRender s_TriangleRender;
 
 #ifdef DECAL
 static PostProcess::DeferredDecalRender s_DeferredDecalRender;
-static PostProcess::DeferredVoxelCutoutRender s_DeferredVoxelCutoutRender;
+#endif
 
+#ifdef GodRay
+
+static PostProcess::DeferredVoxelCutoutRender s_DeferredVoxelCutoutRender;
 static PostProcess::SphereRender s_SphereRender;
 static PostProcess::RadialBlurRender s_RadialBlurRender;
 static PostProcess::ScreenBlendRender s_ScreenBlendRender;
@@ -400,6 +404,16 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	V_RETURN(s_DeferredDecalRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	s_DeferredDecalRender.SetDecalTextureSRV(g_pDecalTextureSRV);
 
+
+
+
+
+
+
+#endif
+
+#ifdef GodRay
+
 	V_RETURN(s_DeferredVoxelCutoutRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 
 	V_RETURN(s_SphereRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
@@ -409,11 +423,8 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(s_ScreenBlendRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	//s_ScreenBlendRender.SetSrcTextureSRV(g_pDecalTextureSRV);
-
-
-
-
 #endif
+
 
 	//Create state objects
 	D3D11_SAMPLER_DESC SamplerDesc;
@@ -481,12 +492,16 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #ifdef DECAL
 #ifdef FORWARDPLUS
 		s_DeferredDecalRender.SetDecalPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
-		s_DeferredVoxelCutoutRender.SetVoxelPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
-		s_SphereRender.SetMeshCenterOffset(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
+
 #else
 		s_DeferredDecalRender.SetDecalPosition(SceneCenter);
 #endif
 #endif // DECAL
+
+#ifdef GodRay
+		s_DeferredVoxelCutoutRender.SetVoxelPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
+		s_SphereRender.SetMeshCenterOffset(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
+#endif
 
 
 		bCameraInit = true;
@@ -528,11 +543,13 @@ HRESULT AddShadersToCache()
 
 #ifdef DECAL
 	s_DeferredDecalRender.AddShadersToCache(&g_ShaderCache);
+#endif
+
+#ifdef GodRay
 	s_DeferredVoxelCutoutRender.AddShadersToCache(&g_ShaderCache);
 	s_SphereRender.AddShadersToCache(&g_ShaderCache);
 	s_RadialBlurRender.AddShadersToCache(&g_ShaderCache);
 	s_ScreenBlendRender.AddShadersToCache(&g_ShaderCache);
-
 #endif
 
 	return hr;
@@ -607,11 +624,13 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 
 #ifdef DECAL
 	s_DeferredDecalRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+#endif
+
+#ifdef GodRay
 	s_DeferredVoxelCutoutRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_SphereRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_RadialBlurRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 	s_ScreenBlendRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
-
 #endif
 
 	return hr;
@@ -647,11 +666,13 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 #endif
 #ifdef DECAL
 	s_DeferredDecalRender.OnReleasingSwapChain();
+#endif
+
+#ifdef GodRay
 	s_DeferredVoxelCutoutRender.OnReleasingSwapChain();
 	s_SphereRender.OnReleasingSwapChain();
 	s_RadialBlurRender.OnReleasingSwapChain();
 	s_ScreenBlendRender.OnReleasingSwapChain();
-
 #endif
 
 
@@ -698,13 +719,15 @@ void OnD3D11DestroyDevice(void * pUserContext)
 #endif
 #ifdef DECAL
 	s_DeferredDecalRender.OnD3D11DestroyDevice(pUserContext);
+#endif
+
+#ifdef GodRay
 	s_DeferredVoxelCutoutRender.OnD3D11DestroyDevice(pUserContext);
 	s_SphereRender.OnD3D11DestroyDevice(pUserContext);
 	s_RadialBlurRender.OnD3D11DestroyDevice(pUserContext);
 	s_ScreenBlendRender.OnD3D11DestroyDevice(pUserContext);
-
-
 #endif
+
 	
 	//AMD
 	g_ShaderCache.OnDestroyDevice();
@@ -851,15 +874,21 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
 		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
 		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+
+
+#endif
+
+#ifdef GodRay
 		s_DeferredVoxelCutoutRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
 
-		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
+		//只绘制DepthStencil信息
+		pD3dImmediateContext->ClearDepthStencilView(g_pTempDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
+		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, nullptr, g_pTempDepthStencilView, g_pDepthStencilSRV);
 
 		s_RadialBlurRender.SetRadialBlurTextureSRV(g_pTempTextureSRV[0]);
 		s_RadialBlurRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[1], g_pTempDepthStencilView, g_pDepthStencilSRV);
 		s_ScreenBlendRender.SetBlendTextureSRV(g_pTempTextureSRV[1]);
 		s_ScreenBlendRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
-
 #endif
 
 		TIMER_End(); // Render

@@ -10,7 +10,7 @@ PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
 	m_pSamAnisotropic(nullptr),
-	m_VoxelExtend(100.0f, 100.0f, 100.0f, 1.0f),
+	m_VoxelParam(100.0f, 100.0f, 100.0f, 1.0f),
 	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
 	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.0f)
 {
@@ -25,7 +25,7 @@ PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
 
 void PostProcess::DeferredVoxelCutoutRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
 {
-	m_VoxelExtend = DirectX::XMFLOAT4(130.0f, 0.0f, 0.0f, width);
+	m_VoxelParam = DirectX::XMFLOAT4(130.0f, 0.0f, 0.0f, width);
 	//m_VoxelExtend.w = width;
 
 	m_MeshData = GeometryHelper::CreateSphere(width,20,20, DirectX::XMFLOAT3(130.0f, 0.0f, 0.0f));
@@ -226,7 +226,7 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 	pPerObject->mWorld = XMMatrixTranspose(mWorld);
 	pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
-	pPerObject->vBoxExtend = m_VoxelExtend;
+	pPerObject->vBoxExtend = m_VoxelParam;
 	pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);

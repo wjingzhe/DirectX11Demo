@@ -117,8 +117,7 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 
 
 
-	pD3dImmediateContext->OMSetRenderTargets(0, nullptr, pDepthStencilView);
-	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
+	pD3dImmediateContext->OMSetRenderTargets(0, &pRTV, pDepthStencilView);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 	pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
