@@ -195,10 +195,10 @@ void QuaterResFastFilterSetup(uint3 ThreadID:SV_DispatchThreadID)
 		}
 		else
 		{
-			WriteDeltaBartlett(TextureIntermediate, float3(red4.x, green4.x, blue4.x), CircleOfConfusionToBlurRadius(fCircleOfField4, padding), location + int2(0, 1));
-			WriteDeltaBartlett(TextureIntermediate, float3(red4.y, green4.y, blue4.y), CircleOfConfusionToBlurRadius(fCircleOfField4, padding), location + int2(1, 1));
-			WriteDeltaBartlett(TextureIntermediate, float3(red4.z, green4.z, blue4.z), CircleOfConfusionToBlurRadius(fCircleOfField4, padding), location + int2(1, 0));
-			WriteDeltaBartlett(TextureIntermediate, float3(red4.w, green4.w, blue4.w), CircleOfConfusionToBlurRadius(fCircleOfField4, padding), location + int2(0, 0));
+			WriteDeltaBartlett(TextureIntermediate, float3(red4.x, green4.x, blue4.x), CircleOfConfusionToBlurRadius(fCircleOfField4.x, padding), location + int2(0, 1));
+			WriteDeltaBartlett(TextureIntermediate, float3(red4.y, green4.y, blue4.y), CircleOfConfusionToBlurRadius(fCircleOfField4.x, padding), location + int2(1, 1));
+			WriteDeltaBartlett(TextureIntermediate, float3(red4.z, green4.z, blue4.z), CircleOfConfusionToBlurRadius(fCircleOfField4.x, padding), location + int2(1, 0));
+			WriteDeltaBartlett(TextureIntermediate, float3(red4.w, green4.w, blue4.w), CircleOfConfusionToBlurRadius(fCircleOfField4.x, padding), location + int2(0, 0));
 
 		}
 
