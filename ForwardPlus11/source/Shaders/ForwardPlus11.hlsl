@@ -89,7 +89,7 @@ VS_OUTPUT_SCENE RenderSceneVS(VS_INPUT_SCENE Input)
 
 	// Position, normal, and tangent in world space
 	Output.PositionWS = mul(float4(Input.Position,1.0f), g_mWorld);
-	Output.Normal = mul(Input.Normal, transpose((float3x3)g_mWorld));//without scaling
+	Output.Normal = mul(Input.Normal, (float3x3)g_mWorld);//without scaling
 	Output.Tangent = mul(Input.Tangent, (float3x3)g_mWorld);
 
 	//Just copy the texture coordinate through

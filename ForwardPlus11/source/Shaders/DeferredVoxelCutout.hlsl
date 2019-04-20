@@ -53,7 +53,7 @@ VS_OUTPUT_SCENE DeferVoxelCutoutVS(VS_INPUT_SCENE vin)
 
 	//rotation maxtix equal to its transposed inverse matrix
 	// assume that there is not a scale factor
-	vout.NormalW = float4(mul(vin.NormalL, transpose((float3x3)g_mWolrd)), 1.0f);//并未实际使用，随便使用World变化一下
+	vout.NormalW = float4(mul(vin.NormalL, (float3x3)g_mWolrd), 1.0f);//并未实际使用，随便使用World变化一下
 	vout.TextureUV = vin.TextureUV;
 
 	return vout;
