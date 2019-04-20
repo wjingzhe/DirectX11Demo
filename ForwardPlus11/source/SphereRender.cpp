@@ -3,7 +3,7 @@ using namespace DirectX;
 
 PostProcess::SphereRender::SphereRender():BasePostProcessRender()
 {
-	m_MeshData = GeometryHelper::CreateSphere(160,20,20, DirectX::XMFLOAT3(130.0f, 0.0f, 0.0f));
+	m_MeshData = GeometryHelper::CreateSphere(160,20,20, DirectX::XMFLOAT3(130.0f, 200.0f, 300.0f));
 }
 
 PostProcess::SphereRender::~SphereRender()
@@ -42,8 +42,6 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 	ID3D11DepthStencilState* pPreDepthStencilStateStored11 = nullptr;
 	UINT uStencilRefStored11;
 	pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
-
-	//开始绘制在体素盒中的元素颜色
 
 
 	XMMATRIX mWorld = XMMatrixIdentity();

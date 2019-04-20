@@ -21,7 +21,7 @@ namespace PostProcess
 			DirectX::XMMATRIX mWorldViewProjection;
 			DirectX::XMMATRIX mWorld;
 			DirectX::XMMATRIX mWorldViewInv;
-			DirectX::XMFLOAT4 vBoxExtend;
+			DirectX::XMFLOAT4 vBoxCenterAndRadius;
 		};
 
 		struct CB_PER_FRAME

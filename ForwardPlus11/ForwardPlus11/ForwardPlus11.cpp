@@ -498,11 +498,6 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 #endif
 #endif // DECAL
 
-#ifdef GodRay
-		s_DeferredVoxelCutoutRender.SetVoxelPosition(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
-		s_SphereRender.SetMeshCenterOffset(XMVectorSet(0.0f, 200.0f, 300.0f, 0.0f));
-#endif
-
 
 		bCameraInit = true;
 	}
@@ -885,6 +880,21 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		pD3dImmediateContext->ClearDepthStencilView(g_pTempDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
 		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, nullptr, g_pTempDepthStencilView, g_pDepthStencilSRV);
 
+		auto p = s_DeferredVoxelCutoutRender.GetVoxelPosition();
+		XMMATRIX mWorld = DirectX::XMMatrixIdentity();
+		mWorld.r[3].m128_f32[0] = p.x;
+		mWorld.r[3].m128_f32[1] = p.y;
+		mWorld.r[3].m128_f32[2] = p.z;
+		//Get the projection & view matrix from the camera class
+		XMMATRIX mView = g_Camera.GetViewMatrix();
+		XMMATRIX mProj = g_Camera.GetProjMatrix();
+		XMMATRIX mWorldViewPrjection = mWorld*mView*mProj;
+		XMVECTOR temp = DirectX::XMVector4Transform(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),mWorldViewPrjection);
+
+		XMFLOAT4 uv;
+		DirectX::XMStoreFloat4(&uv, temp);
+		s_RadialBlurRender.SetRadialBlurCenter(uv.x/ uv.w*0.5f+0.5f,0.5f-uv.y / uv.w*0.5f);
+		
 		s_RadialBlurRender.SetRadialBlurTextureSRV(g_pTempTextureSRV[0]);
 		s_RadialBlurRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[1], g_pTempDepthStencilView, g_pDepthStencilSRV);
 		s_ScreenBlendRender.SetBlendTextureSRV(g_pTempTextureSRV[1]);

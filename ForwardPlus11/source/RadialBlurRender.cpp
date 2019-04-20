@@ -74,7 +74,6 @@ void PostProcess::RadialBlurRender::OnRender(ID3D11Device * pD3dDevice, ID3D11De
 		V(pD3dImmediateContext->Map(m_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 		CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
 		pPerObject->RadialBlurCenterUV = m_RadialBlurCenterUV;
-		pPerObject->RadialBlurCenterUV = m_RadialBlurCenterUV;
 		pPerObject->fRadialBlurLength = m_fRadialBlurLength;
 		pPerObject->iSampleCount = m_iSampleCount;
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);

@@ -6,16 +6,14 @@ PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNormalAndTexturePS(nullptr),
 	m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false),
 	m_pRasterizerState(nullptr), m_pDepthLessAndStencilOnlyOneTime(nullptr),
-
 	m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
+	m_VoxelCenterAndRadius(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
 	m_pSamAnisotropic(nullptr),
-	m_VoxelParam(100.0f, 100.0f, 100.0f, 1.0f),
 	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
 	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.0f)
 {
-	GenerateMeshData(100, 200, 200, 6);
-
+	GenerateSphereMeshData(130.0f, 200.0f, 300.0f, 100.0f);
 }
 
 PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
@@ -25,10 +23,17 @@ PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
 
 void PostProcess::DeferredVoxelCutoutRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
 {
-	m_VoxelParam = DirectX::XMFLOAT4(130.0f, 0.0f, 0.0f, width);
-	//m_VoxelExtend.w = width;
+//jingz todo,暂时没时间去处理立体包围引发的hlsl编码变化，先忽略
+}
 
-	m_MeshData = GeometryHelper::CreateSphere(width,20,20, DirectX::XMFLOAT3(130.0f, 0.0f, 0.0f));
+void PostProcess::DeferredVoxelCutoutRender::GenerateSphereMeshData(float centerX, float centerY, float centerZ, float radius, unsigned int numSubdivision)
+{
+	m_VoxelCenterAndRadius.w  = radius;
+	m_MeshData = GeometryHelper::CreateSphere(radius, 20, 20);
+	m_Position4.x = centerX;
+	m_Position4.y = centerY;
+	m_Position4.z = centerZ;
+
 }
 
 void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
@@ -226,7 +231,7 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 	pPerObject->mWorld = XMMatrixTranspose(mWorld);
 	pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
-	pPerObject->vBoxExtend = m_VoxelParam;
+	pPerObject->vBoundingParam = m_VoxelCenterAndRadius;
 	pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);

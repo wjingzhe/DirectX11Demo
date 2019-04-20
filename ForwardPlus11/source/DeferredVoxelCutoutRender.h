@@ -6,6 +6,9 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
+//
+// 将体素内的2D像素绘制为标记色（vMaskedColor4默认为黑色），其余像素绘制为光颜色vCommonColor4
+//
 
 namespace PostProcess
 {
@@ -22,7 +25,7 @@ namespace PostProcess
 			DirectX::XMMATRIX mWorldViewProjection;
 			DirectX::XMMATRIX mWorld;
 			DirectX::XMMATRIX mWorldViewInv;
-			DirectX::XMFLOAT4 vBoxExtend;
+			DirectX::XMFLOAT4 vBoundingParam;//if box:width/height/depth;if sphere:center.xyz/radius
 		};
 
 		struct CB_PER_FRAME
@@ -81,6 +84,11 @@ namespace PostProcess
 			m_Position4 = position;
 		}
 
+		DirectX::XMFLOAT4 GetVoxelPosition(void)
+		{
+			return m_Position4;
+		}
+
 	protected:
 		void ReleaseAllD3D11COM(void);
 		void ReleaseSwapChainAssociatedCOM(void);
@@ -91,12 +99,12 @@ namespace PostProcess
 
 		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
 
-		void GenerateSphereMeshData(float radius = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
+		void GenerateSphereMeshData(float centerX = 1.0f, float centerY = 1.0f, float centerZ = 1.0f, float radius = 1.0f, unsigned int numSubdivision = 6);
 
 	private:
 		DirectX::XMFLOAT4 m_Position4;
 
-		DirectX::XMFLOAT4 m_VoxelParam;
+		DirectX::XMFLOAT4 m_VoxelCenterAndRadius;
 
 
 		ID3D11DepthStencilState* m_pDepthLessAndStencilOnlyOneTime;
