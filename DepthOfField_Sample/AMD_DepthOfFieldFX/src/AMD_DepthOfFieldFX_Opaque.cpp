@@ -213,11 +213,13 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::render(const DEPTHOFFIELD
 
     int tgX = (desc.m_screenSize.x + 7) / 8;
     int tgY = (desc.m_screenSize.y + 7) / 8;
-
+	
+	//1
     update_constant_buffer(desc, m_bufferWidth, m_bufferHeight);
     Bind_UAVs(desc, m_pIntermediateUAV, nullptr, nullptr);
     pCtx->Dispatch(tgX, tgY, 1);
 
+	//2
     // do Vertical integration
     {
         update_constant_buffer(desc, m_bufferWidth, m_bufferHeight);
@@ -225,7 +227,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::render(const DEPTHOFFIELD
         Bind_UAVs(desc, m_pIntermediateUAV, m_pIntermediateTransposedUAV, nullptr);
         pCtx->Dispatch((m_bufferWidth + 63) / 64, 1, 1);
     }
-
+	//3
     // do vertical integration by transposing the image and doing horizontal integration again
     {
         update_constant_buffer(desc, m_bufferHeight, m_bufferWidth);
@@ -236,6 +238,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::render(const DEPTHOFFIELD
     // debug: Copy from intermediate results
     update_constant_buffer(desc, m_bufferWidth, m_bufferHeight);
 
+	//4
     pCtx->CSSetShader(m_pReadFinalResultCS, nullptr, 0);
     Bind_UAVs(desc, m_pIntermediateUAV, nullptr, desc.m_pResultUAV);
     pCtx->Dispatch((desc.m_screenSize.x + 7) / 8, (desc.m_screenSize.y + 7) / 8, 1);
@@ -401,7 +404,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::create_shaders(const DEPT
 
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csFastFilterSetup, sizeof(g_csFastFilterSetup), nullptr, &m_pFastFilterSetupCS);
+        //result = pDev->CreateComputeShader(g_csFastFilterSetup, sizeof(g_csFastFilterSetup), nullptr, &m_pFastFilterSetupCS);
     }
     if (result == S_OK)
     {
@@ -409,11 +412,11 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::create_shaders(const DEPT
     }
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csVerticalIntegrate, sizeof(g_csVerticalIntegrate), nullptr, &m_pVerticalIntegrateCS);
+       // result = pDev->CreateComputeShader(g_csVerticalIntegrate, sizeof(g_csVerticalIntegrate), nullptr, &m_pVerticalIntegrateCS);
     }
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csReadFinalResult, sizeof(g_csReadFinalResult), nullptr, &m_pReadFinalResultCS);
+   //     result = pDev->CreateComputeShader(g_csReadFinalResult, sizeof(g_csReadFinalResult), nullptr, &m_pReadFinalResultCS);
     }
     if (result == S_OK)
     {
@@ -421,7 +424,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::create_shaders(const DEPT
     }
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csDoubleVerticalIntegrate, sizeof(g_csDoubleVerticalIntegrate), nullptr, &m_pDoubleVerticalIntegrateCS);
+ //       result = pDev->CreateComputeShader(g_csDoubleVerticalIntegrate, sizeof(g_csDoubleVerticalIntegrate), nullptr, &m_pDoubleVerticalIntegrateCS);
     }
 
 

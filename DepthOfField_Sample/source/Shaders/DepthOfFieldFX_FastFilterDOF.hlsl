@@ -97,7 +97,8 @@ int4 normalizeBlurColor(const in float4 color, const in int BlurRadius)
 	return int4(round(color*normalization));//jingz 返回最接近的整数
 }
 
-//loc 是什么意思
+
+//将当前处理的像素以弥散圈为范围，使用权重值增加在其他像素上，弥散圈内的算法可以参照原pdf，下面代码即是实现
 void WriteDeltaBartlett(RWTexToUse deltaBuffer, float3 vColor, int BlurRadius, int2 location)
 {
 	int4 intColor = normalizeBlurColor(float4(vColor, 1.0f), BlurRadius);
@@ -140,7 +141,7 @@ void WriteBoxDeltaBartlett(RWTexToUse deltaBuffer, float3 vColor, int BlurRadius
 
 
 [numthreads(8,8,1)]
-void FastFilterSetup(uint3 ThreadID:SV_DispathThreadID)
+void FastFilterSetup(uint3 ThreadID:SV_DispatchThreadID)
 {
 	if (((int)ThreadID.x < sourceResolution.x) && ((int)ThreadID.y < sourceResolution.y))
 	{
@@ -155,7 +156,7 @@ void FastFilterSetup(uint3 ThreadID:SV_DispathThreadID)
 
 
 [numthreads(8,8,1)]
-void QuaterResFastFilterSetup(uint3 ThreadID:SV_DispathThreadID)
+void QuaterResFastFilterSetup(uint3 ThreadID:SV_DispatchThreadID)
 {
 	uint2 location = ThreadID.xy * 2;
 	if (int(location.x) < sourceResolution.x && int(location.y) < sourceResolution.y)
@@ -279,7 +280,6 @@ float3 LinearToSRGB(float3 linColor)
 void ReadFinalResult(uint3 Tid:SV_DispatchThreadID, uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID)
 {
 	uint2 texCoord = Tid.xy;
-	float CircleOfConfusion = TextureCircleOfConfusion[texCoord];
 
 	float4 result = ReadResult(TextureIntermediate, texCoord);
 

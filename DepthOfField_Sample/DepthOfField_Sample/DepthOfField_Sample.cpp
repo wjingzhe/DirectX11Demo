@@ -25,6 +25,7 @@
 #include "../source/Shaders/inc/VS_SCREENQUAD.inc"
 #include "../source/Shaders/inc/PS_FULLSCREEN.inc"
 #include "../source/AMD_Lib/AMD_Texture2D.h"
+#include "../src/AMD_DepthOfFieldFX_Opaque.h"
 
 //#define FORWARDPLUS
 //#define TRIANGLE
@@ -309,9 +310,9 @@ struct CameraParameters
 	float4 vecEye;
 	float4 vecAt;
 	float focalLength;
-	float focalDistance;
+	float focusDistance;
 	float sensorWidth;
-	float fStop;
+	float fStop;//ratioFocalLengthToLensDiameter
 };
 
 static const CameraParameters g_defaultCameraParameters[] = {
@@ -331,7 +332,7 @@ static const CameraParameters g_defaultCameraParameters[] = {
 float g_FocalLength = 190.0f;// in mm
 float g_FocalDistance = 14.61f; // in meters
 float g_SensorWidth = 100.0f;//in mm
-float g_fStop = 1.8f;//jingz CM?
+float g_fStop = 1.8f;//jingz 焦距比镜头直径的比率值
 float g_ForceCircleOfConfusion = 0.0f;
 unsigned int g_MaxRadius = 57;
 unsigned int g_ScaleFactor = 30;
@@ -351,6 +352,13 @@ ID3D11Buffer* g_pD3DModelConstBuffer = nullptr;
 
 ID3D11ComputeShader* g_pCalcCirlceOfConfusionCS = nullptr;
 ID3D11ComputeShader* g_pDebugCirlceOfConfusionCS = nullptr;
+
+ID3D11ComputeShader* g_pDoubleVerticalIntegrateCS = nullptr;
+ID3D11ComputeShader* g_pVerticalIntegrateCS = nullptr;
+ID3D11ComputeShader* g_pFastFilterSetupCS = nullptr;
+ID3D11ComputeShader* g_pReadFinalResultCS = nullptr;
+//ID3D11ComputeShader* g_pDoubleVerticalIntegrateCS = nullptr;
+
 
 ID3D11Buffer* g_pD3DViewerConsterBuffer = nullptr;
 ID3D11Buffer* g_pD3DCalcDofConsterBuffer = nullptr;
@@ -395,14 +403,14 @@ void SetupCameraParameters()
 	g_Camera.SetViewParams(vecEyePosi, vecLookAt);
 
 	g_FocalLength = params.focalLength;
-	g_FocalDistance = params.focalDistance;
+	g_FocalDistance = params.focusDistance;
 	g_SensorWidth = params.sensorWidth;
 	g_fStop = params.fStop;
 
 	g_HUD.m_GUI.GetSlider(IDC_SLIDER_FOCAL_LENGTH)->SetValue((int)g_FocalLength);
-	g_HUD.m_GUI.GetSlider(IDC_SLIDER_FOCAL_DISTANCE)->SetValue((int)(g_FocalDistance*100.0f));
+	g_HUD.m_GUI.GetSlider(IDC_SLIDER_FOCAL_DISTANCE)->SetValue((int)(g_FocalDistance*100.0f));//2位小数点
 	g_HUD.m_GUI.GetSlider(IDC_SLIDER_SENSOR_WIDTH)->SetValue((int)(g_SensorWidth*10.0f));
-	g_HUD.m_GUI.GetSlider(IDC_SLIDER_FSTOP)->SetValue((int)(g_fStop*10.0f));
+	g_HUD.m_GUI.GetSlider(IDC_SLIDER_FSTOP)->SetValue((int)(g_fStop/10.0f));//slider小数点精度处理问题
 
 }
 
@@ -655,11 +663,14 @@ struct CalcDepthOfFieldParams
 	float        zNear;
 	float        zFar;
 	float        FocusDistance;
-	float        fStop;
+	float        ratioFocalLengthToLensDiameter;
 	float        FocalLength;
 	float        MaxRadius;
 	float        forceCircleOfConfusion;
-	float        pad[3];
+
+	float CircleOfConfusionScale;
+	float CircleOfConfusionBias;
+	float pad;
 
 };
 
@@ -963,7 +974,31 @@ HRESULT CompileShadersForDoF(ID3D11Device* device)
 	g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pCalcCirlceOfConfusionCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"CalcDOF", L"DepthOfField_CsCalcDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
 	g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pDebugCirlceOfConfusionCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"DebugVisDOF", L"DepthOfField_CsCalcDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
-	
+	{
+		AMD::ShaderCache::Macro ShaderMacros[1];
+		wcscpy_s(ShaderMacros[0].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"DOUBLE_INTEGRATE");
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pDoubleVerticalIntegrateCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"VerticalIntegrate", L"DepthOfFieldFX_FastFilterDOF.hlsl", 1, ShaderMacros, nullptr, nullptr, 0);
+
+	}
+
+	{
+		//AMD::ShaderCache::Macro ShaderMacros[1];
+		//wcscpy_s(ShaderMacros[0].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"DOUBLE_INTEGRATE");
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pVerticalIntegrateCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"VerticalIntegrate", L"DepthOfFieldFX_FastFilterDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
+	}
+
+	{
+		
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pFastFilterSetupCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"FastFilterSetup", L"DepthOfFieldFX_FastFilterDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
+
+	}
+
+	{
+		AMD::ShaderCache::Macro ShaderMacros[1];
+		wcscpy_s(ShaderMacros[0].m_wsName, AMD::ShaderCache::m_uMACRO_MAX_LENGTH, L"CONVERT_TO_SRGB");
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pReadFinalResultCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"ReadFinalResult", L"DepthOfFieldFX_FastFilterDOF.hlsl", 1, ShaderMacros, nullptr, nullptr, 0);
+
+	}
 
 	device->CreateVertexShader(VS_FULLSCREEN_Data, sizeof(VS_FULLSCREEN_Data), NULL, &g_pFullScreenVS);
 	device->CreatePixelShader(PS_FULLSCREEN_Data, sizeof(PS_FULLSCREEN_Data), NULL, &g_pFullScreenPS);
@@ -1223,6 +1258,12 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	SAFE_RELEASE(g_pCalcCirlceOfConfusionCS);
 	SAFE_RELEASE(g_pDebugCirlceOfConfusionCS);
 
+	//SAFE_RELEASE(g_pDoubleVerticalIntegrateCS);
+	g_pDoubleVerticalIntegrateCS = nullptr;
+	g_pVerticalIntegrateCS = nullptr;
+	g_pFastFilterSetupCS = nullptr;
+	g_pReadFinalResultCS = nullptr;
+
 	SAFE_RELEASE(g_pD3DViewerConsterBuffer);
 	SAFE_RELEASE(g_pD3DCalcDofConsterBuffer);
 
@@ -1368,14 +1409,23 @@ void SetCameraConstantBuffer(ID3D11DeviceContext* pD3DContext, ID3D11Buffer* pD3
 		pD3DContext->Unmap(pD3DCameraConstBufer, 0);
 	}
 
+	auto tempFocalLength = g_FocalLength / 1000.0f;//换算回米做计算
+	float CircleOfConfusionScale =  (1.0f / g_fStop) * tempFocalLength * (g_ViewerData.m_FarPlane - g_ViewerData.m_NearPlane) / ((g_FocalDistance - tempFocalLength)*g_ViewerData.m_NearPlane*g_ViewerData.m_FarPlane);
+	float CircleOfConfusionBias = ((1.0f / g_fStop) * tempFocalLength * (g_ViewerData.m_NearPlane - g_FocalDistance)) / ((g_FocalDistance * tempFocalLength) * g_ViewerData.m_NearPlane);
+	float temp = (0.95f * CircleOfConfusionScale + CircleOfConfusionBias)*900.0f;
+
 	hr = pD3DContext->Map(g_pD3DCalcDofConsterBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 	if (hr == S_OK && MappedResource.pData != NULL)
 	{
 		CalcDepthOfFieldParams* pParams = reinterpret_cast<CalcDepthOfFieldParams*>(MappedResource.pData);
 
+
+		pParams->CircleOfConfusionScale = CircleOfConfusionScale;
+		pParams->CircleOfConfusionBias = CircleOfConfusionBias;
+
 		pParams->FocalLength = g_FocalLength / 1000.0f;
 		pParams->FocusDistance = g_FocalDistance;
-		pParams->fStop = g_fStop;
+		pParams->ratioFocalLengthToLensDiameter = g_fStop;
 		pParams->ScreenParamsX = g_ScreenWidth;
 		pParams->ScreenParamsY = g_ScreenHeight;
 		pParams->zNear = g_ViewerData.m_NearPlane;
@@ -1656,6 +1706,11 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			AMD::DepthOfFieldFX_RenderBox(g_AMD_DofFX_Desc);
 			break;
 		case DOF_FastFilterSpread:
+			g_AMD_DofFX_Desc.m_pOpaque->m_pFastFilterSetupCS = g_pFastFilterSetupCS;
+			g_AMD_DofFX_Desc.m_pOpaque->m_pVerticalIntegrateCS = g_pVerticalIntegrateCS;
+			g_AMD_DofFX_Desc.m_pOpaque->m_pDoubleVerticalIntegrateCS = g_pDoubleVerticalIntegrateCS;
+			g_AMD_DofFX_Desc.m_pOpaque->m_pReadFinalResultCS = g_pReadFinalResultCS;
+			
 			AMD::DepthOfFieldFX_Render(g_AMD_DofFX_Desc);
 			break;
 		case DOF_QuarterResFastFilterSpread:
@@ -1812,14 +1867,14 @@ void InitApp()
 #ifdef DOF_GUI
 
 	g_HUD.m_GUI.AddStatic(IDC_STATIC_FOCAL_LENGTH, L"Focal Length (mm)", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
-	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FOCAL_LENGTH, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 18, 400, (int)(g_FocalLength));
+	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FOCAL_LENGTH, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 18, 500, (int)(g_FocalLength));
 	g_HUD.m_GUI.AddStatic(IDC_STATIC_SENSOR_WIDTH, L"Sensor Width (mm)", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
 	g_HUD.m_GUI.AddSlider(IDC_SLIDER_SENSOR_WIDTH, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 45, 1000, (int)(g_ScreenWidth * 10.0f));
 	g_HUD.m_GUI.AddStatic(IDC_STATIC_FOCAL_DISTANCE, L"Focal Distance (meters)", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
-	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FOCAL_DISTANCE, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 10, 10000,
-		(int)(g_FocalDistance * 100.0f));
-	g_HUD.m_GUI.AddStatic(IDC_STATIC_FSTOP, L"fStop", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
-	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FSTOP, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 14, 220, int(g_fStop * 10.0f));
+	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FOCAL_DISTANCE, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 20, 10000,
+		(int)(g_FocalDistance * 100.0f));//2位小数点
+	g_HUD.m_GUI.AddStatic(IDC_STATIC_FSTOP, L"F value(ratioFocalLengthToLensDiameter)", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
+	g_HUD.m_GUI.AddSlider(IDC_SLIDER_FSTOP, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 14, 220, (int)(g_fStop*10));//1位小数点精度放大，之后再除以10还原
 
 	g_HUD.m_GUI.AddStatic(IDC_STATIC_MAX_RADIUS, L"MaxRadius", AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight);
 	g_HUD.m_GUI.AddSlider(IDC_SLIDER_MAX_RADIUS, AMD::HUD::iElementOffset, iY += AMD::HUD::iElementDelta, AMD::HUD::iElementWidth, AMD::HUD::iElementHeight, 5, MAX_DOF_RADIUS, g_MaxRadius);
@@ -1944,7 +1999,7 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl * pControl, v
 
 	case IDC_SLIDER_FOCAL_DISTANCE:
 	{
-		g_FocalDistance = float(g_HUD.m_GUI.GetSlider(IDC_SLIDER_FOCAL_DISTANCE)->GetValue()) / 100.0f;
+		g_FocalDistance = float(g_HUD.m_GUI.GetSlider(IDC_SLIDER_FOCAL_DISTANCE)->GetValue()) / 100.0f;//2位小数点
 		swprintf_s(szTemp, 64, L"Focal Distance:%.2f", g_FocalDistance);
 		g_HUD.m_GUI.GetStatic(IDC_STATIC_FOCAL_DISTANCE)->SetText(szTemp);
 	}
@@ -1952,8 +2007,8 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl * pControl, v
 
 	case IDC_SLIDER_FSTOP:
 	{
-		g_fStop = float(g_HUD.m_GUI.GetSlider(nControlID)->GetValue()) / 10.0f;
-		swprintf_s(szTemp, 64, L"fStop:%.1f", g_fStop);
+		g_fStop = float(g_HUD.m_GUI.GetSlider(nControlID)->GetValue()/10.f);
+		swprintf_s(szTemp, 64, L"fStop Value(%.1f ratioFocalLengthToLensDiameter)", g_fStop);
 		g_HUD.m_GUI.GetStatic(IDC_STATIC_FSTOP)->SetText(szTemp);
 	}
 	break;

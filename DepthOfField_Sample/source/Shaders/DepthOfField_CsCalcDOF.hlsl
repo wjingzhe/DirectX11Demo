@@ -9,26 +9,41 @@ cbuffer CalcDOFParams
 	uint2 ScreenParams;
 	float zNear;
 	float zFar;
-	float focusDistance;
-	float fStop;
+	float focusDistance;//对焦平面到镜头的距离，俗称对焦距离
+	float ratioFocalLengthToLensDiameter;//fStop
 	float focalLength;//焦距
 	float maxRadius;
 	float forceCircleOfConfusion;
+
+	float CircleOfConfusionScale;
+	float CircleOfConfusionBias;
+
 };
 
-//场景深度可能是成像点
-//focalLength distanceToLense focusDistance这几个变量有什么区别,
-float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float fStop, float focalLength)
+
+////focalLength distanceToLense focusDistance这几个变量有什么区别,
+//float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float ratioFocalLengthToLensDiameter, float focalLength)
+//{
+//	const float lensDiameter = focalLength / ratioFocalLengthToLensDiameter;
+//	const float circleOfConfusionScale = focalLength*lensDiameter / focusDistance;// move to canstant buffer
+//	const float objectDepthGreaterThanFocalLength = sceneDepth - focalLength;
+//	float circleOfConfusion = (objectDepthGreaterThanFocalLength > 0.0f) ? (circleOfConfusionScale*(sceneDepth - focusDistance) / (sceneDepth - focalLength)) : 0.0;
+//
+//	circleOfConfusion = clamp(circleOfConfusion* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
+//
+//	return circleOfConfusion;
+//}
+
+
+float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float ratioFocalLengthToLensDiameter, float focalLength)
 {
-	const float circleOfConfusionScale = (focalLength*focalLength) / fStop;// move to canstant buffer
-	const float distanceToLense = sceneDepth - focalLength;
-	const float distanceToFocusPlane = distanceToLense - focusDistance;
-	float circleOfConfusion = (distanceToLense > 0.0f) ? (circleOfConfusionScale*(distanceToFocusPlane / distanceToLense)) : 0.0;
+	float DCoC = sceneDepth * CircleOfConfusionScale + CircleOfConfusionBias;
 
-	circleOfConfusion = clamp(circleOfConfusion* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
+	DCoC = clamp(DCoC* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
 
-	return circleOfConfusion;
+	return DCoC;
 }
+
 
 // Compute camera-space depth for current pixel
 float CameraDepth(float depth, float zNear, float zFar)
@@ -45,7 +60,8 @@ void CalcDOF(uint3 threadID:SV_DispatchThreadID)
 	{
 		const float depth = tDepth.Load(int3(threadID.xy, 0), 0);
 		const float camDepth = CameraDepth(depth, zNear, zFar);
-		float circleOfConfusion = clamp(CircleOfConfusionFromDepth(camDepth, focusDistance, fStop, focalLength), -maxRadius, maxRadius);
+
+		float circleOfConfusion = clamp(CircleOfConfusionFromDepth(camDepth, focusDistance, ratioFocalLengthToLensDiameter, focalLength), -maxRadius, maxRadius);
 
 		if (abs(forceCircleOfConfusion) > 0.25)
 		{

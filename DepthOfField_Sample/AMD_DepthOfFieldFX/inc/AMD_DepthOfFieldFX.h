@@ -66,7 +66,7 @@ FX Modules share a variety of trivial types such as vectors and
 camera structures. These types are declared inside an FX descriptor
 in order to avoid any collisions between different modules or app types.
 */
-
+public:
     AMD_DEPTHOFFIELDFX_DLL_API DEPTHOFFIELDFX_DESC();
 
     uint2 m_screenSize;
