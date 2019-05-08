@@ -386,12 +386,12 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::release()
     SAFE_RELEASE(&m_pIntermediateTransposedUAV);
     SAFE_RELEASE(&m_pDofParamsCB);
     SAFE_RELEASE(&m_pPointSampler);
-    SAFE_RELEASE(&m_pFastFilterSetupCS);
-    SAFE_RELEASE(&m_pFastFilterSetupQuarterResCS);
-    SAFE_RELEASE(&m_pBoxFastFilterSetupCS);
-    SAFE_RELEASE(&m_pReadFinalResultCS);
-    SAFE_RELEASE(&m_pVerticalIntegrateCS);
-    SAFE_RELEASE(&m_pDoubleVerticalIntegrateCS);
+    //SAFE_RELEASE(&m_pFastFilterSetupCS);
+    //SAFE_RELEASE(&m_pFastFilterSetupQuarterResCS);
+    //SAFE_RELEASE(&m_pBoxFastFilterSetupCS);
+    //SAFE_RELEASE(&m_pReadFinalResultCS);
+    //SAFE_RELEASE(&m_pVerticalIntegrateCS);
+    //SAFE_RELEASE(&m_pDoubleVerticalIntegrateCS);
     return result;
 }
 
@@ -408,7 +408,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::create_shaders(const DEPT
     }
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csFastFilterSetupQuarterRes, sizeof(g_csFastFilterSetupQuarterRes), nullptr, &m_pFastFilterSetupQuarterResCS);
+    //    result = pDev->CreateComputeShader(g_csFastFilterSetupQuarterRes, sizeof(g_csFastFilterSetupQuarterRes), nullptr, &m_pFastFilterSetupQuarterResCS);
     }
     if (result == S_OK)
     {
@@ -420,7 +420,7 @@ DEPTHOFFIELDFX_RETURN_CODE DEPTHOFFIELDFX_OPAQUE_DESC::create_shaders(const DEPT
     }
     if (result == S_OK)
     {
-        result = pDev->CreateComputeShader(g_csBoxFastFilterSetup, sizeof(g_csBoxFastFilterSetup), nullptr, &m_pBoxFastFilterSetupCS);
+   //     result = pDev->CreateComputeShader(g_csBoxFastFilterSetup, sizeof(g_csBoxFastFilterSetup), nullptr, &m_pBoxFastFilterSetupCS);
     }
     if (result == S_OK)
     {

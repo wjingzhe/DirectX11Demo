@@ -1,6 +1,6 @@
-#ifndef DOUBLE_INTEGRATE
-#define DOUBLE_INTEGRATE 1
-#endif
+//#ifndef DOUBLE_INTEGRATE
+//#define DOUBLE_INTEGRATE 1
+//#endif
 
 #ifndef CONVERT_TO_SRGB
 #define CONVERT_TO_SRGB 1

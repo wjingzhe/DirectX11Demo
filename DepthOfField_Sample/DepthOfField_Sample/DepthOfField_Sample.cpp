@@ -357,7 +357,9 @@ ID3D11ComputeShader* g_pDoubleVerticalIntegrateCS = nullptr;
 ID3D11ComputeShader* g_pVerticalIntegrateCS = nullptr;
 ID3D11ComputeShader* g_pFastFilterSetupCS = nullptr;
 ID3D11ComputeShader* g_pReadFinalResultCS = nullptr;
-//ID3D11ComputeShader* g_pDoubleVerticalIntegrateCS = nullptr;
+ID3D11ComputeShader* g_pFastFilterSetupQuarterResCS = nullptr;
+ID3D11ComputeShader* g_pBoxFastFilterSetupCS = nullptr;
+
 
 
 ID3D11Buffer* g_pD3DViewerConsterBuffer = nullptr;
@@ -1001,6 +1003,16 @@ HRESULT CompileShadersForDoF(ID3D11Device* device)
 
 	}
 
+	{
+
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pFastFilterSetupQuarterResCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"QuaterResFastFilterSetup", L"DepthOfFieldFX_FastFilterDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
+
+	}
+
+	{
+		g_ShaderCache.AddShader((ID3D11DeviceChild**)&g_pBoxFastFilterSetupCS, AMD::ShaderCache::SHADER_TYPE_COMPUTE, L"cs_5_0", L"BoxFastFilterSetup", L"DepthOfFieldFX_FastFilterDOF.hlsl", 0, nullptr, nullptr, nullptr, 0);
+	}
+
 	device->CreateVertexShader(VS_FULLSCREEN_Data, sizeof(VS_FULLSCREEN_Data), NULL, &g_pFullScreenVS);
 	device->CreatePixelShader(PS_FULLSCREEN_Data, sizeof(PS_FULLSCREEN_Data), NULL, &g_pFullScreenPS);
 
@@ -1110,6 +1122,7 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 		D3D11_USAGE_DEFAULT, false, 0, NULL);
 
 	// circle of confusion target
+	g_appCircleOfConfusionTexture.Release();
 	g_appCircleOfConfusionTexture.CreateSurface(pD3dDevice, pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height, pBackBufferSurfaceDesc->SampleDesc.Count, 1, 1,
 		DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_UNKNOWN,
 		DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_UNKNOWN,
@@ -1262,11 +1275,18 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	SAFE_RELEASE(g_pCalcCirlceOfConfusionCS);
 	SAFE_RELEASE(g_pDebugCirlceOfConfusionCS);
 
-	//SAFE_RELEASE(g_pDoubleVerticalIntegrateCS);
-	g_pDoubleVerticalIntegrateCS = nullptr;
-	g_pVerticalIntegrateCS = nullptr;
-	g_pFastFilterSetupCS = nullptr;
-	g_pReadFinalResultCS = nullptr;
+	SAFE_RELEASE(g_pDoubleVerticalIntegrateCS);
+	SAFE_RELEASE(g_pVerticalIntegrateCS);
+	SAFE_RELEASE(g_pFastFilterSetupCS);
+	SAFE_RELEASE(g_pReadFinalResultCS);
+	SAFE_RELEASE(g_pFastFilterSetupQuarterResCS);
+	SAFE_RELEASE(g_pBoxFastFilterSetupCS);
+	//g_pDoubleVerticalIntegrateCS = nullptr;
+	//g_pVerticalIntegrateCS = nullptr;
+	//g_pFastFilterSetupCS = nullptr;
+	//g_pReadFinalResultCS = nullptr;
+	//g_pFastFilterSetupQuarterResCS = nullptr;
+	//g_pBoxFastFilterSetupCS = nullptr;
 
 	SAFE_RELEASE(g_pD3DViewerConsterBuffer);
 	SAFE_RELEASE(g_pD3DCalcDofConsterBuffer);
@@ -1707,7 +1727,9 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		{
 		case DOF_BoxFastFilterSpread:
 			g_AMD_DofFX_Desc.m_scaleFactor = g_BoxScaleFactor;
-			AMD::DepthOfFieldFX_RenderBox(g_AMD_DofFX_Desc);
+			g_AMD_DofFX_Desc.m_pOpaque->m_pBoxFastFilterSetupCS = g_pBoxFastFilterSetupCS;
+			
+			AMD::DepthOfFieldFX_RenderBox(g_AMD_DofFX_Desc);//jingz 暂时不关注这些问题
 			break;
 		case DOF_FastFilterSpread:
 			g_AMD_DofFX_Desc.m_pOpaque->m_pFastFilterSetupCS = g_pFastFilterSetupCS;
@@ -1718,6 +1740,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 			AMD::DepthOfFieldFX_Render(g_AMD_DofFX_Desc);
 			break;
 		case DOF_QuarterResFastFilterSpread:
+			g_AMD_DofFX_Desc.m_pOpaque->m_pFastFilterSetupQuarterResCS = g_pFastFilterSetupQuarterResCS;
 			AMD::DepthOfFieldFX_RenderQuarterRes(g_AMD_DofFX_Desc);
 			break;
 		case DOF_Disabled:
