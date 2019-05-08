@@ -190,7 +190,7 @@ void QuaterResFastFilterSetup(uint3 ThreadID:SV_DispatchThreadID)
 			vColor.g = dot(green4, focusMask) / weight;
 			vColor.b = dot(blue4, focusMask) / weight;
 
-			WriteDeltaBartlett(TextureIntermediate, vColor, BlurRadius, ThreadID.xy);
+			WriteDeltaBartlett(TextureIntermediate, vColor, BlurRadius, location);
 
 		}
 		else
