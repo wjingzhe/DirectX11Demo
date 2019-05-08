@@ -35,14 +35,26 @@ cbuffer CalcDOFParams
 //}
 
 
-float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float ratioFocalLengthToLensDiameter, float focalLength)
+float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float fStop, float focalLength)
 {
-	float DCoC = sceneDepth * CircleOfConfusionScale + CircleOfConfusionBias;
+	const float cocScale = (focalLength * focalLength) / fStop;  // move to constant buffer
+	const float distanceToLense = sceneDepth - focalLength;
+	const float distanceToFocusPlane = distanceToLense - focusDistance;
+	float       coc = (distanceToLense > 0.0) ? (cocScale * (distanceToFocusPlane / distanceToLense)) : 0.0;
 
-	DCoC = clamp(DCoC* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
+	coc = clamp(coc * float(ScreenParams.x) * 0.5, -maxRadius, maxRadius);
 
-	return DCoC;
+	return coc;
 }
+
+//float CircleOfConfusionFromDepth(float sceneDepth, float focusDistance, float ratioFocalLengthToLensDiameter, float focalLength)
+//{
+//	float DCoC = sceneDepth * CircleOfConfusionScale + CircleOfConfusionBias;
+//
+//	DCoC = clamp(DCoC* float(ScreenParams.x)*0.5, -maxRadius, maxRadius);
+//
+//	return DCoC;
+//}
 
 
 // Compute camera-space depth for current pixel
