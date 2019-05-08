@@ -419,8 +419,9 @@ void SetCameraProjectionParameters()
 {
 	float fov = 2 * atan(0.5f* g_SensorWidth / g_FocalLength);
 
-	FLOAT fApsectRatio = (float)g_ScreenWidth / (float)g_ScreenHeight;
-	g_Camera.SetProjParams(XM_PI / 4, fApsectRatio, 1.0f, 1000.0f);
+	FLOAT fAspectRatio = (float)g_ScreenWidth / (float)g_ScreenHeight;
+	g_Camera.SetProjParams(fov, fAspectRatio, 1.0f, 100.0f);
+	//g_Camera.SetProjParams(XM_PI / 4, fAspectRatio, 1.0f, 1000.0f);
 
 }
 
@@ -498,7 +499,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	InitApp();
 	DXUTInit(true,true,NULL);//Parse the command line,show msgBoxes on error,no extra command line params
-	DXUTSetCursorSettings(true, false);
+	DXUTSetCursorSettings(true, true);
 	DXUTCreateWindow(L"TestTriangle v1.2");
 
 
@@ -1050,6 +1051,9 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	g_HUD.m_GUI.SetSize(AMD::HUD::iDialogWidth, pBackBufferSurfaceDesc->Height);
 	g_HUD.OnResizedSwapChain(pBackBufferSurfaceDesc);
 
+	//jingz живЊДњТы
+	g_AMD_DofFX_Desc.m_screenSize.x = g_ScreenWidth;
+	g_AMD_DofFX_Desc.m_screenSize.y = g_ScreenHeight;
 
 	// Setup the camera's projection parameter
 	float fApsectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
