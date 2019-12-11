@@ -154,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\BasePostProcessRender.h" />
+    <ClInclude Include="..\source\CubeMapCapture.h" />
     <ClInclude Include="..\source\DeferredDecalRender.h" />
     <ClInclude Include="..\source\ForwardPlusRender.h" />
     <ClInclude Include="..\source\GeometryHelper.h" />
@@ -169,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\BasePostProcessRender.cpp" />
+    <ClCompile Include="..\source\CubeMapCapture.cpp" />
     <ClCompile Include="..\source\DeferredDecalRender.cpp" />
     <ClCompile Include="..\source\ForwardPlusRender.cpp" />
     <ClCompile Include="..\source\GeometryHelper.cpp" />
@@ -255,6 +257,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\source\Shaders\DeferredVoxelSphereCutout.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\source\Shaders\CubeMapCapture.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

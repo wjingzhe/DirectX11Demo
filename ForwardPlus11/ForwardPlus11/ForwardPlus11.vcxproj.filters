@@ -60,6 +60,9 @@
     <ClInclude Include="..\source\SphereRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\CubeMapCapture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -93,6 +96,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\SphereRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\CubeMapCapture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,10 +140,9 @@
     <None Include="..\source\Shaders\RadialBlur.hlsl">
       <Filter>Shaders</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\source\Shaders\DeferredVoxelSphereCutout.hlsl">
+    <None Include="..\source\Shaders\DeferredVoxelSphereCutout.hlsl" />
+    <None Include="..\source\Shaders\CubeMapCapture.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>

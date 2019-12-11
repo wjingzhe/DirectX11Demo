@@ -17,6 +17,8 @@
 #include "../../DXUT/Core/WICTextureLoader.h"
 #include <stdlib.h>
 #include <string>
+#include <stb_image.h>
+
 
 #define FORWARDPLUS
 //#define TRIANGLE
@@ -82,6 +84,9 @@ ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
 ID3D11Texture2D* g_pTempTexture2D[2] = { nullptr,nullptr };
 ID3D11RenderTargetView* g_pTempTextureRenderTargetView[2] = { nullptr,nullptr };
 ID3D11ShaderResourceView* g_pTempTextureSRV[2] = { nullptr,nullptr };
+
+ID3D11Texture2D* g_pHdrTexture = nullptr;
+ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
 
 
 //GUI
