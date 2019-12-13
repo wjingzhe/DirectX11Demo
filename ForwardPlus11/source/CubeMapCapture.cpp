@@ -1,6 +1,6 @@
 #include "CubeMapCapture.h"
 
-
+#include "stb_image.h"
 
 namespace ForwardRender
 {
@@ -10,6 +10,7 @@ namespace ForwardRender
 		m_pDepthStencilState(nullptr),m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerState(nullptr),
 		m_pConstantBufferPerObject(nullptr),m_pConstantBufferPerFrame(nullptr),
 		m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
+		//m_pHdrTexture(nullptr),
 		m_pSrcTextureSRV(nullptr),
 		m_bShaderInited(false)
 	{
@@ -33,6 +34,8 @@ namespace ForwardRender
 		this->AddShadersToCache(pShaderCache, L"CubeMapCaptureVS", L"CubeMapCapturePS", L"CubeMapCapture.hlsl", layout, size);
 
 	}
+
+
 	HRESULT CubeMapCapture::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 	{
 		HRESULT hr;
@@ -41,8 +44,9 @@ namespace ForwardRender
 		V_RETURN(this->CreateOtherRenderStateResources(pD3dDevice));
 
 		stbi_set_flip_vertically_on_load(true);
-		int width, height, nrComponents;
-		float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
+		//int width, height, nrComponents;
+		//float *data = stbi_loadf("hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+
 
 
 
@@ -158,13 +162,13 @@ namespace ForwardRender
 		//Create Sampler
 		D3D11_SAMPLER_DESC SamplerDesc;
 		ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
-		SamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-		SamplerDesc.AddressU = SamplerDesc.AddressV = SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		SamplerDesc.AddressU = SamplerDesc.AddressV = SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		SamplerDesc.MaxAnisotropy = 16;
 		SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 		SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 		V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerState));
-		m_pSamplerState->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Anisotropic"), "Anisotropic");
+		m_pSamplerState->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("LINEAR"), "LINEAR");
 
 		// Create blend states
 		D3D11_BLEND_DESC BlendStateDesc;

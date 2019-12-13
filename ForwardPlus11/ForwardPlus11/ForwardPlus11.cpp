@@ -17,7 +17,7 @@
 #include "../../DXUT/Core/WICTextureLoader.h"
 #include <stdlib.h>
 #include <string>
-#include <stb_image.h>
+#include "../source/stb_image.h"
 
 
 #define FORWARDPLUS
@@ -86,7 +86,7 @@ ID3D11RenderTargetView* g_pTempTextureRenderTargetView[2] = { nullptr,nullptr };
 ID3D11ShaderResourceView* g_pTempTextureSRV[2] = { nullptr,nullptr };
 
 ID3D11Texture2D* g_pHdrTexture = nullptr;
-ID3D11ShaderResourceView* g_pDecalTextureSRV = nullptr;
+ID3D11ShaderResourceView* g_pHdrTextureSRV = nullptr;
 
 
 //GUI
@@ -338,6 +338,8 @@ bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo* AdapterInfo, 
 }
 
 
+#include "c:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include\D3DX11tex.h"
+
 // Create any D3D11 resource that aren't dependent on the back buffer
 HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 {
@@ -364,6 +366,39 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../len_full.jpg", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
 	
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrComponents;
+	float *data = stbi_loadf("D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+
+	D3D11_TEXTURE2D_DESC texDesc;
+
+	texDesc.Width = width;
+	texDesc.Height = height;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_BC6H_UF16;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.MiscFlags = 0;
+
+
+
+	D3D11_SUBRESOURCE_DATA InitData = { 0 };
+	InitData.SysMemPitch = width * 16;
+	InitData.pSysMem = data;
+	InitData.SysMemSlicePitch = 0;
+
+	V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
+	V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
+
+	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+
+	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+
 	XMVECTOR SceneMin, SceneMax;
 
 	bool bIsSceneMinMaxInited = false;
@@ -703,6 +738,10 @@ void OnD3D11DestroyDevice(void * pUserContext)
 
 	SAFE_RELEASE(g_pDecalTexture);
 	SAFE_RELEASE(g_pDecalTextureSRV);
+
+	SAFE_RELEASE(g_pHdrTexture);
+	SAFE_RELEASE(g_pHdrTextureSRV);
+	
 
 	for (int i = 0; i < MAX_TEMP_SCENE_TEXTURE; ++i)
 	{

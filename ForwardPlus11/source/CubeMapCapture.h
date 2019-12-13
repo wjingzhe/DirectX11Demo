@@ -50,6 +50,13 @@ namespace ForwardRender
 			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV) = 0;
 
 
+		void SetSrcTextureSRV(ID3D11ShaderResourceView* pNewSRV)
+		{
+			SAFE_RELEASE(m_pSrcTextureSRV);
+			m_pSrcTextureSRV = pNewSRV;
+			m_pSrcTextureSRV->AddRef();
+		}
+
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
 
@@ -83,6 +90,7 @@ namespace ForwardRender
 		UINT m_uSizeConstantBufferPerObject;
 		UINT m_uSizeConstantBufferPerFrame;
 
+		//ID3D11Texture2D* m_pHdrTexture;
 		ID3D11ShaderResourceView* m_pSrcTextureSRV;
 
 		bool m_bShaderInited;
