@@ -60,10 +60,10 @@
     <ClInclude Include="..\source\SphereRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\CubeMapCapture.h">
+    <ClInclude Include="..\source\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\stb_image.h">
+    <ClInclude Include="..\source\CubeMapCaptureRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -101,10 +101,10 @@
     <ClCompile Include="..\source\SphereRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\CubeMapCapture.cpp">
+    <ClCompile Include="..\source\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\stb_image.cpp">
+    <ClCompile Include="..\source\CubeMapCaptureRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

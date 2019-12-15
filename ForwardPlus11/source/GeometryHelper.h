@@ -65,6 +65,8 @@ public:
 
 	static MeshData CreateSphere(float radius, uint32 sliceCount, uint32 stackCount,DirectX::XMFLOAT3 center = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f));
 
+	static MeshData CreateCubePlane();
+
 	static void Subdivide(MeshData& meshData);
 
 protected:

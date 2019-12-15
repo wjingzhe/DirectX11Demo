@@ -18,12 +18,14 @@
 #include <stdlib.h>
 #include <string>
 #include "../source/stb_image.h"
+#include "../source/CubeMapCaptureRender.h"
 
 
 #define FORWARDPLUS
 //#define TRIANGLE
 #define DECAL
 #define GodRay
+#define PBR
 
 #define MAX_TEMP_SCENE_TEXTURE 2
 
@@ -56,6 +58,15 @@ static PostProcess::RadialBlurRender s_RadialBlurRender;
 static PostProcess::ScreenBlendRender s_ScreenBlendRender;
 
 #endif
+
+#ifdef PBR
+
+static ForwardRender::CubeMapCaptureRender s_CubeMapCaptureRender;
+
+
+#endif // PBR
+
+
 
 // Direct3D 11 resources
 CDXUTSDKMesh g_SceneMesh;
@@ -338,8 +349,6 @@ bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo* AdapterInfo, 
 }
 
 
-#include "c:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include\D3DX11tex.h"
-
 // Create any D3D11 resource that aren't dependent on the back buffer
 HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 {
@@ -369,7 +378,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrComponents;
-	float *data = stbi_loadf("D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+	float *data = stbi_loadf("C:/WorkSpace/DirectX11Demo/ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
 
 	D3D11_TEXTURE2D_DESC texDesc;
 
@@ -464,6 +473,12 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	V_RETURN(s_ScreenBlendRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	//s_ScreenBlendRender.SetSrcTextureSRV(g_pDecalTextureSRV);
 #endif
+
+
+#ifdef PBR
+	V_RETURN(s_CubeMapCaptureRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+	
+#endif // PBR
 
 
 	//Create state objects
@@ -587,6 +602,12 @@ HRESULT AddShadersToCache()
 	s_ScreenBlendRender.AddShadersToCache(&g_ShaderCache);
 #endif
 
+#ifdef PBR
+
+	s_CubeMapCaptureRender.AddShadersToCache(&g_ShaderCache);
+#endif // PBR
+
+
 	return hr;
 }
 
@@ -668,6 +689,11 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 	s_ScreenBlendRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 #endif
 
+#ifdef PBR
+	s_CubeMapCaptureRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+#endif // PBR
+
+
 	return hr;
 }
 
@@ -693,6 +719,9 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 	}
 
 	
+	SAFE_RELEASE(g_pHdrTexture);
+	SAFE_RELEASE(g_pHdrTextureSRV);
+
 #ifdef FORWARDPLUS
 	s_ForwardPlusRender.OnReleasingSwapChain();
 #endif
@@ -710,6 +739,9 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 	s_ScreenBlendRender.OnReleasingSwapChain();
 #endif
 
+#ifdef PBR
+	s_CubeMapCaptureRender.OnReleasingSwapChain();
+#endif // PBR
 
 	g_DialogResourceManager.OnD3D11ReleasingSwapChain();
 }
@@ -767,6 +799,9 @@ void OnD3D11DestroyDevice(void * pUserContext)
 	s_ScreenBlendRender.OnD3D11DestroyDevice(pUserContext);
 #endif
 
+#ifdef PBR
+	s_CubeMapCaptureRender.OnD3D11DestroyDevice(pUserContext);
+#endif // PBR
 	
 	//AMD
 	g_ShaderCache.OnDestroyDevice();
@@ -944,6 +979,13 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		s_ScreenBlendRender.SetBlendTextureSRV(g_pTempTextureSRV[1]);
 		s_ScreenBlendRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 #endif
+
+#ifdef PBR
+		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
+		
+		s_CubeMapCaptureRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pDepthStencilView, g_pDepthStencilSRV);
+#endif // PBR
+
 
 		TIMER_End(); // Render
 

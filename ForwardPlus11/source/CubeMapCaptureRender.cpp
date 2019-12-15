@@ -1,10 +1,10 @@
-#include "CubeMapCapture.h"
+#include "CubeMapCaptureRender.h"
 
 #include "stb_image.h"
 
 namespace ForwardRender
 {
-	CubeMapCapture::CubeMapCapture()
+	CubeMapCaptureRender::CubeMapCaptureRender()
 		:m_pMeshIB(nullptr),m_pMeshVB(nullptr),
 		m_pShaderInputLayout(nullptr),m_pShaderVS(nullptr),m_pShaderPS(nullptr),
 		m_pDepthStencilState(nullptr),m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerState(nullptr),
@@ -14,12 +14,15 @@ namespace ForwardRender
 		m_pSrcTextureSRV(nullptr),
 		m_bShaderInited(false)
 	{
+		m_MeshData = GeometryHelper::CreateScreenQuad();
+		m_uSizeConstantBufferPerObject = sizeof(CB_PER_OBJECT);
+		m_uSizeConstantBufferPerFrame = sizeof(CB_PER_FRAME);
 	}
 
-	CubeMapCapture::~CubeMapCapture()
+	CubeMapCaptureRender::~CubeMapCaptureRender()
 	{
 	}
-	void CubeMapCapture::AddShadersToCache(AMD::ShaderCache * pShaderCache)
+	void CubeMapCaptureRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
 	{
 		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
@@ -36,14 +39,14 @@ namespace ForwardRender
 	}
 
 
-	HRESULT CubeMapCapture::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
+	HRESULT CubeMapCaptureRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 	{
 		HRESULT hr;
 
 		V_RETURN(this->CreateCommonBuffers(pD3dDevice, m_MeshData, m_uSizeConstantBufferPerObject, m_uSizeConstantBufferPerFrame));
 		V_RETURN(this->CreateOtherRenderStateResources(pD3dDevice));
 
-		stbi_set_flip_vertically_on_load(true);
+		//stbi_set_flip_vertically_on_load(true);
 		//int width, height, nrComponents;
 		//float *data = stbi_loadf("hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
 
@@ -52,29 +55,40 @@ namespace ForwardRender
 
 		return hr;
 	}
-	void CubeMapCapture::OnD3D11DestroyDevice(void * pUserContext)
+	void CubeMapCaptureRender::OnD3D11DestroyDevice(void * pUserContext)
 	{
 		ReleaseAllD3D11COM();
 
 	}
-	void CubeMapCapture::OnReleasingSwapChain(void)
+	void CubeMapCaptureRender::OnReleasingSwapChain(void)
 	{
 		this->ReleaseSwapChainAssociatedCOM();
 	}
 
-	void CubeMapCapture::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
+	void CubeMapCaptureRender::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 	{
 		//jingz todo
 	}
 
-	void CubeMapCapture::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView, ID3D11ShaderResourceView * pDepthStencilCopySRV)
-	{
+	void CubeMapCaptureRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView, ID3D11ShaderResourceView * pDepthStencilCopySRV)
+	{		// save blend state(for later restore)
+		ID3D11BlendState* pBlendStateStored11 = nullptr;
+		FLOAT afBlendFactorStored11[4];
+		UINT uSampleMaskStored11;
+		pD3dImmediateContext->OMGetBlendState(&pBlendStateStored11, afBlendFactorStored11, &uSampleMaskStored11);
+
+		// save depth state (for later restore)
+		ID3D11DepthStencilState* pDepthStencilStateStored11 = nullptr;
+		UINT uStencilRefStored11;
+		pD3dImmediateContext->OMGetDepthStencilState(&pDepthStencilStateStored11, &uStencilRefStored11);
+
+
 	}
 
-	void CubeMapCapture::AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size)
+	void CubeMapCaptureRender::AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size)
 	{
 	}
-	HRESULT CubeMapCapture::CreateCommonBuffers(ID3D11Device * pD3dDevice, GeometryHelper::MeshData & meshData, UINT constBufferPerObjectSize, UINT constBufferPerFrameSize)
+	HRESULT CubeMapCaptureRender::CreateCommonBuffers(ID3D11Device * pD3dDevice, GeometryHelper::MeshData & meshData, UINT constBufferPerObjectSize, UINT constBufferPerFrameSize)
 	{
 		HRESULT hr;
 
@@ -84,7 +98,7 @@ namespace ForwardRender
 			//Create index buffer
 			D3D11_BUFFER_DESC indexBufferDesc;
 			ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
-			indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 			indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 			indexBufferDesc.ByteWidth = sizeof(GeometryHelper::uint32)*m_MeshData.Indices32.size();
 
@@ -98,7 +112,7 @@ namespace ForwardRender
 			//Create vertex buffer
 			D3D11_BUFFER_DESC vertexBufferDesc;
 			ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-			vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 			vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 			vertexBufferDesc.ByteWidth = sizeof(GeometryHelper::Vertex)*m_MeshData.Vertices.size();
 
@@ -123,7 +137,7 @@ namespace ForwardRender
 
 		return hr;
 	}
-	HRESULT CubeMapCapture::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
+	HRESULT CubeMapCaptureRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
 	{
 		HRESULT hr;
 
@@ -189,17 +203,17 @@ namespace ForwardRender
 		return hr;
 	}
 
-	void CubeMapCapture::ReleaseAllD3D11COM(void)
+	void CubeMapCaptureRender::ReleaseAllD3D11COM(void)
 	{
 		this->ReleaseSwapChainAssociatedCOM();
 		this->ReleaseOneTimeInitedCOM();
 	}
 
-	void CubeMapCapture::ReleaseSwapChainAssociatedCOM(void)
+	void CubeMapCaptureRender::ReleaseSwapChainAssociatedCOM(void)
 	{
 	}
 
-	void CubeMapCapture::ReleaseOneTimeInitedCOM(void)
+	void CubeMapCaptureRender::ReleaseOneTimeInitedCOM(void)
 	{
 		SAFE_RELEASE(m_pMeshIB);
 		SAFE_RELEASE(m_pMeshVB);
@@ -220,7 +234,7 @@ namespace ForwardRender
 		
 	}
 
-	HRESULT CubeMapCapture::CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
+	HRESULT CubeMapCaptureRender::CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 	{
 		return E_NOTIMPL;
 	}

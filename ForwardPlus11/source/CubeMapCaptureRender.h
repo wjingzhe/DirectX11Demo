@@ -9,25 +9,22 @@
 namespace ForwardRender
 {
 
-	class CubeMapCapture
+	class CubeMapCaptureRender
 	{
 	public:
-		CubeMapCapture();
-		~CubeMapCapture();
+		CubeMapCaptureRender();
+		~CubeMapCaptureRender();
 
 
 		struct CB_PER_OBJECT
 		{
 			DirectX::XMMATRIX mWorldViewProjection;
 			DirectX::XMMATRIX mWorld;
-			DirectX::XMMATRIX mWorldViewInv;
 		};
 
 		struct CB_PER_FRAME
 		{
 			DirectX::XMVECTOR vCameraPos3AndAlphaTest;
-			DirectX::XMMATRIX m_mProjection;
-			DirectX::XMMATRIX m_mProjectionInv;
 		};
 
 
@@ -47,7 +44,7 @@ namespace ForwardRender
 		void OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 
 		virtual void OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
-			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV) = 0;
+			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV);
 
 
 		void SetSrcTextureSRV(ID3D11ShaderResourceView* pNewSRV)
