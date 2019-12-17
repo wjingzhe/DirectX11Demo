@@ -6,6 +6,8 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
+
+
 namespace ForwardRender
 {
 
@@ -25,6 +27,7 @@ namespace ForwardRender
 		struct CB_PER_FRAME
 		{
 			DirectX::XMVECTOR vCameraPos3AndAlphaTest;
+			DirectX::XMVECTOR vScreenSize;
 		};
 
 
@@ -47,11 +50,18 @@ namespace ForwardRender
 			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV);
 
 
+		virtual void RenderHDRtoCubeMap(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
+			CBaseCamera* pCamera,ID3D11RenderTargetView* g_pTempTextureRenderTargetView, ID3D11DepthStencilView* g_pTempDepthStencilView);
+
 		void SetSrcTextureSRV(ID3D11ShaderResourceView* pNewSRV)
 		{
-			SAFE_RELEASE(m_pSrcTextureSRV);
-			m_pSrcTextureSRV = pNewSRV;
-			m_pSrcTextureSRV->AddRef();
+			if (m_pSrcTextureSRV!= pNewSRV)
+			{
+				SAFE_RELEASE(m_pSrcTextureSRV);
+				m_pSrcTextureSRV = pNewSRV;
+				m_pSrcTextureSRV->AddRef();
+			}
+			
 		}
 
 	protected:
@@ -89,6 +99,19 @@ namespace ForwardRender
 
 		//ID3D11Texture2D* m_pHdrTexture;
 		ID3D11ShaderResourceView* m_pSrcTextureSRV;
+
+		CFirstPersonCamera g_TempCubeMapCamera;
+
+
+		ID3D11Texture2D* g_pCubeTexture = nullptr;
+		ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs = nullptr;
+		//ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
+		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
+
+		// Depth stencil data
+		ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 
 		bool m_bShaderInited;
 

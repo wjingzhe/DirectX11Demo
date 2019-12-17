@@ -28,16 +28,32 @@
 <li><a href="#tabs-9">CullLightsCS_USE_DEPTH_BOUNDS=1</a></li>
 <li><a href="#tabs-10">CullLightsCS_USE_DEPTH_BOUNDS=2</a></li>
 <li><a href="#tabs-11">CullLightsCS_USE_DEPTH_BOUNDS=0</a></li>
-<li><a href="#tabs-12">DeferredDecalVS</a></li>
-<li><a href="#tabs-13">DeferredDecalPS</a></li>
-<li><a href="#tabs-14">DeferVoxelCutoutVS</a></li>
-<li><a href="#tabs-15">DeferVoxelCutoutPS</a></li>
-<li><a href="#tabs-16">BaseGeometryVS</a></li>
-<li><a href="#tabs-17">BaseGeometryPS</a></li>
-<li><a href="#tabs-18">RadialBlurVS</a></li>
-<li><a href="#tabs-19">RadialBlurPS</a></li>
-<li><a href="#tabs-20">ScreenBlendVS</a></li>
-<li><a href="#tabs-21">ScreenBlendPS</a></li>
+<li><a href="#tabs-12">CubeMapCaptureVS</a></li>
+<li><a href="#tabs-13">CubeMapCapturePS</a></li>
+<li><a href="#tabs-14">RenderScenePositionOnlyVS</a></li>
+<li><a href="#tabs-15">RenderScenePositionAndTexVS</a></li>
+<li><a href="#tabs-16">RenderSceneVS</a></li>
+<li><a href="#tabs-17">RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1</a></li>
+<li><a href="#tabs-18">RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1</a></li>
+<li><a href="#tabs-19">RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0</a></li>
+<li><a href="#tabs-20">RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0</a></li>
+<li><a href="#tabs-21">RenderSceneAlphaTestOnlyPS</a></li>
+<li><a href="#tabs-22">CullLightsCS_USE_DEPTH_BOUNDS=1</a></li>
+<li><a href="#tabs-23">CullLightsCS_USE_DEPTH_BOUNDS=2</a></li>
+<li><a href="#tabs-24">CullLightsCS_USE_DEPTH_BOUNDS=0</a></li>
+<li><a href="#tabs-25">CubeMapCaptureVS</a></li>
+<li><a href="#tabs-26">CubeMapCapturePS</a></li>
+<li><a href="#tabs-27">RenderScenePositionOnlyVS</a></li>
+<li><a href="#tabs-28">RenderScenePositionAndTexVS</a></li>
+<li><a href="#tabs-29">RenderSceneVS</a></li>
+<li><a href="#tabs-30">RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1</a></li>
+<li><a href="#tabs-31">RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1</a></li>
+<li><a href="#tabs-32">RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0</a></li>
+<li><a href="#tabs-33">RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0</a></li>
+<li><a href="#tabs-34">RenderSceneAlphaTestOnlyPS</a></li>
+<li><a href="#tabs-35">CullLightsCS_USE_DEPTH_BOUNDS=1</a></li>
+<li><a href="#tabs-36">CullLightsCS_USE_DEPTH_BOUNDS=2</a></li>
+<li><a href="#tabs-37">CullLightsCS_USE_DEPTH_BOUNDS=0</a></li>
 </ul>
 <div id="tabs-1">
 Raw Filename: RenderScenePositionOnlyVS<br>
@@ -179,7 +195,7 @@ Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGH
 Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh</a><br>
 <br>
 Compile Status: Finished Preprocessing<br>
-Compile Timing: -1<br>
+Compile Timing: 1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
@@ -263,7 +279,7 @@ Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt">Sh
 Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh</a><br>
 <br>
 Compile Status: Finished Preprocessing<br>
-Compile Timing: 0<br>
+Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
@@ -271,17 +287,17 @@ Macros: <br>
 USE_DEPTH_BOUNDS: 0<br>
 </div>
 <div id="tabs-12">
-Raw Filename: DeferredDecalVS<br>
-Entry Point: DeferredDecalVS<br>
-Hashed Filename: 3bf25eda<br>
+Raw Filename: CubeMapCaptureVS<br>
+Entry Point: CubeMapCaptureVS<br>
+Hashed Filename: 76b3f5e<br>
 ASM Target: vs_5_0<br>
 <br>
-Source HLSL File: <a href="DeferredDecal.hlsl">DeferredDecal.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\DeferredDecalVS.ppf">Shaders\Cache\Preprocess\DeferredDecalVS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\3bf25eda.asm">Shaders\Cache\Assembly\3bf25eda.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\DeferredDecalVS.obj">Shaders\Cache\Object\Debug\DeferredDecalVS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\DeferredDecalVS.txt">Shaders\Cache\Error\DeferredDecalVS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\DeferredDecalVS.hsh">Shaders\Cache\Hash\Debug\DeferredDecalVS.hsh</a><br>
+Source HLSL File: <a href="CubeMapCapture.hlsl">CubeMapCapture.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf">Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\76b3f5e.asm">Shaders\Cache\Assembly\76b3f5e.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj">Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CubeMapCaptureVS.txt">Shaders\Cache\Error\CubeMapCaptureVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh">Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh</a><br>
 <br>
 Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
@@ -291,17 +307,17 @@ Up-to-date?: no<br>
 Macros: <br>
 </div>
 <div id="tabs-13">
-Raw Filename: DeferredDecalPS<br>
-Entry Point: DeferredDecalPS<br>
-Hashed Filename: 5b20a28d<br>
+Raw Filename: CubeMapCapturePS<br>
+Entry Point: CubeMapCapturePS<br>
+Hashed Filename: cb242a80<br>
 ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="DeferredDecal.hlsl">DeferredDecal.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\DeferredDecalPS.ppf">Shaders\Cache\Preprocess\DeferredDecalPS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\5b20a28d.asm">Shaders\Cache\Assembly\5b20a28d.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\DeferredDecalPS.obj">Shaders\Cache\Object\Debug\DeferredDecalPS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\DeferredDecalPS.txt">Shaders\Cache\Error\DeferredDecalPS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\DeferredDecalPS.hsh">Shaders\Cache\Hash\Debug\DeferredDecalPS.hsh</a><br>
+Source HLSL File: <a href="CubeMapCapture.hlsl">CubeMapCapture.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CubeMapCapturePS.ppf">Shaders\Cache\Preprocess\CubeMapCapturePS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\cb242a80.asm">Shaders\Cache\Assembly\cb242a80.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CubeMapCapturePS.obj">Shaders\Cache\Object\Debug\CubeMapCapturePS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CubeMapCapturePS.txt">Shaders\Cache\Error\CubeMapCapturePS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh">Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh</a><br>
 <br>
 Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
@@ -311,19 +327,19 @@ Up-to-date?: no<br>
 Macros: <br>
 </div>
 <div id="tabs-14">
-Raw Filename: DeferVoxelCutoutVS<br>
-Entry Point: DeferVoxelCutoutVS<br>
-Hashed Filename: ae2bc70d<br>
+Raw Filename: RenderScenePositionOnlyVS<br>
+Entry Point: RenderScenePositionOnlyVS<br>
+Hashed Filename: 8bf5c268<br>
 ASM Target: vs_5_0<br>
 <br>
-Source HLSL File: <a href="DeferredVoxelCutout.hlsl">DeferredVoxelCutout.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\DeferVoxelCutoutVS.ppf">Shaders\Cache\Preprocess\DeferVoxelCutoutVS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\ae2bc70d.asm">Shaders\Cache\Assembly\ae2bc70d.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\DeferVoxelCutoutVS.obj">Shaders\Cache\Object\Debug\DeferVoxelCutoutVS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\DeferVoxelCutoutVS.txt">Shaders\Cache\Error\DeferVoxelCutoutVS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\DeferVoxelCutoutVS.hsh">Shaders\Cache\Hash\Debug\DeferVoxelCutoutVS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\8bf5c268.asm">Shaders\Cache\Assembly\8bf5c268.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePositionOnlyVS.txt">Shaders\Cache\Error\RenderScenePositionOnlyVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
@@ -331,19 +347,19 @@ Up-to-date?: no<br>
 Macros: <br>
 </div>
 <div id="tabs-15">
-Raw Filename: DeferVoxelCutoutPS<br>
-Entry Point: DeferVoxelCutoutPS<br>
-Hashed Filename: 3ca86b61<br>
-ASM Target: ps_5_0<br>
+Raw Filename: RenderScenePositionAndTexVS<br>
+Entry Point: RenderScenePositionAndTexVS<br>
+Hashed Filename: 82f2f0ad<br>
+ASM Target: vs_5_0<br>
 <br>
-Source HLSL File: <a href="DeferredVoxelCutout.hlsl">DeferredVoxelCutout.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\DeferVoxelCutoutPS.ppf">Shaders\Cache\Preprocess\DeferVoxelCutoutPS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\3ca86b61.asm">Shaders\Cache\Assembly\3ca86b61.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\DeferVoxelCutoutPS.obj">Shaders\Cache\Object\Debug\DeferVoxelCutoutPS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\DeferVoxelCutoutPS.txt">Shaders\Cache\Error\DeferVoxelCutoutPS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\DeferVoxelCutoutPS.hsh">Shaders\Cache\Hash\Debug\DeferVoxelCutoutPS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\82f2f0ad.asm">Shaders\Cache\Assembly\82f2f0ad.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePositionAndTexVS.txt">Shaders\Cache\Error\RenderScenePositionAndTexVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
@@ -351,19 +367,19 @@ Up-to-date?: no<br>
 Macros: <br>
 </div>
 <div id="tabs-16">
-Raw Filename: BaseGeometryVS<br>
-Entry Point: BaseGeometryVS<br>
-Hashed Filename: c6a3890f<br>
+Raw Filename: RenderSceneVS<br>
+Entry Point: RenderSceneVS<br>
+Hashed Filename: eaef763c<br>
 ASM Target: vs_5_0<br>
 <br>
-Source HLSL File: <a href="DrawBasicGeometry.hlsl">DrawBasicGeometry.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\BaseGeometryVS.ppf">Shaders\Cache\Preprocess\BaseGeometryVS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\c6a3890f.asm">Shaders\Cache\Assembly\c6a3890f.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\BaseGeometryVS.obj">Shaders\Cache\Object\Debug\BaseGeometryVS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\BaseGeometryVS.txt">Shaders\Cache\Error\BaseGeometryVS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\BaseGeometryVS.hsh">Shaders\Cache\Hash\Debug\BaseGeometryVS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderSceneVS.ppf">Shaders\Cache\Preprocess\RenderSceneVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\eaef763c.asm">Shaders\Cache\Assembly\eaef763c.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderSceneVS.obj">Shaders\Cache\Object\Debug\RenderSceneVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderSceneVS.txt">Shaders\Cache\Error\RenderSceneVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderSceneVS.hsh">Shaders\Cache\Hash\Debug\RenderSceneVS.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
@@ -371,104 +387,446 @@ Up-to-date?: no<br>
 Macros: <br>
 </div>
 <div id="tabs-17">
-Raw Filename: BaseGeometryPS<br>
-Entry Point: BaseGeometryPS<br>
-Hashed Filename: f822a44f<br>
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 47bc8a32<br>
 ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="DrawBasicGeometry.hlsl">DrawBasicGeometry.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\BaseGeometryPS.ppf">Shaders\Cache\Preprocess\BaseGeometryPS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\f822a44f.asm">Shaders\Cache\Assembly\f822a44f.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\BaseGeometryPS.obj">Shaders\Cache\Object\Debug\BaseGeometryPS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\BaseGeometryPS.txt">Shaders\Cache\Error\BaseGeometryPS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\BaseGeometryPS.hsh">Shaders\Cache\Hash\Debug\BaseGeometryPS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\47bc8a32.asm">Shaders\Cache\Assembly\47bc8a32.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
 Macros: <br>
+USE_ALPHA_TEST: 0<br>
+USE_LIGHT_CULLING: 1<br>
 </div>
 <div id="tabs-18">
-Raw Filename: RadialBlurVS<br>
-Entry Point: RadialBlurVS<br>
-Hashed Filename: c833aa97<br>
-ASM Target: vs_5_0<br>
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 5f441b62<br>
+ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="RadialBlur.hlsl">RadialBlur.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\RadialBlurVS.ppf">Shaders\Cache\Preprocess\RadialBlurVS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\c833aa97.asm">Shaders\Cache\Assembly\c833aa97.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\RadialBlurVS.obj">Shaders\Cache\Object\Debug\RadialBlurVS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\RadialBlurVS.txt">Shaders\Cache\Error\RadialBlurVS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\RadialBlurVS.hsh">Shaders\Cache\Hash\Debug\RadialBlurVS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5f441b62.asm">Shaders\Cache\Assembly\5f441b62.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
 Macros: <br>
+USE_ALPHA_TEST: 1<br>
+USE_LIGHT_CULLING: 1<br>
 </div>
 <div id="tabs-19">
-Raw Filename: RadialBlurPS<br>
-Entry Point: RadialBlurPS<br>
-Hashed Filename: 9ce12fbd<br>
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 5ac0692b<br>
 ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="RadialBlur.hlsl">RadialBlur.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\RadialBlurPS.ppf">Shaders\Cache\Preprocess\RadialBlurPS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\9ce12fbd.asm">Shaders\Cache\Assembly\9ce12fbd.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\RadialBlurPS.obj">Shaders\Cache\Object\Debug\RadialBlurPS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\RadialBlurPS.txt">Shaders\Cache\Error\RadialBlurPS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\RadialBlurPS.hsh">Shaders\Cache\Hash\Debug\RadialBlurPS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5ac0692b.asm">Shaders\Cache\Assembly\5ac0692b.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
 Macros: <br>
+USE_ALPHA_TEST: 0<br>
+USE_LIGHT_CULLING: 0<br>
 </div>
 <div id="tabs-20">
-Raw Filename: ScreenBlendVS<br>
-Entry Point: ScreenBlendVS<br>
-Hashed Filename: 2e5a8984<br>
-ASM Target: vs_5_0<br>
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: f0f77997<br>
+ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="ScreenBlend.hlsl">ScreenBlend.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\ScreenBlendVS.ppf">Shaders\Cache\Preprocess\ScreenBlendVS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\2e5a8984.asm">Shaders\Cache\Assembly\2e5a8984.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\ScreenBlendVS.obj">Shaders\Cache\Object\Debug\ScreenBlendVS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\ScreenBlendVS.txt">Shaders\Cache\Error\ScreenBlendVS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\ScreenBlendVS.hsh">Shaders\Cache\Hash\Debug\ScreenBlendVS.hsh</a><br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\f0f77997.asm">Shaders\Cache\Assembly\f0f77997.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: 1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_ALPHA_TEST: 1<br>
+USE_LIGHT_CULLING: 0<br>
+</div>
+<div id="tabs-21">
+Raw Filename: RenderSceneAlphaTestOnlyPS<br>
+Entry Point: RenderSceneAlphaTestOnlyPS<br>
+Hashed Filename: 5199e4e5<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf">Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5199e4e5.asm">Shaders\Cache\Assembly\5199e4e5.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj">Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt">Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh">Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: -1<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
 Macros: <br>
 </div>
-<div id="tabs-21">
-Raw Filename: ScreenBlendPS<br>
-Entry Point: ScreenBlendPS<br>
-Hashed Filename: a59cbcc2<br>
+<div id="tabs-22">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=1<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: eb0112aa<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\eb0112aa.asm">Shaders\Cache\Assembly\eb0112aa.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 1<br>
+</div>
+<div id="tabs-23">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=2<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: a2a184c<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\a2a184c.asm">Shaders\Cache\Assembly\a2a184c.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 2<br>
+</div>
+<div id="tabs-24">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=0<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: f3f6470b<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\f3f6470b.asm">Shaders\Cache\Assembly\f3f6470b.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 0<br>
+</div>
+<div id="tabs-25">
+Raw Filename: CubeMapCaptureVS<br>
+Entry Point: CubeMapCaptureVS<br>
+Hashed Filename: 76b3f5e<br>
+ASM Target: vs_5_0<br>
+<br>
+Source HLSL File: <a href="CubeMapCapture.hlsl">CubeMapCapture.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf">Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\76b3f5e.asm">Shaders\Cache\Assembly\76b3f5e.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj">Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CubeMapCaptureVS.txt">Shaders\Cache\Error\CubeMapCaptureVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh">Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+</div>
+<div id="tabs-26">
+Raw Filename: CubeMapCapturePS<br>
+Entry Point: CubeMapCapturePS<br>
+Hashed Filename: cb242a80<br>
 ASM Target: ps_5_0<br>
 <br>
-Source HLSL File: <a href="ScreenBlend.hlsl">ScreenBlend.hlsl</a><br>
-Preprocess File: <a href="Shaders\Cache\Preprocess\ScreenBlendPS.ppf">Shaders\Cache\Preprocess\ScreenBlendPS.ppf</a><br>
-Assembly File: <a href="Shaders\Cache\Assembly\a59cbcc2.asm">Shaders\Cache\Assembly\a59cbcc2.asm</a><br>
-Object File: <a href="Shaders\Cache\Object\Debug\ScreenBlendPS.obj">Shaders\Cache\Object\Debug\ScreenBlendPS.obj</a><br>
-Error File: <a href="Shaders\Cache\Error\ScreenBlendPS.txt">Shaders\Cache\Error\ScreenBlendPS.txt</a><br>
-Hash File: <a href="Shaders\Cache\Hash\Debug\ScreenBlendPS.hsh">Shaders\Cache\Hash\Debug\ScreenBlendPS.hsh</a><br>
+Source HLSL File: <a href="CubeMapCapture.hlsl">CubeMapCapture.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CubeMapCapturePS.ppf">Shaders\Cache\Preprocess\CubeMapCapturePS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\cb242a80.asm">Shaders\Cache\Assembly\cb242a80.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CubeMapCapturePS.obj">Shaders\Cache\Object\Debug\CubeMapCapturePS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CubeMapCapturePS.txt">Shaders\Cache\Error\CubeMapCapturePS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh">Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh</a><br>
 <br>
-Compile Status: Done!<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+</div>
+<div id="tabs-27">
+Raw Filename: RenderScenePositionOnlyVS<br>
+Entry Point: RenderScenePositionOnlyVS<br>
+Hashed Filename: 8bf5c268<br>
+ASM Target: vs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\8bf5c268.asm">Shaders\Cache\Assembly\8bf5c268.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePositionOnlyVS.txt">Shaders\Cache\Error\RenderScenePositionOnlyVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
 Compile Timing: 0<br>
 Processing?: no<br>
 Up-to-date?: no<br>
 <br>
 Macros: <br>
+</div>
+<div id="tabs-28">
+Raw Filename: RenderScenePositionAndTexVS<br>
+Entry Point: RenderScenePositionAndTexVS<br>
+Hashed Filename: 82f2f0ad<br>
+ASM Target: vs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\82f2f0ad.asm">Shaders\Cache\Assembly\82f2f0ad.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePositionAndTexVS.txt">Shaders\Cache\Error\RenderScenePositionAndTexVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+</div>
+<div id="tabs-29">
+Raw Filename: RenderSceneVS<br>
+Entry Point: RenderSceneVS<br>
+Hashed Filename: eaef763c<br>
+ASM Target: vs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderSceneVS.ppf">Shaders\Cache\Preprocess\RenderSceneVS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\eaef763c.asm">Shaders\Cache\Assembly\eaef763c.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderSceneVS.obj">Shaders\Cache\Object\Debug\RenderSceneVS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderSceneVS.txt">Shaders\Cache\Error\RenderSceneVS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderSceneVS.hsh">Shaders\Cache\Hash\Debug\RenderSceneVS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+</div>
+<div id="tabs-30">
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 47bc8a32<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\47bc8a32.asm">Shaders\Cache\Assembly\47bc8a32.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_ALPHA_TEST: 0<br>
+USE_LIGHT_CULLING: 1<br>
+</div>
+<div id="tabs-31">
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 5f441b62<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5f441b62.asm">Shaders\Cache\Assembly\5f441b62.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_ALPHA_TEST: 1<br>
+USE_LIGHT_CULLING: 1<br>
+</div>
+<div id="tabs-32">
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: 5ac0692b<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5ac0692b.asm">Shaders\Cache\Assembly\5ac0692b.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_ALPHA_TEST: 0<br>
+USE_LIGHT_CULLING: 0<br>
+</div>
+<div id="tabs-33">
+Raw Filename: RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0<br>
+Entry Point: RenderScenePS<br>
+Hashed Filename: f0f77997<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\f0f77997.asm">Shaders\Cache\Assembly\f0f77997.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_ALPHA_TEST: 1<br>
+USE_LIGHT_CULLING: 0<br>
+</div>
+<div id="tabs-34">
+Raw Filename: RenderSceneAlphaTestOnlyPS<br>
+Entry Point: RenderSceneAlphaTestOnlyPS<br>
+Hashed Filename: 5199e4e5<br>
+ASM Target: ps_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11.hlsl">ForwardPlus11.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf">Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\5199e4e5.asm">Shaders\Cache\Assembly\5199e4e5.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj">Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt">Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh">Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: 0<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+</div>
+<div id="tabs-35">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=1<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: eb0112aa<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\eb0112aa.asm">Shaders\Cache\Assembly\eb0112aa.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 1<br>
+</div>
+<div id="tabs-36">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=2<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: a2a184c<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\a2a184c.asm">Shaders\Cache\Assembly\a2a184c.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: -1<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 2<br>
+</div>
+<div id="tabs-37">
+Raw Filename: CullLightsCS_USE_DEPTH_BOUNDS=0<br>
+Entry Point: CullLightsCS<br>
+Hashed Filename: f3f6470b<br>
+ASM Target: cs_5_0<br>
+<br>
+Source HLSL File: <a href="ForwardPlus11Tiling.hlsl">ForwardPlus11Tiling.hlsl</a><br>
+Preprocess File: <a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf</a><br>
+Assembly File: <a href="Shaders\Cache\Assembly\f3f6470b.asm">Shaders\Cache\Assembly\f3f6470b.asm</a><br>
+Object File: <a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj</a><br>
+Error File: <a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt</a><br>
+Hash File: <a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh</a><br>
+<br>
+Compile Status: Finished Preprocessing<br>
+Compile Timing: 0<br>
+Processing?: no<br>
+Up-to-date?: no<br>
+<br>
+Macros: <br>
+USE_DEPTH_BOUNDS: 0<br>
 </div>
 </div>
 <font face="Calibri" size="-3">
@@ -608,122 +966,314 @@ Macros: <br>
 
 
 
-<tr><td>DeferredDecalVS</td>
-<td>3bf25eda</td>
-<td><a href="Shaders\Cache\Assembly\3bf25eda.asm">Shaders\Cache\Assembly\3bf25eda.asm</a></td>
-<td><a href="Shaders\Cache\Error\DeferredDecalVS.txt">Shaders\Cache\Error\DeferredDecalVS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\DeferredDecalVS.hsh">Shaders\Cache\Hash\Debug\DeferredDecalVS.hsh</a></td>
+<tr><td>CubeMapCaptureVS</td>
+<td>76b3f5e</td>
+<td><a href="Shaders\Cache\Assembly\76b3f5e.asm">Shaders\Cache\Assembly\76b3f5e.asm</a></td>
+<td><a href="Shaders\Cache\Error\CubeMapCaptureVS.txt">Shaders\Cache\Error\CubeMapCaptureVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh">Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\DeferredDecalVS.obj">Shaders\Cache\Object\Debug\DeferredDecalVS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\DeferredDecalVS.ppf">Shaders\Cache\Preprocess\DeferredDecalVS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj">Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf">Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf</a></td>
 </tr>
 
 
 
-<tr><td>DeferredDecalPS</td>
-<td>5b20a28d</td>
-<td><a href="Shaders\Cache\Assembly\5b20a28d.asm">Shaders\Cache\Assembly\5b20a28d.asm</a></td>
-<td><a href="Shaders\Cache\Error\DeferredDecalPS.txt">Shaders\Cache\Error\DeferredDecalPS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\DeferredDecalPS.hsh">Shaders\Cache\Hash\Debug\DeferredDecalPS.hsh</a></td>
+<tr><td>CubeMapCapturePS</td>
+<td>cb242a80</td>
+<td><a href="Shaders\Cache\Assembly\cb242a80.asm">Shaders\Cache\Assembly\cb242a80.asm</a></td>
+<td><a href="Shaders\Cache\Error\CubeMapCapturePS.txt">Shaders\Cache\Error\CubeMapCapturePS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh">Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\DeferredDecalPS.obj">Shaders\Cache\Object\Debug\DeferredDecalPS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\DeferredDecalPS.ppf">Shaders\Cache\Preprocess\DeferredDecalPS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CubeMapCapturePS.obj">Shaders\Cache\Object\Debug\CubeMapCapturePS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CubeMapCapturePS.ppf">Shaders\Cache\Preprocess\CubeMapCapturePS.ppf</a></td>
 </tr>
 
 
 
-<tr><td>DeferVoxelCutoutVS</td>
-<td>ae2bc70d</td>
-<td><a href="Shaders\Cache\Assembly\ae2bc70d.asm">Shaders\Cache\Assembly\ae2bc70d.asm</a></td>
-<td><a href="Shaders\Cache\Error\DeferVoxelCutoutVS.txt">Shaders\Cache\Error\DeferVoxelCutoutVS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\DeferVoxelCutoutVS.hsh">Shaders\Cache\Hash\Debug\DeferVoxelCutoutVS.hsh</a></td>
+<tr><td>RenderScenePositionOnlyVS</td>
+<td>8bf5c268</td>
+<td><a href="Shaders\Cache\Assembly\8bf5c268.asm">Shaders\Cache\Assembly\8bf5c268.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePositionOnlyVS.txt">Shaders\Cache\Error\RenderScenePositionOnlyVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\DeferVoxelCutoutVS.obj">Shaders\Cache\Object\Debug\DeferVoxelCutoutVS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\DeferVoxelCutoutVS.ppf">Shaders\Cache\Preprocess\DeferVoxelCutoutVS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf</a></td>
 </tr>
 
 
 
-<tr><td>DeferVoxelCutoutPS</td>
-<td>3ca86b61</td>
-<td><a href="Shaders\Cache\Assembly\3ca86b61.asm">Shaders\Cache\Assembly\3ca86b61.asm</a></td>
-<td><a href="Shaders\Cache\Error\DeferVoxelCutoutPS.txt">Shaders\Cache\Error\DeferVoxelCutoutPS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\DeferVoxelCutoutPS.hsh">Shaders\Cache\Hash\Debug\DeferVoxelCutoutPS.hsh</a></td>
+<tr><td>RenderScenePositionAndTexVS</td>
+<td>82f2f0ad</td>
+<td><a href="Shaders\Cache\Assembly\82f2f0ad.asm">Shaders\Cache\Assembly\82f2f0ad.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePositionAndTexVS.txt">Shaders\Cache\Error\RenderScenePositionAndTexVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\DeferVoxelCutoutPS.obj">Shaders\Cache\Object\Debug\DeferVoxelCutoutPS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\DeferVoxelCutoutPS.ppf">Shaders\Cache\Preprocess\DeferVoxelCutoutPS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf</a></td>
 </tr>
 
 
 
-<tr><td>BaseGeometryVS</td>
-<td>c6a3890f</td>
-<td><a href="Shaders\Cache\Assembly\c6a3890f.asm">Shaders\Cache\Assembly\c6a3890f.asm</a></td>
-<td><a href="Shaders\Cache\Error\BaseGeometryVS.txt">Shaders\Cache\Error\BaseGeometryVS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\BaseGeometryVS.hsh">Shaders\Cache\Hash\Debug\BaseGeometryVS.hsh</a></td>
+<tr><td>RenderSceneVS</td>
+<td>eaef763c</td>
+<td><a href="Shaders\Cache\Assembly\eaef763c.asm">Shaders\Cache\Assembly\eaef763c.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderSceneVS.txt">Shaders\Cache\Error\RenderSceneVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderSceneVS.hsh">Shaders\Cache\Hash\Debug\RenderSceneVS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\BaseGeometryVS.obj">Shaders\Cache\Object\Debug\BaseGeometryVS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\BaseGeometryVS.ppf">Shaders\Cache\Preprocess\BaseGeometryVS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderSceneVS.obj">Shaders\Cache\Object\Debug\RenderSceneVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderSceneVS.ppf">Shaders\Cache\Preprocess\RenderSceneVS.ppf</a></td>
 </tr>
 
 
 
-<tr><td>BaseGeometryPS</td>
-<td>f822a44f</td>
-<td><a href="Shaders\Cache\Assembly\f822a44f.asm">Shaders\Cache\Assembly\f822a44f.asm</a></td>
-<td><a href="Shaders\Cache\Error\BaseGeometryPS.txt">Shaders\Cache\Error\BaseGeometryPS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\BaseGeometryPS.hsh">Shaders\Cache\Hash\Debug\BaseGeometryPS.hsh</a></td>
+<tr><td>RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1</td>
+<td>47bc8a32</td>
+<td><a href="Shaders\Cache\Assembly\47bc8a32.asm">Shaders\Cache\Assembly\47bc8a32.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\BaseGeometryPS.obj">Shaders\Cache\Object\Debug\BaseGeometryPS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\BaseGeometryPS.ppf">Shaders\Cache\Preprocess\BaseGeometryPS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf</a></td>
 </tr>
 
 
 
-<tr><td>RadialBlurVS</td>
-<td>c833aa97</td>
-<td><a href="Shaders\Cache\Assembly\c833aa97.asm">Shaders\Cache\Assembly\c833aa97.asm</a></td>
-<td><a href="Shaders\Cache\Error\RadialBlurVS.txt">Shaders\Cache\Error\RadialBlurVS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\RadialBlurVS.hsh">Shaders\Cache\Hash\Debug\RadialBlurVS.hsh</a></td>
+<tr><td>RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1</td>
+<td>5f441b62</td>
+<td><a href="Shaders\Cache\Assembly\5f441b62.asm">Shaders\Cache\Assembly\5f441b62.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\RadialBlurVS.obj">Shaders\Cache\Object\Debug\RadialBlurVS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\RadialBlurVS.ppf">Shaders\Cache\Preprocess\RadialBlurVS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf</a></td>
 </tr>
 
 
 
-<tr><td>RadialBlurPS</td>
-<td>9ce12fbd</td>
-<td><a href="Shaders\Cache\Assembly\9ce12fbd.asm">Shaders\Cache\Assembly\9ce12fbd.asm</a></td>
-<td><a href="Shaders\Cache\Error\RadialBlurPS.txt">Shaders\Cache\Error\RadialBlurPS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\RadialBlurPS.hsh">Shaders\Cache\Hash\Debug\RadialBlurPS.hsh</a></td>
+<tr><td>RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0</td>
+<td>5ac0692b</td>
+<td><a href="Shaders\Cache\Assembly\5ac0692b.asm">Shaders\Cache\Assembly\5ac0692b.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\RadialBlurPS.obj">Shaders\Cache\Object\Debug\RadialBlurPS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\RadialBlurPS.ppf">Shaders\Cache\Preprocess\RadialBlurPS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf</a></td>
 </tr>
 
 
 
-<tr><td>ScreenBlendVS</td>
-<td>2e5a8984</td>
-<td><a href="Shaders\Cache\Assembly\2e5a8984.asm">Shaders\Cache\Assembly\2e5a8984.asm</a></td>
-<td><a href="Shaders\Cache\Error\ScreenBlendVS.txt">Shaders\Cache\Error\ScreenBlendVS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\ScreenBlendVS.hsh">Shaders\Cache\Hash\Debug\ScreenBlendVS.hsh</a></td>
+<tr><td>RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0</td>
+<td>f0f77997</td>
+<td><a href="Shaders\Cache\Assembly\f0f77997.asm">Shaders\Cache\Assembly\f0f77997.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\ScreenBlendVS.obj">Shaders\Cache\Object\Debug\ScreenBlendVS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\ScreenBlendVS.ppf">Shaders\Cache\Preprocess\ScreenBlendVS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf</a></td>
 </tr>
 
 
 
-<tr><td>ScreenBlendPS</td>
-<td>a59cbcc2</td>
-<td><a href="Shaders\Cache\Assembly\a59cbcc2.asm">Shaders\Cache\Assembly\a59cbcc2.asm</a></td>
-<td><a href="Shaders\Cache\Error\ScreenBlendPS.txt">Shaders\Cache\Error\ScreenBlendPS.txt</a></td>
-<td><a href="Shaders\Cache\Hash\Debug\ScreenBlendPS.hsh">Shaders\Cache\Hash\Debug\ScreenBlendPS.hsh</a></td>
+<tr><td>RenderSceneAlphaTestOnlyPS</td>
+<td>5199e4e5</td>
+<td><a href="Shaders\Cache\Assembly\5199e4e5.asm">Shaders\Cache\Assembly\5199e4e5.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt">Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh">Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh</a></td>
 <td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
-<td><a href="Shaders\Cache\Object\Debug\ScreenBlendPS.obj">Shaders\Cache\Object\Debug\ScreenBlendPS.obj</a></td>
-<td><a href="Shaders\Cache\Preprocess\ScreenBlendPS.ppf">Shaders\Cache\Preprocess\ScreenBlendPS.ppf</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj">Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf">Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=1</td>
+<td>eb0112aa</td>
+<td><a href="Shaders\Cache\Assembly\eb0112aa.asm">Shaders\Cache\Assembly\eb0112aa.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=2</td>
+<td>a2a184c</td>
+<td><a href="Shaders\Cache\Assembly\a2a184c.asm">Shaders\Cache\Assembly\a2a184c.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=0</td>
+<td>f3f6470b</td>
+<td><a href="Shaders\Cache\Assembly\f3f6470b.asm">Shaders\Cache\Assembly\f3f6470b.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CubeMapCaptureVS</td>
+<td>76b3f5e</td>
+<td><a href="Shaders\Cache\Assembly\76b3f5e.asm">Shaders\Cache\Assembly\76b3f5e.asm</a></td>
+<td><a href="Shaders\Cache\Error\CubeMapCaptureVS.txt">Shaders\Cache\Error\CubeMapCaptureVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh">Shaders\Cache\Hash\Debug\CubeMapCaptureVS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj">Shaders\Cache\Object\Debug\CubeMapCaptureVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf">Shaders\Cache\Preprocess\CubeMapCaptureVS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CubeMapCapturePS</td>
+<td>cb242a80</td>
+<td><a href="Shaders\Cache\Assembly\cb242a80.asm">Shaders\Cache\Assembly\cb242a80.asm</a></td>
+<td><a href="Shaders\Cache\Error\CubeMapCapturePS.txt">Shaders\Cache\Error\CubeMapCapturePS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh">Shaders\Cache\Hash\Debug\CubeMapCapturePS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CubeMapCapturePS.obj">Shaders\Cache\Object\Debug\CubeMapCapturePS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CubeMapCapturePS.ppf">Shaders\Cache\Preprocess\CubeMapCapturePS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePositionOnlyVS</td>
+<td>8bf5c268</td>
+<td><a href="Shaders\Cache\Assembly\8bf5c268.asm">Shaders\Cache\Assembly\8bf5c268.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePositionOnlyVS.txt">Shaders\Cache\Error\RenderScenePositionOnlyVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionOnlyVS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionOnlyVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionOnlyVS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePositionAndTexVS</td>
+<td>82f2f0ad</td>
+<td><a href="Shaders\Cache\Assembly\82f2f0ad.asm">Shaders\Cache\Assembly\82f2f0ad.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePositionAndTexVS.txt">Shaders\Cache\Error\RenderScenePositionAndTexVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh">Shaders\Cache\Hash\Debug\RenderScenePositionAndTexVS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj">Shaders\Cache\Object\Debug\RenderScenePositionAndTexVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf">Shaders\Cache\Preprocess\RenderScenePositionAndTexVS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderSceneVS</td>
+<td>eaef763c</td>
+<td><a href="Shaders\Cache\Assembly\eaef763c.asm">Shaders\Cache\Assembly\eaef763c.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderSceneVS.txt">Shaders\Cache\Error\RenderSceneVS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderSceneVS.hsh">Shaders\Cache\Hash\Debug\RenderSceneVS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderSceneVS.obj">Shaders\Cache\Object\Debug\RenderSceneVS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderSceneVS.ppf">Shaders\Cache\Preprocess\RenderSceneVS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1</td>
+<td>47bc8a32</td>
+<td><a href="Shaders\Cache\Assembly\47bc8a32.asm">Shaders\Cache\Assembly\47bc8a32.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=1.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1</td>
+<td>5f441b62</td>
+<td><a href="Shaders\Cache\Assembly\5f441b62.asm">Shaders\Cache\Assembly\5f441b62.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=1.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0</td>
+<td>5ac0692b</td>
+<td><a href="Shaders\Cache\Assembly\5ac0692b.asm">Shaders\Cache\Assembly\5ac0692b.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=0_USE_LIGHT_CULLING=0.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0</td>
+<td>f0f77997</td>
+<td><a href="Shaders\Cache\Assembly\f0f77997.asm">Shaders\Cache\Assembly\f0f77997.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt">Shaders\Cache\Error\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh">Shaders\Cache\Hash\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj">Shaders\Cache\Object\Debug\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf">Shaders\Cache\Preprocess\RenderScenePS_USE_ALPHA_TEST=1_USE_LIGHT_CULLING=0.ppf</a></td>
+</tr>
+
+
+
+<tr><td>RenderSceneAlphaTestOnlyPS</td>
+<td>5199e4e5</td>
+<td><a href="Shaders\Cache\Assembly\5199e4e5.asm">Shaders\Cache\Assembly\5199e4e5.asm</a></td>
+<td><a href="Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt">Shaders\Cache\Error\RenderSceneAlphaTestOnlyPS.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh">Shaders\Cache\Hash\Debug\RenderSceneAlphaTestOnlyPS.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj">Shaders\Cache\Object\Debug\RenderSceneAlphaTestOnlyPS.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf">Shaders\Cache\Preprocess\RenderSceneAlphaTestOnlyPS.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=1</td>
+<td>eb0112aa</td>
+<td><a href="Shaders\Cache\Assembly\eb0112aa.asm">Shaders\Cache\Assembly\eb0112aa.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=1.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=1.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=1.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=2</td>
+<td>a2a184c</td>
+<td><a href="Shaders\Cache\Assembly\a2a184c.asm">Shaders\Cache\Assembly\a2a184c.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=2.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=2.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=2.ppf</a></td>
+</tr>
+
+
+
+<tr><td>CullLightsCS_USE_DEPTH_BOUNDS=0</td>
+<td>f3f6470b</td>
+<td><a href="Shaders\Cache\Assembly\f3f6470b.asm">Shaders\Cache\Assembly\f3f6470b.asm</a></td>
+<td><a href="Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt">Shaders\Cache\Error\CullLightsCS_USE_DEPTH_BOUNDS=0.txt</a></td>
+<td><a href="Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh">Shaders\Cache\Hash\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.hsh</a></td>
+<td><a href="Shaders\Cache\ISA\">Shaders\Cache\ISA\</a></td>
+<td><a href="Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj">Shaders\Cache\Object\Debug\CullLightsCS_USE_DEPTH_BOUNDS=0.obj</a></td>
+<td><a href="Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf">Shaders\Cache\Preprocess\CullLightsCS_USE_DEPTH_BOUNDS=0.ppf</a></td>
 </tr>
 
 </table>
