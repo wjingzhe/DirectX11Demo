@@ -2,6 +2,8 @@
 #include "stb_image.h"
 using namespace DirectX;
 
+#define CUBEMAP_SIZE 512
+
 namespace ForwardRender
 {
 	CubeMapCaptureRender::CubeMapCaptureRender()
@@ -15,11 +17,64 @@ namespace ForwardRender
 		m_bShaderInited(false)
 	{
 
-		g_TempCubeMapCamera.SetProjParams(XM_PI / 4, 1.0f, 1.0f, 1000.0f);
+		g_TempCubeMapCamera.SetProjParams(XM_PI / 2, 1.0f, 1.0f, 1000.0f);
 		
+		g_Viewport.Width = CUBEMAP_SIZE;
+		g_Viewport.Height = CUBEMAP_SIZE;
+		g_Viewport.MinDepth = 0;
+		g_Viewport.MaxDepth = 1;
+		g_Viewport.TopLeftX = 0;
+		g_Viewport.TopLeftY = 0;
 
 
-		m_MeshData = GeometryHelper::CreateCubePlane(100, 100, 400);
+		//Use world up vector(0,1,0) for all direction
+		XMVECTOR UpVector[6] =
+		{
+			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+x
+			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-x
+			XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//+Y
+			XMVectorSet(0.0f,0.0f,+1.0f, 1.0f),//-Y
+			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+Z
+			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-Z
+		};
+
+		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 1.0f);
+
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(100.0f, 0.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[0]);
+			m_ViewMatrix[0] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(-100.0f, 0.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[1]);
+			m_ViewMatrix[1] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 100.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[2]);
+			m_ViewMatrix[2] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, -100.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[3]);
+			m_ViewMatrix[3] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, 100.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[4]);
+			m_ViewMatrix[4] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+		{
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, -100.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[5]);
+			m_ViewMatrix[5] = g_TempCubeMapCamera.GetViewMatrix();
+		}
+
+
+		m_MeshData = GeometryHelper::CreateCubePlane(CUBEMAP_SIZE, CUBEMAP_SIZE, CUBEMAP_SIZE);
 		//m_MeshData = GeometryHelper::CreateBox(100, 100, 100,6,0,0,0);
 		m_uSizeConstantBufferPerObject = sizeof(CB_PER_OBJECT);
 		m_uSizeConstantBufferPerFrame = sizeof(CB_PER_FRAME);
@@ -52,24 +107,24 @@ namespace ForwardRender
 		V_RETURN(this->CreateCommonBuffers(pD3dDevice, m_MeshData, m_uSizeConstantBufferPerObject, m_uSizeConstantBufferPerFrame));
 		V_RETURN(this->CreateOtherRenderStateResources(pD3dDevice));
 
-		//stbi_set_flip_vertically_on_load(true);
-		//int width, height, nrComponents;
-		//float *data = stbi_loadf("hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+		stbi_set_flip_vertically_on_load(true);
+		int width, height, nrComponents;
+		float *data = stbi_loadf("hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
 
 		//CubeMap RTV
 		{
 			D3D11_TEXTURE2D_DESC texDesc;
-			texDesc.Width = 512;
-			texDesc.Height = 512;
+			texDesc.Width = g_Viewport.Width;
+			texDesc.Height = g_Viewport.Height;
 			texDesc.MipLevels = 0;
-			texDesc.ArraySize = 1;
+			texDesc.ArraySize = 6;//arraysize
 			texDesc.SampleDesc.Count = pBackBufferSurfaceDesc->SampleDesc.Count;
 			texDesc.SampleDesc.Quality = pBackBufferSurfaceDesc->SampleDesc.Quality;
 			texDesc.Format = pBackBufferSurfaceDesc->Format;
 			texDesc.Usage = D3D11_USAGE_DEFAULT;
 			texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 			texDesc.CPUAccessFlags = 0;
-			texDesc.MiscFlags = 0;
+			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;//Texture Cube 
 
 			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pCubeTexture));
 
@@ -82,23 +137,28 @@ namespace ForwardRender
 
 			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
 			rtvDesc.Format = texDesc.Format;
-			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			//rtvDesc.Texture2DArray.ArraySize = 1;
-			//rtvDesc.Texture2D.MipSlice = 0;
+			rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			rtvDesc.Texture2DArray.ArraySize = 1;
+			rtvDesc.Texture2D.MipSlice = 0;
 
-			//for (int i = 0; i < 6; ++i)
+			for (int i = 0; i < 6; ++i)
 			{
-				//rtvDesc.Texture2DArray.FirstArraySlice = i;
-				V_RETURN(pD3dDevice->CreateRenderTargetView(g_pCubeTexture, &RTVDesc, &g_pTextureForEnvCubeMapRTVs));
-				g_pTextureForEnvCubeMapRTVs->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("CubeRT"), "CubeRT");
+				rtvDesc.Texture2DArray.FirstArraySlice = i;
+				V_RETURN(pD3dDevice->CreateRenderTargetView(g_pCubeTexture, &rtvDesc, &g_pTextureForEnvCubeMapRTVs[i]));
+				g_pTextureForEnvCubeMapRTVs[i]->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("CubeRT"), "CubeRT");
+
+				//V_RETURN(pD3dDevice->CreateRenderTargetView(g_pCubeTexture, &RTVDesc, &g_pTextureForEnvCubeMapRTVs));
+				//g_pTextureForEnvCubeMapRTVs->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("CubeRT"), "CubeRT");
 			}
 
 
 		}
 
+
+
 		//create our own depth stencil surface that'bindable as a shader
 		V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
-			DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 100.0f, 100.0f, pBackBufferSurfaceDesc->SampleDesc.Count));
+			DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, g_Viewport.Width, g_Viewport.Height, pBackBufferSurfaceDesc->SampleDesc.Count));
 
 
 		return hr;
@@ -147,6 +207,8 @@ namespace ForwardRender
 	void CubeMapCaptureRender::RenderHDRtoCubeMap(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
 		CBaseCamera * pCamera, ID3D11RenderTargetView* g_pTempTextureRenderTargetView, ID3D11DepthStencilView* g_pTempDepthStencilView)
 	{
+		HRESULT hr;
+
 		// save Rasterizer State (for later restore)
 		ID3D11RasterizerState* pPreRasterizerState = nullptr;
 		pD3dImmediateContext->RSGetState(&pPreRasterizerState);
@@ -165,6 +227,7 @@ namespace ForwardRender
 
 
 		//¿ªÊ¼äÖÈ¾
+		pD3dImmediateContext->RSSetViewports(1, &g_Viewport);
 
 		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
 
@@ -205,63 +268,54 @@ namespace ForwardRender
 		//mWorld.r[1].m128_f32[1] = 999.0f;
 		//mWorld.r[2].m128_f32[2] = 999.0f;
 
-		XMMATRIX ViewMatrix[6];
-		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 1.0f);
-		{
-			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, 100.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos);
-			ViewMatrix[0] = g_TempCubeMapCamera.GetViewMatrix();
-		}
-		
 
-		
-
-		
-
-		////Get the projection & view matrix from the camera class
-		//XMMATRIX mView = g_TempCubeMapCamera.GetViewMatrix();
-		XMMATRIX mProj = g_TempCubeMapCamera.GetProjMatrix();
-		XMMATRIX mWorldViewPrjection = mWorld*ViewMatrix[0] *mProj;
-
-		//Set the constant buffers
-		HRESULT hr;
-		{
-			D3D11_MAPPED_SUBRESOURCE MappedResource;
-			V(pD3dImmediateContext->Map(m_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
-			CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
-			pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
-			pPerObject->mWorld = XMMatrixTranspose(mProj);
-
-			pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
-		}
 
 		{
 			D3D11_MAPPED_SUBRESOURCE MappedResource;
 			V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 			CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
 			XMFLOAT2 temp;
-			temp.x = 100.0f;
-			temp.y = 100.0f;
+			temp.x = g_Viewport.Width;
+			temp.y = g_Viewport.Height;
 			pPerFrame->vScreenSize = XMLoadFloat2(&temp);
 			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
 		}
 
 
-		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
-		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
+
 
 
 		pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 		pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-	//	for (int i = 0; i < 6; ++i)
+		for (int i = 0; i < 6; ++i)
 		{
+
+			////Get the projection & view matrix from the camera class
+			//XMMATRIX mView = g_TempCubeMapCamera.GetViewMatrix();
+			XMMATRIX mProj = g_TempCubeMapCamera.GetProjMatrix();
+			XMMATRIX mWorldViewPrjection = mWorld*m_ViewMatrix[i] * mProj;
+
+			//Set the constant buffers
+			{
+				D3D11_MAPPED_SUBRESOURCE MappedResource;
+				V(pD3dImmediateContext->Map(m_pConstantBufferPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
+				CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
+				pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
+				pPerObject->mWorld = XMMatrixTranspose(mProj);
+
+				pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
+			}
+
+			pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
+			pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
+
 			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &g_pTempTextureRenderTargetView, g_pTempDepthStencilView);
+			pD3dImmediateContext->OMSetRenderTargets(1, &g_pTextureForEnvCubeMapRTVs[i], g_pDepthStencilView);
 
 			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(g_pTempTextureRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
-			pD3dImmediateContext->ClearDepthStencilView(g_pTempDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			pD3dImmediateContext->ClearRenderTargetView(g_pTextureForEnvCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
+			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
@@ -449,9 +503,9 @@ namespace ForwardRender
 
 		SAFE_RELEASE(g_pCubeTexture);
 		SAFE_RELEASE(g_pEnvCubeMapSRV);
-		//for (int i = 0; i < 6; ++i)
+		for (int i = 0; i < 6; ++i)
 		{
-			SAFE_RELEASE(g_pTextureForEnvCubeMapRTVs);
+			SAFE_RELEASE(g_pTextureForEnvCubeMapRTVs[i]);
 		}
 
 		SAFE_RELEASE(g_pDepthStencilView);

@@ -100,12 +100,13 @@ namespace ForwardRender
 		//ID3D11Texture2D* m_pHdrTexture;
 		ID3D11ShaderResourceView* m_pSrcTextureSRV;
 
+		DirectX::XMMATRIX m_ViewMatrix[6];
 		CFirstPersonCamera g_TempCubeMapCamera;
-
+		D3D11_VIEWPORT g_Viewport;
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
-		ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs = nullptr;
-		//ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
+		//ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs = nullptr;
+		ID3D11RenderTargetView* g_pTextureForEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
 
 		// Depth stencil data

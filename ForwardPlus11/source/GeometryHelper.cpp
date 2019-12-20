@@ -235,7 +235,7 @@ GeometryHelper::MeshData GeometryHelper::CreateCubePlane(float width, float heig
 {
 	GeometryHelper::MeshData meshData;
 
-	Vertex v[4];
+	Vertex v[24];
 
 	float halfWidth = width*0.5f;
 	float halfHeight = height*0.5f;
@@ -250,59 +250,59 @@ GeometryHelper::MeshData GeometryHelper::CreateCubePlane(float width, float heig
 	v[3] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 	
 
-	//// face from viewer to screen
-	//v[4] = Vertex(/*Position*/ -1.0f, -1.0f, -1.0f, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	//v[5] = Vertex(/*Position*/1.0f, -1.0f, -1.0f, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	//v[6] = Vertex(/*Position*/ -1.0f, 1.0f, -1.0f, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	//v[7] = Vertex(/*Position*/1.0f, 1.0f, -1.0f, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// face from viewer to screen
+	v[4] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[5] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[6] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[7] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	//// face left
-	//v[8] = Vertex(/*Position*/ -1.0f, -1.0f, -1.0f, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	//v[9] = Vertex(/*Position*/-1.0f, -1.0f, 1.0f, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	//v[10] = Vertex(/*Position*/ -1.0f, 1.0f, -1.0f, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	//v[11] = Vertex(/*Position*/-1.0f, 1.0f, 1.0f, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// face left
+	v[8] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[9] = Vertex(/*Position*/-1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[10] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[11] = Vertex(/*Position*/-1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	//// face right
-	//v[12] = Vertex(/*Position*/ 1.0f, -1.0f, 1.0f, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	//v[13] = Vertex(/*Position*/1.0f, -1.0f, -1.0f, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	//v[14] = Vertex(/*Position*/ 1.0f, 1.0f, 1.0f, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	//v[15] = Vertex(/*Position*/1.0f, 1.0f, -1.0f, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// face right
+	v[12] = Vertex(/*Position*/ 1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[13] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[14] = Vertex(/*Position*/ 1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[15] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	//// face top
-	//v[16] = Vertex(/*Position*/ -1.0f, 1.0f, -1.0f, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	//v[17] = Vertex(/*Position*/1.0f, 1.0f, -1.0f, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	//v[18] = Vertex(/*Position*/ -1.0f, 1.0f, 1.0f, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	//v[19] = Vertex(/*Position*/1.0f, 1.0f, 1.0f, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// face top
+	v[16] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[17] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[18] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[19] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	//// face bottom
-	//v[20] = Vertex(/*Position*/ -1.0f, -1.0f, 1.0f, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	//v[21] = Vertex(/*Position*/1.0f, -1.0f, 1.0f, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	//v[22] = Vertex(/*Position*/ -1.0f, -1.0f, -1.0f, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	//v[23] = Vertex(/*Position*/1.0f, -1.0f, -1.0f, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// face bottom
+	v[20] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[21] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[22] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[23] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	meshData.Vertices.assign(&v[0], &v[4]);
+	meshData.Vertices.assign(&v[0], &v[24]);
 
 	uint32 i[36];
 	// Fill in the front face index data
 	i[0] = 0; i[1] = 2; i[2] = 3;
 	i[3] = 0; i[4] = 3; i[5] = 1;
 
-	//i[6] = 4; i[7] = 6; i[8] = 7;
-	//i[9] = 4; i[10] = 7; i[11] = 5;
+	i[6] = 4; i[7] = 6; i[8] = 7;
+	i[9] = 4; i[10] = 7; i[11] = 5;
 
-	//i[12] = 8; i[13] = 10; i[14] = 11;
-	//i[15] = 8; i[16] = 11; i[17] = 9;
+	i[12] = 8; i[13] = 10; i[14] = 11;
+	i[15] = 8; i[16] = 11; i[17] = 9;
 
-	//i[18] = 12; i[19] = 14; i[20] = 15;
-	//i[21] = 12; i[22] = 15; i[23] = 13;
+	i[18] = 12; i[19] = 14; i[20] = 15;
+	i[21] = 12; i[22] = 15; i[23] = 13;
 
-	//i[24] = 16; i[25] = 18; i[26] = 19;
-	//i[27] = 16; i[28] = 19; i[29] = 17;
+	i[24] = 16; i[25] = 18; i[26] = 19;
+	i[27] = 16; i[28] = 19; i[29] = 17;
 
-	//i[30] = 20; i[31] = 22; i[32] = 23;
-	//i[33] = 20; i[34] = 23; i[35] = 21;
+	i[30] = 20; i[31] = 22; i[32] = 23;
+	i[33] = 20; i[34] = 23; i[35] = 21;
 
-	meshData.Indices32.assign(&i[0], &i[6]);
+	meshData.Indices32.assign(&i[0], &i[36]);
 
 	return meshData;
 }

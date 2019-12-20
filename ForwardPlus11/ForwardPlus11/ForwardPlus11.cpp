@@ -141,6 +141,7 @@ static int g_iNumActiveSpotLights = 0;
 static float g_fMaxDistance = 1000.0f;
 
 CFirstPersonCamera g_Camera;
+D3D11_VIEWPORT g_Viewport;
 static AMD::HUD             g_HUD;
 static CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
 static CDXUTTextHelper*			g_pTextHelper = nullptr;
@@ -348,7 +349,8 @@ bool CALLBACK IsD3D11DeviceAcceptable(const CD3D11EnumAdapterInfo* AdapterInfo, 
 {
 	return true;
 }
-
+//#include <d3d11.h>
+//#include <d3dx11.h>
 
 // Create any D3D11 resource that aren't dependent on the back buffer
 HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
@@ -378,36 +380,53 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	
 	{// HDR CubeMap
 
-		stbi_set_flip_vertically_on_load(true);
-		int width, height, nrComponents;
-		//float *data = stbi_loadf("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+		//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
+		//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-		float *data = stbi_loadf("D:/SelfWorkSpace/directx11demo/1333380921_3046.png", &width, &height, &nrComponents, 0);
+		////stbi_set_flip_vertically_on_load(true);
+		////int width, height, nrComponents;
+		////float *data = stbi_loadf("../../ForwardPlus11/media/hdr/newport_loft.dds", &width, &height, &nrComponents, 0);
 
-		D3D11_TEXTURE2D_DESC texDesc;
+		//D3D11_TEXTURE2D_DESC texDesc;
 
-		texDesc.Width = width;
-		texDesc.Height = height;
-		texDesc.MipLevels = 1;
-		texDesc.ArraySize = 1;
-		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		//texDesc.Format = DXGI_FORMAT_BC6H_UF16;
-		texDesc.SampleDesc.Count = 1;
-		texDesc.SampleDesc.Quality = 0;
-		texDesc.Usage = D3D11_USAGE_DEFAULT;
-		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		texDesc.CPUAccessFlags = 0;
-		texDesc.MiscFlags = 0;
+		//texDesc.Width = width;
+		//texDesc.Height = height;
+		//texDesc.MipLevels = 1;
+		//texDesc.ArraySize = 1;
+		//texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		//texDesc.SampleDesc.Count = 1;
+		//texDesc.SampleDesc.Quality = 0;
+		//texDesc.Usage = D3D11_USAGE_DEFAULT;
+		//texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		//texDesc.CPUAccessFlags = 0;
+		//texDesc.MiscFlags = 0;
+
+		////float *data = stbi_loadf("D:/SelfWorkSpace/directx11demo/1333380921_3046.png", &width, &height, &nrComponents, 0);
+
+		////D3D11_TEXTURE2D_DESC texDesc;
+
+		////texDesc.Width = width;
+		////texDesc.Height = height;
+		////texDesc.MipLevels = 1;
+		////texDesc.ArraySize = 1;
+		////texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		//////texDesc.Format = DXGI_FORMAT_BC6H_UF16;
+		////texDesc.SampleDesc.Count = 1;
+		////texDesc.SampleDesc.Quality = 0;
+		////texDesc.Usage = D3D11_USAGE_DEFAULT;
+		////texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		////texDesc.CPUAccessFlags = 0;
+		////texDesc.MiscFlags = 0;
 
 
 
-		D3D11_SUBRESOURCE_DATA InitData = { 0 };
-		InitData.SysMemPitch = width * 4;
-		InitData.pSysMem = data;
-		InitData.SysMemSlicePitch = width *height * 4;
+		//D3D11_SUBRESOURCE_DATA InitData = { 0 };
+		//InitData.SysMemPitch = width * 8;
+		//InitData.pSysMem = data;
+		//InitData.SysMemSlicePitch = width *height * 8;
 
-		V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
-		V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
+		//V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
+		//V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
 
 
 
@@ -415,12 +434,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 
 
-
-
-
 	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
 	XMVECTOR SceneMin, SceneMax;
 
@@ -627,7 +643,7 @@ HRESULT AddShadersToCache()
 
 HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwapChain, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 {
-	HRESULT hr;
+	HRESULT hr; 
 
 	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(g_D3dSettingsGUI.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
@@ -908,8 +924,12 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		return;
 	}
 
-
+	//本地清理环境
 	ClearD3D11DeviceContext();
+
+
+	DXUTSetupD3D11Views(pD3dImmediateContext);//设置viewport和rt/ds
+
 
 	const DXGI_SURFACE_DESC* pBackBufferDesc = DXUTGetDXGIBackBufferSurfaceDesc();
 
@@ -993,8 +1013,8 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 #ifdef PBR
 		
-		//s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
-		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
+		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
+		//s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
 
 		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera, pRTV, g_pTempDepthStencilView);
 #endif // PBR
