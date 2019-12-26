@@ -66,6 +66,9 @@
     <ClInclude Include="..\source\CubeMapCaptureRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\PbrRender.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -105,6 +108,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\source\CubeMapCaptureRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\PbrRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -148,6 +154,15 @@
     </None>
     <None Include="..\source\Shaders\DeferredVoxelSphereCutout.hlsl" />
     <None Include="..\source\Shaders\CubeMapCapture.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\irradiance_convolution.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\prefilter.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\source\Shaders\pbr.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

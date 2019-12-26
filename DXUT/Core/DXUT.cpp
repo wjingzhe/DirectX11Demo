@@ -1839,7 +1839,7 @@ HRESULT DXUTChangeDevice( DXUTDeviceSettings* pNewDeviceSettings,
         return E_OUTOFMEMORY;
     memcpy( pNewDeviceSettingsOnHeap, pNewDeviceSettings, sizeof( DXUTDeviceSettings ) );
     pNewDeviceSettings = pNewDeviceSettingsOnHeap;
-
+	//pNewDeviceSettingsOnHeap->d3d11.sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     GetDXUTState().SetCurrentDeviceSettings(pNewDeviceSettingsOnHeap);
     hr = DXUTSnapDeviceSettingsToEnumDevice(pNewDeviceSettingsOnHeap, false);
 
@@ -3538,7 +3538,7 @@ HRESULT WINAPI DXUTToggleFullScreen()
         {
             static const DXGI_MODE_DESC s_adapterDesktopDisplayMode =
             {
-                800, 600, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
+                800, 600, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM
             };
             memcpy(&adapterDesktopDisplayMode, &s_adapterDesktopDisplayMode, sizeof(DXGI_MODE_DESC));
         }
@@ -4412,7 +4412,7 @@ void DXUTApplyDefaultDeviceSettings(DXUTDeviceSettings *modifySettings)
     modifySettings->d3d11.Output = 0;
     modifySettings->d3d11.PresentFlags = 0;
     modifySettings->d3d11.sd.BufferCount = 2;
-    modifySettings->d3d11.sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    modifySettings->d3d11.sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     modifySettings->d3d11.sd.BufferDesc.Height = 600;
     modifySettings->d3d11.sd.BufferDesc.RefreshRate.Numerator = 0;
     modifySettings->d3d11.sd.BufferDesc.RefreshRate.Denominator = 0;

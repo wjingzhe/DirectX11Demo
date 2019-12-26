@@ -19,7 +19,7 @@
 #include <string>
 #include "../source/stb_image.h"
 #include "../source/CubeMapCaptureRender.h"
-
+#include "../source/PbrRender.h"
 
 #define FORWARDPLUS
 //#define TRIANGLE
@@ -62,7 +62,7 @@ static PostProcess::ScreenBlendRender s_ScreenBlendRender;
 #ifdef PBR
 
 static ForwardRender::CubeMapCaptureRender s_CubeMapCaptureRender;
-
+static ForwardRender::PbrRender s_PbrRender;
 
 #endif // PBR
 
@@ -220,7 +220,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	DXUTCreateWindow(L"TestTriangle v1.2");
 
 
-	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, 1920, 1080);//jingz 在此窗口为出现全屏化之前，其分辨率一直有个错误bug，偶然消除了
+
+	g_Viewport.Width = 1920;
+	g_Viewport.Height = 1080;
+
+	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, g_Viewport.Width, g_Viewport.Height);//jingz 在此窗口为出现全屏化之前，其分辨率一直有个错误bug，偶然消除了
 
 	DXUTMainLoop();
 
@@ -243,7 +247,19 @@ LRESULT  CALLBACK MsgProc(HWND hWnd, UINT uMsg,WPARAM wParam, LPARAM lParam, boo
 		((MINMAXINFO*)lParam)->ptMinTrackSize.y = 512;
 		*pbNoFurtherProcessing = true;
 		break;
+
+	case WM_WINDOWPOSCHANGED:
+		
+		g_Viewport.TopLeftX = ((tagWINDOWPOS *)lParam)->x;   // horizontal position 
+		g_Viewport.TopLeftY = ((tagWINDOWPOS *)lParam)->y;   // vertical position
+		g_Viewport.Width = ((tagWINDOWPOS *)lParam)->cx;
+		g_Viewport.Height = ((tagWINDOWPOS *)lParam)->cy;
+
+		break;
+
 	}
+
+	
 
 	//在调整窗口的过程中，不需要进一步处理
 	if (*pbNoFurtherProcessing)
@@ -296,7 +312,7 @@ bool ModifyDeviceSettings(DXUTDeviceSettings * pDeviceSettings, void * pUserCont
 		// and that Forward+ uses the hardware MSAA as intended,then default to 4x MSAA
 		else
 		{
-			pDeviceSettings->d3d11.sd.SampleDesc.Count = 1;
+			pDeviceSettings->d3d11.sd.SampleDesc.Count = 4;
 		}
 
 		//Start with sync disabled
@@ -376,7 +392,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../len_full.jpg", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/1333380921_3046.png", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV,false));
 	
 	{// HDR CubeMap
 
@@ -436,7 +452,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
 
 	XMVECTOR SceneMin, SceneMax;
 
@@ -507,6 +523,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 #ifdef PBR
 	V_RETURN(s_CubeMapCaptureRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
+	V_RETURN(s_PbrRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 	
 #endif // PBR
 
@@ -541,13 +558,13 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
 
 		g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
-		XMVECTOR vEye = XMVectorSet(150.0f, 200.0f, 0.0f, 0.0f);
-		XMVECTOR vLookAtPos = XMVectorSet(150.0f, 200.0f, 100.0f, 0.0f);
+		XMVECTOR vEye = XMVectorSet(0, 0.0f, 5.0f, 1.0f);
+		XMVECTOR vLookAtPos = XMVectorSet(0, 0, -1.0f, 1.0f);
 		g_Camera.SetRotateButtons(true, false, false);
 		//g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
-		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
+		g_Camera.SetScalers(0.005f, 0.001f*g_fMaxDistance);
 
 	//	s_DeferredVoxelCutoutRender.SetVoxelPosition(vLookAtPos);
 
@@ -635,6 +652,7 @@ HRESULT AddShadersToCache()
 #ifdef PBR
 
 	s_CubeMapCaptureRender.AddShadersToCache(&g_ShaderCache);
+	s_PbrRender.AddShadersToCache(&g_ShaderCache);
 #endif // PBR
 
 
@@ -644,6 +662,11 @@ HRESULT AddShadersToCache()
 HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwapChain, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
 {
 	HRESULT hr; 
+
+	g_Viewport.Width = pBackBufferSurfaceDesc->Width;
+	g_Viewport.Height = pBackBufferSurfaceDesc->Height;
+
+
 
 	V_RETURN(g_DialogResourceManager.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
 	V_RETURN(g_D3dSettingsGUI.OnD3D11ResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc));
@@ -721,6 +744,7 @@ HRESULT OnD3D11ResizedSwapChain(ID3D11Device * pD3dDevice, IDXGISwapChain * pSwa
 
 #ifdef PBR
 	s_CubeMapCaptureRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
+	s_PbrRender.OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 #endif // PBR
 
 
@@ -767,6 +791,7 @@ void OnD3D11ReleasingSwapChain(void * pUserContext)
 
 #ifdef PBR
 	s_CubeMapCaptureRender.OnReleasingSwapChain();
+	s_PbrRender.OnReleasingSwapChain();
 #endif // PBR
 
 	g_DialogResourceManager.OnD3D11ReleasingSwapChain();
@@ -828,6 +853,7 @@ void OnD3D11DestroyDevice(void * pUserContext)
 
 #ifdef PBR
 	s_CubeMapCaptureRender.OnD3D11DestroyDevice(pUserContext);
+	s_PbrRender.OnD3D11DestroyDevice(pUserContext);
 #endif // PBR
 	
 	//AMD
@@ -929,7 +955,8 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 
 	DXUTSetupD3D11Views(pD3dImmediateContext);//设置viewport和rt/ds
-
+	UINT count = 1;
+	pD3dImmediateContext->RSGetViewports(&count, &g_Viewport);
 
 	const DXGI_SURFACE_DESC* pBackBufferDesc = DXUTGetDXGIBackBufferSurfaceDesc();
 
@@ -1012,11 +1039,19 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 #endif
 
 #ifdef PBR
-		
-		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
-		//s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
 
-		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera, pRTV, g_pTempDepthStencilView);
+		//s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
+	//	s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
+
+		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera, pRTV, g_pTempDepthStencilView);
+		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pTempDepthStencilView);
+
+
+
+		//s_PbrRender
+		pD3dImmediateContext->RSSetViewports(count, &g_Viewport);
+		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetIrradianceSRV(), s_CubeMapCaptureRender.GetPrefilterSRV());
+
 #endif // PBR
 
 
@@ -1098,6 +1133,12 @@ void RenderText()
 
 void InitApp()
 {
+
+	g_Viewport.MinDepth = 0;
+	g_Viewport.MaxDepth = 1;
+	g_Viewport.TopLeftX = 0;
+	g_Viewport.TopLeftY = 0;
+
 	g_D3dSettingsGUI.Init(&g_DialogResourceManager);
 
 
