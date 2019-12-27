@@ -54,7 +54,7 @@ namespace ForwardRender
 			CBaseCamera* pCamera,ID3D11RenderTargetView* g_pTempTextureRenderTargetView, ID3D11DepthStencilView* g_pTempDepthStencilView);
 
 		virtual void RenderIrradiance(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
-			CBaseCamera* pCamera, ID3D11RenderTargetView* g_pTempTextureRenderTargetView, ID3D11DepthStencilView* g_pTempDepthStencilView);
+			CBaseCamera* pCamera);
 
 		virtual void RenderPrefilter(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
 			CBaseCamera* pCamera, ID3D11RenderTargetView* g_pTempTextureRenderTargetView, ID3D11DepthStencilView* g_pTempDepthStencilView);
@@ -80,6 +80,10 @@ namespace ForwardRender
 			return g_pPrefilterSRV;
 		}
 
+		ID3D11ShaderResourceView* GetEnvSRV()
+		{
+			return g_pEnvCubeMapSRV;
+		}
 
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
@@ -116,6 +120,7 @@ namespace ForwardRender
 
 
 		ID3D11DepthStencilState* m_pDepthStencilState;
+		ID3D11DepthStencilState* m_pDisableDepthStencilState;
 		ID3D11RasterizerState* m_pRasterizerState;
 		ID3D11BlendState* m_pBlendState;
 		ID3D11SamplerState* m_pSamplerLinear;
@@ -132,7 +137,10 @@ namespace ForwardRender
 
 		DirectX::XMMATRIX m_ViewMatrix[6];
 		CFirstPersonCamera g_TempCubeMapCamera;
-		D3D11_VIEWPORT g_Viewport;
+
+		D3D11_VIEWPORT g_Viewport32;
+		D3D11_VIEWPORT g_Viewport128;
+		D3D11_VIEWPORT g_Viewport512;
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
 		ID3D11RenderTargetView* g_pEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };

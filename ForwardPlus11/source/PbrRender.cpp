@@ -12,8 +12,8 @@ ForwardRender::PbrRender::PbrRender()
 	m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr),
 	m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)), m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME))
 {
-	//m_MeshData = GeometryHelper::CreateSphere(1.0, 100.0f, 100.0f);
-	m_MeshData = GeometryHelper::CreateScreenQuad();
+	m_MeshData = GeometryHelper::CreateSphere(1.0, 500.0f, 500.0f);
+	//m_MeshData = GeometryHelper::CreateScreenQuad();
 }
 
 ForwardRender::PbrRender::~PbrRender()
@@ -196,7 +196,7 @@ void ForwardRender::PbrRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceC
 		pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 
 		//Clear cube map face and depth buffer.
-		pD3dImmediateContext->ClearRenderTargetView(pRTV, reinterpret_cast<const float*>(&Colors::Black));
+		//pD3dImmediateContext->ClearRenderTargetView(pRTV, reinterpret_cast<const float*>(&Colors::Black));
 		//pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		//Draw the scene with the exception of the center sphere to this cube map face.
@@ -404,7 +404,7 @@ HRESULT ForwardRender::PbrRender::CreateOtherRenderStateResources(ID3D11Device *
 	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/ao.png", (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));
 
 	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/albedo.dds",0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE,0,0,true,(ID3D11Resource**)&m_pAlbedo, &m_pAlbedoSRV));
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/normal.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, true, (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/normal.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
 	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/metallic.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pMetallic, &m_pMetallicSRV));
 	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/roughness.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pRoughness, &m_pRoughnessSRV));
 	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/ao.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));

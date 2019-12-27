@@ -26,7 +26,8 @@ namespace ForwardRender
 		m_pShaderInputLayout(nullptr),m_pShaderVS(nullptr),m_pShaderPS(nullptr), 
 		m_pShaderInputLayout2(nullptr), m_pShaderVS2(nullptr), m_pShaderPS2(nullptr),
 		m_pShaderInputLayout3(nullptr), m_pShaderVS3(nullptr), m_pShaderPS3(nullptr),
-		m_pDepthStencilState(nullptr),m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerLinear(nullptr), m_pSamplerPoint(nullptr),
+		m_pDepthStencilState(nullptr), m_pDisableDepthStencilState(nullptr),
+		m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerLinear(nullptr), m_pSamplerPoint(nullptr),
 		m_pConstantBufferPerObject(nullptr),m_pConstantBufferPerFrame(nullptr),
 		m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
 		//m_pHdrTexture(nullptr),
@@ -36,12 +37,27 @@ namespace ForwardRender
 
 		g_TempCubeMapCamera.SetProjParams(XM_PI / 2, 1.0f, 1.0f, 1000.0f);
 		
-		g_Viewport.Width = CUBEMAP_SIZE;
-		g_Viewport.Height = CUBEMAP_SIZE;
-		g_Viewport.MinDepth = 0;
-		g_Viewport.MaxDepth = 1;
-		g_Viewport.TopLeftX = 0;
-		g_Viewport.TopLeftY = 0;
+
+		g_Viewport32.Width = 32;
+		g_Viewport32.Height = 32;
+		g_Viewport32.MinDepth = 0;
+		g_Viewport32.MaxDepth = 1;
+		g_Viewport32.TopLeftX = 0;
+		g_Viewport32.TopLeftY = 0;
+
+		g_Viewport128.Width = 128;
+		g_Viewport128.Height = 128;
+		g_Viewport128.MinDepth = 0;
+		g_Viewport128.MaxDepth = 1;
+		g_Viewport128.TopLeftX = 0;
+		g_Viewport128.TopLeftY = 0;
+
+		g_Viewport512.Width = CUBEMAP_SIZE;
+		g_Viewport512.Height = CUBEMAP_SIZE;
+		g_Viewport512.MinDepth = 0;
+		g_Viewport512.MaxDepth = 1;
+		g_Viewport512.TopLeftX = 0;
+		g_Viewport512.TopLeftY = 0;
 
 
 		//Use world up vector(0,1,0) for all direction
@@ -146,8 +162,8 @@ namespace ForwardRender
 		//CubeMap RTV
 		{
 			D3D11_TEXTURE2D_DESC texDesc;
-			texDesc.Width = 512;
-			texDesc.Height = 512;
+			texDesc.Width = CUBEMAP_SIZE;
+			texDesc.Height = CUBEMAP_SIZE;
 			texDesc.MipLevels = 1;
 			texDesc.ArraySize = 6;//arraysize
 			texDesc.SampleDesc.Count = 1;
@@ -229,7 +245,7 @@ namespace ForwardRender
 			V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
 		}
 
-		V_RETURN(CreateDDSTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceCubeMap32.dds", &g_pIceCubemapTexture,&g_pEnvCubeMapSRV));
+		V_RETURN(CreateDDSTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceCubeMapDX.dds", &g_pIceCubemapTexture,&g_pEnvCubeMapSRV));
 
 		return hr;
 	}
@@ -293,11 +309,14 @@ namespace ForwardRender
 		UINT uStencilRefStored11;
 		pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
 
+		UINT count = 1;
+		D3D11_VIEWPORT PreViewport;
+		pD3dImmediateContext->RSGetViewports(&count, &PreViewport);
 
 		//开始渲染
-		pD3dImmediateContext->RSSetViewports(1, &g_Viewport);
+		pD3dImmediateContext->RSSetViewports(1, &g_Viewport512);
 
-		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
+		pD3dImmediateContext->OMSetDepthStencilState(m_pDisableDepthStencilState, 1);
 
 		float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 		pD3dImmediateContext->OMSetBlendState(m_pBlendState, BlendFactor, 0xFFFFFFFF);
@@ -343,8 +362,8 @@ namespace ForwardRender
 			V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 			CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
 			XMFLOAT2 temp;
-			temp.x = g_Viewport.Width;
-			temp.y = g_Viewport.Height;
+			temp.x = g_Viewport512.Width;
+			temp.y = g_Viewport512.Height;
 			pPerFrame->vScreenSize = XMLoadFloat2(&temp);
 			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
 		}
@@ -379,7 +398,7 @@ namespace ForwardRender
 			pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 
 			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &g_pEnvCubeMapRTVs[i], g_pDepthStencilView);
+			pD3dImmediateContext->OMSetRenderTargets(1, &g_pEnvCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
 			pD3dImmediateContext->ClearRenderTargetView(g_pEnvCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
@@ -394,6 +413,7 @@ namespace ForwardRender
 
 
 		//还原状态
+		pD3dImmediateContext->RSSetViewports(count, &PreViewport);
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
@@ -403,7 +423,8 @@ namespace ForwardRender
 		SAFE_RELEASE(pPreDepthStencilStateStored11);
 	}
 
-	void CubeMapCaptureRender::RenderIrradiance(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc, CBaseCamera * pCamera, ID3D11RenderTargetView * g_pTempTextureRenderTargetView, ID3D11DepthStencilView * g_pTempDepthStencilView)
+	void CubeMapCaptureRender::RenderIrradiance(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
+		CBaseCamera * pCamera)
 	{
 		HRESULT hr;
 
@@ -422,13 +443,16 @@ namespace ForwardRender
 		UINT uStencilRefStored11;
 		pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
 
-		g_Viewport.Width = 32;
-		g_Viewport.Height = 32;
+
+		D3D11_VIEWPORT PreViewport; 
+		UINT count = 1;
+		pD3dImmediateContext->RSGetViewports(&count,&PreViewport);
+
 
 		//开始渲染
-		pD3dImmediateContext->RSSetViewports(1, &g_Viewport);
+		pD3dImmediateContext->RSSetViewports(1, &g_Viewport32);
 
-		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
+		pD3dImmediateContext->OMSetDepthStencilState(m_pDisableDepthStencilState, 1);
 
 		float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 		pD3dImmediateContext->OMSetBlendState(m_pBlendState, BlendFactor, 0xFFFFFFFF);
@@ -457,8 +481,8 @@ namespace ForwardRender
 			V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 			CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
 			XMFLOAT2 temp;
-			temp.x = g_Viewport.Width;
-			temp.y = g_Viewport.Height;
+			temp.x = g_Viewport32.Width;
+			temp.y = g_Viewport32.Height;
 			pPerFrame->vScreenSize = XMLoadFloat2(&temp);
 			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
 		}
@@ -492,7 +516,7 @@ namespace ForwardRender
 			pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 
 			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &g_pIrradianceCubeMapRTVs[i], g_pDepthStencilView);
+			pD3dImmediateContext->OMSetRenderTargets(1, &g_pIrradianceCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
 			pD3dImmediateContext->ClearRenderTargetView(g_pIrradianceCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
@@ -503,10 +527,12 @@ namespace ForwardRender
 
 		}
 		//Have harware generate lower mimap levels of cube map.
-		pD3dImmediateContext->GenerateMips(g_pPrefilterSRV);
+		pD3dImmediateContext->GenerateMips(g_pIrradianceSRV);
 
 
 		//还原状态
+
+		pD3dImmediateContext->RSSetViewports(count, &PreViewport);
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
@@ -535,13 +561,14 @@ namespace ForwardRender
 		UINT uStencilRefStored11;
 		pD3dImmediateContext->OMGetDepthStencilState(&pPreDepthStencilStateStored11, &uStencilRefStored11);
 
-		g_Viewport.Width = 128;
-		g_Viewport.Height = 128;
+		D3D11_VIEWPORT PreViewport;
+		UINT count = 1;
+		pD3dImmediateContext->RSGetViewports(&count, &PreViewport);
 
 		//开始渲染
-		pD3dImmediateContext->RSSetViewports(1, &g_Viewport);
+		pD3dImmediateContext->RSSetViewports(1, &g_Viewport128);
 
-		pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
+		pD3dImmediateContext->OMSetDepthStencilState(m_pDisableDepthStencilState, 1);
 
 		float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
 		pD3dImmediateContext->OMSetBlendState(m_pBlendState, BlendFactor, 0xFFFFFFFF);
@@ -570,8 +597,8 @@ namespace ForwardRender
 			V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 			CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
 			XMFLOAT3 temp;
-			temp.x = g_Viewport.Width;
-			temp.y = g_Viewport.Height;
+			temp.x = g_Viewport128.Width;
+			temp.y = g_Viewport128.Height;
 			temp.z = 0.0f;
 			pPerFrame->vScreenSize = XMLoadFloat3(&temp);
 			pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
@@ -606,7 +633,7 @@ namespace ForwardRender
 			pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 
 			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &g_pPrefilterCubeMapRTVs[i], g_pDepthStencilView);
+			pD3dImmediateContext->OMSetRenderTargets(1, &g_pPrefilterCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
 			pD3dImmediateContext->ClearRenderTargetView(g_pPrefilterCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
@@ -621,6 +648,8 @@ namespace ForwardRender
 
 
 		//还原状态
+
+		pD3dImmediateContext->RSSetViewports(count, &PreViewport);
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
@@ -772,6 +801,28 @@ namespace ForwardRender
 		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
 		V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthStencilState));
 
+		{
+			//Create DepthStencilState
+			D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
+			DepthStencilDesc.DepthEnable = FALSE;
+			DepthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+			DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			DepthStencilDesc.StencilEnable = FALSE;
+			DepthStencilDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+			DepthStencilDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+			DepthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			DepthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+			DepthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+			DepthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+			DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+			DepthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+			DepthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+			DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR;
+			V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDisableDepthStencilState));
+		}
+
+
+
 
 		D3D11_RASTERIZER_DESC RasterizerDesc;
 		RasterizerDesc.FillMode = D3D11_FILL_SOLID;
@@ -847,6 +898,7 @@ namespace ForwardRender
 
 
 		SAFE_RELEASE(m_pDepthStencilState);
+		SAFE_RELEASE(m_pDisableDepthStencilState);
 		SAFE_RELEASE(m_pRasterizerState);
 		SAFE_RELEASE(m_pBlendState);
 		SAFE_RELEASE(m_pSamplerLinear);

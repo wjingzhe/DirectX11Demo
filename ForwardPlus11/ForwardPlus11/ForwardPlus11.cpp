@@ -399,50 +399,32 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
 		//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-		////stbi_set_flip_vertically_on_load(true);
-		////int width, height, nrComponents;
-		////float *data = stbi_loadf("../../ForwardPlus11/media/hdr/newport_loft.dds", &width, &height, &nrComponents, 0);
+		stbi_set_flip_vertically_on_load(true);
+		int width, height, nrComponents;
+		void *data = stbi_load("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
 
-		//D3D11_TEXTURE2D_DESC texDesc;
+		D3D11_TEXTURE2D_DESC texDesc;
 
-		//texDesc.Width = width;
-		//texDesc.Height = height;
-		//texDesc.MipLevels = 1;
-		//texDesc.ArraySize = 1;
-		//texDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		//texDesc.SampleDesc.Count = 1;
-		//texDesc.SampleDesc.Quality = 0;
-		//texDesc.Usage = D3D11_USAGE_DEFAULT;
-		//texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		//texDesc.CPUAccessFlags = 0;
-		//texDesc.MiscFlags = 0;
-
-		////float *data = stbi_loadf("D:/SelfWorkSpace/directx11demo/1333380921_3046.png", &width, &height, &nrComponents, 0);
-
-		////D3D11_TEXTURE2D_DESC texDesc;
-
-		////texDesc.Width = width;
-		////texDesc.Height = height;
-		////texDesc.MipLevels = 1;
-		////texDesc.ArraySize = 1;
-		////texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		//////texDesc.Format = DXGI_FORMAT_BC6H_UF16;
-		////texDesc.SampleDesc.Count = 1;
-		////texDesc.SampleDesc.Quality = 0;
-		////texDesc.Usage = D3D11_USAGE_DEFAULT;
-		////texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		////texDesc.CPUAccessFlags = 0;
-		////texDesc.MiscFlags = 0;
+		texDesc.Width = width;
+		texDesc.Height = height;
+		texDesc.MipLevels = 1;
+		texDesc.ArraySize = 1;
+		texDesc.Format = DXGI_FORMAT_BC6H_UF16;
+		texDesc.SampleDesc.Count = 1;
+		texDesc.SampleDesc.Quality = 0;
+		texDesc.Usage = D3D11_USAGE_DEFAULT;
+		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		texDesc.CPUAccessFlags = 0;
+		texDesc.MiscFlags = 0;
 
 
+		D3D11_SUBRESOURCE_DATA InitData = { 0 };
+		InitData.SysMemPitch = width * nrComponents;
+		InitData.pSysMem = data;
+		InitData.SysMemSlicePitch = width *height * nrComponents;
 
-		//D3D11_SUBRESOURCE_DATA InitData = { 0 };
-		//InitData.SysMemPitch = width * 8;
-		//InitData.pSysMem = data;
-		//InitData.SysMemSlicePitch = width *height * 8;
-
-		//V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
-		//V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
+		V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
+		V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
 
 
 
@@ -452,7 +434,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
+	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
 
 	XMVECTOR SceneMin, SceneMax;
 
@@ -988,9 +970,9 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		const DXGI_SURFACE_DESC* pBackBufferSurfaceDes = DXUTGetDXGIBackBufferSurfaceDesc();
 
 #ifdef FORWARDPLUS
-		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDes,
+		/*s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDes,
 			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
-			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
+			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);*/
 #endif // FORWARDPLUS
 
 
@@ -1040,25 +1022,27 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 #ifdef PBR
 
-		//s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
+		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
 	//	s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
 
-		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera, pRTV, g_pTempDepthStencilView);
+		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera);
 		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pTempDepthStencilView);
 
 
 
 		//s_PbrRender
 		pD3dImmediateContext->RSSetViewports(count, &g_Viewport);
-		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetIrradianceSRV(), s_CubeMapCaptureRender.GetPrefilterSRV());
+		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetEnvSRV(), s_CubeMapCaptureRender.GetEnvSRV());
 
 #endif // PBR
 
 
+		pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, g_pDepthStencilView);
+
 		TIMER_End(); // Render
 
 
-		//RenderText();
+		RenderText();
 
 
 		if (g_bRenderHUD)

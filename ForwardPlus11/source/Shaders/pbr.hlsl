@@ -40,7 +40,8 @@ VS_OUTPUT PbrVS(VS_INPUT vin)
 	//vout.PositionH = float4(vin.PositionL, 1.0f);
 	vout.PositionH = mul(float4(vin.PositionL, 1.0f), g_mWolrdViewProjection);
 	vout.PositionW = mul(float4(vin.PositionL, 1.0f), g_mWolrd).xyz;
-	vout.TextureUV = float2(vin.TextureUV.x, 1.0f - vin.TextureUV.y);
+	vout.TextureUV = vin.TextureUV.xy;
+	//vout.TextureUV = float2(vin.TextureUV.x, 1.0f - vin.TextureUV.y);
 	vout.Normal = mul(vin.NormalL, (float3x3)g_mWolrd);
 
 	return vout;
@@ -75,8 +76,9 @@ float3 GetNormalFromMap(VS_OUTPUT pin)
 	float2 st1 = ddx(pin.TextureUV);
 	float2 st2 = ddy(pin.TextureUV);
 
+	float k = 1.0f / (st1.x*st2.y - st2.x*st1.y);
+	float3 T = normalize(k*Q1*st2.y-k*Q2*st1.y);
 	float3 N = normalize(pin.Normal);
-	float3 T = normalize(Q1*st2.y-Q2*st1.y);
 	float3 B = -normalize(cross(N, T));
 
 	float3x3 TBN = float3x3(T, B, N);
@@ -211,13 +213,13 @@ float4 PbrPS(VS_OUTPUT pin) :SV_TARGET
 	float3 kD = 1.0f - kS;
 	kD *= 1.0f - Metallic;
 
-	float3 irradiance = g_IrradianceMap.Sample(g_SamplerLinear, N).rgb;
+	float3 irradiance = Albedo;// pow(g_IrradianceMap.Sample(g_SamplerLinear, N).rgb, float3(2.2f, 2.2f, 2.2f));
 	float3 diffuse = irradiance * Albedo;
 
 	// sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
 	const float MAX_REFLECTION_LOD = 4.0f;
-	float3 prefilteredColor = g_PrefilterMap.SampleLevel(g_SamplerLinear, R, Roughness*MAX_REFLECTION_LOD).rgb;
-	float2 brdf = g_BrdfLUT.Sample(g_SamplerLinear, float2(max(dot(N,V),0.0f), Roughness)).rg;
+	float3 prefilteredColor = Albedo;// pow(g_PrefilterMap.SampleLevel(g_SamplerLinear, R, Roughness*MAX_REFLECTION_LOD).rgb, float3(2.2f, 2.2f, 2.2f));
+	float2 brdf = g_BrdfLUT.Sample(g_SamplerLinear, float2(max(dot(N,V),0.0f),1.0f - Roughness)).rg;
 	float3 specular = prefilteredColor * (F*brdf.x + brdf.y);
 
 	float3 ambient = (kD*diffuse + specular)*AO;
