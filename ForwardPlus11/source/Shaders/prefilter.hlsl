@@ -27,7 +27,7 @@ struct VS_OUTPUT
 	float3 PositionW:TEXCOORD0;//World position
 };
 
-VS_OUTPUT CubeMapCaptureVS(VS_INPUT vin)
+VS_OUTPUT CubeMapPrefilterVS(VS_INPUT vin)
 {
 
 	VS_OUTPUT vout;
@@ -103,7 +103,7 @@ float3 ImportanceSampleGGX(float2 Xi, float3 N, float roughness)
 }
 
 
-float4 CubeMapCapturePS(VS_OUTPUT pin) :SV_TARGET
+float4 CubeMapPrefilterPS(VS_OUTPUT pin) :SV_TARGET
 {
 
 

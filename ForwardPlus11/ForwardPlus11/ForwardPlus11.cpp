@@ -394,41 +394,41 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/1333380921_3046.png", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV,false));
 	
-	{// HDR CubeMap
+	//{// HDR CubeMap
 
-		//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
-		//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+	//	//V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
+	//	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-		stbi_set_flip_vertically_on_load(true);
-		int width, height, nrComponents;
-		void *data = stbi_load("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+	//	stbi_set_flip_vertically_on_load(true);
+	//	int width, height, nrComponents;
+	//	void *data = stbi_load("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
 
-		D3D11_TEXTURE2D_DESC texDesc;
+	//	D3D11_TEXTURE2D_DESC texDesc;
 
-		texDesc.Width = width;
-		texDesc.Height = height;
-		texDesc.MipLevels = 1;
-		texDesc.ArraySize = 1;
-		texDesc.Format = DXGI_FORMAT_BC6H_UF16;
-		texDesc.SampleDesc.Count = 1;
-		texDesc.SampleDesc.Quality = 0;
-		texDesc.Usage = D3D11_USAGE_DEFAULT;
-		texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		texDesc.CPUAccessFlags = 0;
-		texDesc.MiscFlags = 0;
-
-
-		D3D11_SUBRESOURCE_DATA InitData = { 0 };
-		InitData.SysMemPitch = width * nrComponents;
-		InitData.pSysMem = data;
-		InitData.SysMemSlicePitch = width *height * nrComponents;
-
-		V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
-		V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
+	//	texDesc.Width = width;
+	//	texDesc.Height = height;
+	//	texDesc.MipLevels = 1;
+	//	texDesc.ArraySize = 1;
+	//	texDesc.Format = DXGI_FORMAT_BC6H_UF16;
+	//	texDesc.SampleDesc.Count = 1;
+	//	texDesc.SampleDesc.Quality = 0;
+	//	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	//	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	//	texDesc.CPUAccessFlags = 0;
+	//	texDesc.MiscFlags = 0;
 
 
+	//	D3D11_SUBRESOURCE_DATA InitData = { 0 };
+	//	InitData.SysMemPitch = width * nrComponents;
+	//	InitData.pSysMem = data;
+	//	InitData.SysMemSlicePitch = width *height * nrComponents;
 
-	}
+	//	V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &g_pHdrTexture));
+	//	V_RETURN(pD3dDevice->CreateShaderResourceView(g_pHdrTexture, nullptr, &g_pHdrTextureSRV));
+
+
+
+	//}
 
 
 
@@ -1023,16 +1023,16 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 #ifdef PBR
 
 		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
-	//	s_CubeMapCaptureRender.SetSrcTextureSRV(g_pDecalTextureSRV);
+		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, nullptr, nullptr);
 
 		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera);
 		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pTempDepthStencilView);
 
 
 
-		//s_PbrRender
+		////s_PbrRender
 		pD3dImmediateContext->RSSetViewports(count, &g_Viewport);
-		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetEnvSRV(), s_CubeMapCaptureRender.GetEnvSRV());
+		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetIrradianceSRV(), s_CubeMapCaptureRender.GetPrefilterSRV());
 
 #endif // PBR
 

@@ -235,50 +235,64 @@ GeometryHelper::MeshData GeometryHelper::CreateCubePlane(float width, float heig
 {
 	GeometryHelper::MeshData meshData;
 
-	Vertex v[24];
-
 	float halfWidth = width*0.5f;
 	float halfHeight = height*0.5f;
 	float halfDepth = depth*0.5f;
 
+	//Vertex v[4];
+	//// left plane 
+	//v[0] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	//v[1] = Vertex(/*Position*/-1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	//v[2] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	//v[3] = Vertex(/*Position*/-1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	//meshData.Vertices.assign(&v[0], &v[4]);
+	//uint32 i[6];
+	//// Fill in the front face index data
+	//i[0] = 0; i[1] = 2; i[2] = 3;
+	//i[3] = 0; i[4] = 3; i[5] = 1;
+	//meshData.Indices32.assign(&i[0], &i[6]);
 
 
-	// face from screen to viewer
-	v[0] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[1] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[2] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[3] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	Vertex v[24];
+	// far plane from screen to viewer
+	v[0] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[1] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[2] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[3] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 	
 
-	// face from viewer to screen
-	v[4] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[5] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[6] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[7] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, -1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// near plane from viewer to screen
+	v[4] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[5] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[6] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[7] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 0.0f, 1.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	// face left
-	v[8] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[9] = Vertex(/*Position*/-1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[10] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[11] = Vertex(/*Position*/-1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	// face right
-	v[12] = Vertex(/*Position*/ 1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[13] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[14] = Vertex(/*Position*/ 1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[15] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	 // right plane 
+	v[8] = Vertex(/*Position*/ 1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[9] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[10] = Vertex(/*Position*/ 1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[11] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */-1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	// face top
-	v[16] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[17] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[18] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[19] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	// left plane 
+	v[12] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[13] = Vertex(/*Position*/-1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[14] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[15] = Vertex(/*Position*/-1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */1.0f, 0.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
-	// face bottom
-	v[20] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
-	v[21] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
-	v[22] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
-	v[23] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+	
+
+	// top plane 
+	v[16] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[17] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[18] = Vertex(/*Position*/ -1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[19] = Vertex(/*Position*/1.0f*halfWidth, 1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, -1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
+
+	// bottom plane 
+	v[20] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-left
+	v[21] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, 1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 1.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// bottom-right
+	v[22] = Vertex(/*Position*/ -1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */0.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-left
+	v[23] = Vertex(/*Position*/1.0f*halfWidth, -1.0f*halfHeight, -1.0f*halfDepth, /* Normal */0.0f, 1.0f, 0.0f, /* TextureUV */1.0f, 0.0f,/*TangentUVW*/ 1.0f, 0.0f, 0.0f);// top-right
 
 	meshData.Vertices.assign(&v[0], &v[24]);
 

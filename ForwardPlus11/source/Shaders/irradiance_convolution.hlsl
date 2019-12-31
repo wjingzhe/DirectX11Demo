@@ -2,6 +2,7 @@ cbuffer cbPerObject:register(b0)
 {
 	matrix g_mWolrdViewProjection:packoffset(c0);
 	matrix g_mWolrd:packoffset(c4);
+	float3 g_Up: packoffset(c8);
 
 };
 cbuffer cbPerFrame : register(b1)
@@ -24,16 +25,17 @@ struct VS_OUTPUT
 {
 	float4 PositionH:SV_POSITION;//Vertex position
 	float3 PositionW:TEXCOORD0;//World position
+	float3 NormalL:TEXCOORD1;
 };
 
-VS_OUTPUT CubeMapCaptureVS(VS_INPUT vin)
+VS_OUTPUT IrradianceConvolutionVS(VS_INPUT vin)
 {
 
 	VS_OUTPUT vout;
 	//vout.PositionH = float4(vin.PositionL, 1.0f);
 	vout.PositionH = mul(float4(vin.PositionL, 1.0f), g_mWolrdViewProjection);
-	vout.PositionW = vin.PositionL;
-
+	vout.PositionW = mul(vin.PositionL, (float3x3)g_mWolrd);
+	vout.NormalL = mul(vin.NormalL, (float3x3)g_mWolrd);
 	return vout;
 }
 
@@ -42,37 +44,38 @@ TextureCube gCubeMap:register(t0);
 SamplerState g_Sampler:register(s0);
 
 
-float4 CubeMapCapturePS(VS_OUTPUT pin) :SV_TARGET
+float4 IrradianceConvolutionPS(VS_OUTPUT pin) :SV_TARGET
 {
 	float PI = 3.141591653f;
 
 	//gCubeMap.Sample(g_Sampler, pin.PositionW);
 
-	float3 N = normalize(pin.PositionW);
+	float3 N = normalize(pin.PositionW.xyz);
 
 	float3 irradiance = float3(0.0f, 0.0f, 0.0f);
 
 	// tangent space calculation from origin point
-	float3 up = float3(0.0, 1.0, 0.0);
+	float3 up = float3(0.0f, 1.0f, 0.0f);//float3(0.0f,1.0f,0.0f);// g_Up;
 	float3 right = cross(up, N);
 	up = cross(N, right);
 
 	float sampleDelta = 0.025f;
 	float nrSamples = 0.0f;
-	for (float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
+	for (float phi = 0.0f; phi < 2.0f * PI; phi += sampleDelta)
 	{
-		for (float theta = 0.0; theta < 0.5 * PI; theta += sampleDelta)
+		for (float theta = 0.0f; theta < 0.5f * PI; theta += sampleDelta)
 		{
 			// spherical to cartesian (in tangent space)
 			float3 tangentSample = float3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
 			// tangent space to world
 			float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
-
-			irradiance += gCubeMap.Sample(g_Sampler, sampleVec).rgb * cos(theta) * sin(theta);
+			//return float4(sampleVec, 1.0f);
+			float3 temp = gCubeMap.Sample(g_Sampler, sampleVec).rgb;
+			irradiance += temp * cos(theta) * sin(theta);
 			nrSamples++;
 		}
 	}
-	irradiance = PI * irradiance * (1.0 / float(nrSamples));
+	irradiance = PI * irradiance * (1.0f / float(nrSamples));
 
 	return float4(irradiance,1.0f);
 }

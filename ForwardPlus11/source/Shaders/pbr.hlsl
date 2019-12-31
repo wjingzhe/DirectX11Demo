@@ -213,12 +213,12 @@ float4 PbrPS(VS_OUTPUT pin) :SV_TARGET
 	float3 kD = 1.0f - kS;
 	kD *= 1.0f - Metallic;
 
-	float3 irradiance = Albedo;// pow(g_IrradianceMap.Sample(g_SamplerLinear, N).rgb, float3(2.2f, 2.2f, 2.2f));
+	float3 irradiance = g_IrradianceMap.Sample(g_SamplerLinear, N).rgb;
 	float3 diffuse = irradiance * Albedo;
 
 	// sample both the pre-filter map and the BRDF lut and combine them together as per the Split-Sum approximation to get the IBL specular part.
 	const float MAX_REFLECTION_LOD = 4.0f;
-	float3 prefilteredColor = Albedo;// pow(g_PrefilterMap.SampleLevel(g_SamplerLinear, R, Roughness*MAX_REFLECTION_LOD).rgb, float3(2.2f, 2.2f, 2.2f));
+	float3 prefilteredColor = g_PrefilterMap.SampleLevel(g_SamplerLinear, R, Roughness*MAX_REFLECTION_LOD).rgb;
 	float2 brdf = g_BrdfLUT.Sample(g_SamplerLinear, float2(max(dot(N,V),0.0f),1.0f - Roughness)).rg;
 	float3 specular = prefilteredColor * (F*brdf.x + brdf.y);
 

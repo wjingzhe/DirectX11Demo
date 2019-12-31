@@ -22,6 +22,7 @@ namespace ForwardRender
 		{
 			DirectX::XMMATRIX mWorldViewProjection;
 			DirectX::XMMATRIX mWorld;
+			DirectX::XMVECTOR vUp;
 		};
 
 		struct CB_PER_FRAME
@@ -123,7 +124,8 @@ namespace ForwardRender
 		ID3D11DepthStencilState* m_pDisableDepthStencilState;
 		ID3D11RasterizerState* m_pRasterizerState;
 		ID3D11BlendState* m_pBlendState;
-		ID3D11SamplerState* m_pSamplerLinear;
+		ID3D11SamplerState* m_pSamplerLinearClamp;
+		ID3D11SamplerState* m_pSamplerLinearWrap;
 		ID3D11SamplerState* m_pSamplerPoint;
 
 		ID3D11Buffer* m_pConstantBufferPerObject;
@@ -132,9 +134,12 @@ namespace ForwardRender
 		UINT m_uSizeConstantBufferPerObject;
 		UINT m_uSizeConstantBufferPerFrame;
 
-		//ID3D11Texture2D* m_pHdrTexture;
+		ID3D11Texture2D* m_pHdrTexture;
+		ID3D11ShaderResourceView* m_pHdrTextureSRV;
+
 		ID3D11ShaderResourceView* m_pSrcTextureSRV;
 
+		DirectX::XMVECTOR m_UpVector[6];
 		DirectX::XMMATRIX m_ViewMatrix[6];
 		CFirstPersonCamera g_TempCubeMapCamera;
 

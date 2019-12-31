@@ -27,15 +27,15 @@ namespace ForwardRender
 		m_pShaderInputLayout2(nullptr), m_pShaderVS2(nullptr), m_pShaderPS2(nullptr),
 		m_pShaderInputLayout3(nullptr), m_pShaderVS3(nullptr), m_pShaderPS3(nullptr),
 		m_pDepthStencilState(nullptr), m_pDisableDepthStencilState(nullptr),
-		m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerLinear(nullptr), m_pSamplerPoint(nullptr),
+		m_pRasterizerState(nullptr),m_pBlendState(nullptr),m_pSamplerLinearClamp(nullptr), m_pSamplerPoint(nullptr), m_pSamplerLinearWrap(nullptr),
 		m_pConstantBufferPerObject(nullptr),m_pConstantBufferPerFrame(nullptr),
 		m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
-		//m_pHdrTexture(nullptr),
+		m_pHdrTexture(nullptr),m_pHdrTextureSRV(nullptr),
 		m_pSrcTextureSRV(nullptr),
 		m_bShaderInited(false)
 	{
 
-		g_TempCubeMapCamera.SetProjParams(XM_PI / 2, 1.0f, 1.0f, 1000.0f);
+		g_TempCubeMapCamera.SetProjParams(XM_PI / 2, 1.0f, 0.1f, 10.0f);
 		
 
 		g_Viewport32.Width = 32;
@@ -61,53 +61,60 @@ namespace ForwardRender
 
 
 		//Use world up vector(0,1,0) for all direction
-		XMVECTOR UpVector[6] =
-		{
-			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+x
-			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-x
-			XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//+Y
-			XMVectorSet(0.0f,0.0f,+1.0f, 1.0f),//-Y
-			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+Z
-			XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-Z
-		};
+		m_UpVector[0] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		m_UpVector[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		m_UpVector[2] = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
+		m_UpVector[3] = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+		m_UpVector[4] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+		m_UpVector[5] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+
+		//DirectX::XMVECTOR  m_UpVector[6] =
+		//{
+		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+x
+		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-x
+		//	XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//+Y
+		//	XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//-Y
+		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+Z
+		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-Z
+		//};
 
 		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 1.0f);
 
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(100.0f, 0.0f, 0.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[0]);
+			XMVECTOR vLookAtPos = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[0]);
 			m_ViewMatrix[0] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(-100.0f, 0.0f, 0.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[1]);
+			XMVECTOR vLookAtPos = XMVectorSet(-1.0f, 0.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[1]);
 			m_ViewMatrix[1] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 100.0f, 0.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[2]);
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[2]);
 			m_ViewMatrix[2] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(0.0f, -100.0f, 0.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[3]);
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, -1.0f, 0.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[3]);
 			m_ViewMatrix[3] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, 100.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[4]);
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[4]);
 			m_ViewMatrix[4] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 		{
-			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, -100.0f, 1.0f);
-			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, UpVector[5]);
+			XMVECTOR vLookAtPos = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
+			g_TempCubeMapCamera.SetViewParams(vEye, vLookAtPos, m_UpVector[5]);
 			m_ViewMatrix[5] = g_TempCubeMapCamera.GetViewMatrix();
 		}
 
 
-		m_MeshData = GeometryHelper::CreateCubePlane(CUBEMAP_SIZE, CUBEMAP_SIZE, CUBEMAP_SIZE);
+		m_MeshData = GeometryHelper::CreateCubePlane(1, 1, 1);
 		//m_MeshData = GeometryHelper::CreateBox(100, 100, 100,6,0,0,0);
 		m_uSizeConstantBufferPerObject = sizeof(CB_PER_OBJECT);
 		m_uSizeConstantBufferPerFrame = sizeof(CB_PER_FRAME);
@@ -135,9 +142,9 @@ namespace ForwardRender
 			this->AddShadersToCache(pShaderCache, L"CubeMapCaptureVS", L"CubeMapCapturePS", L"CubeMapCapture.hlsl", layout, size);
 
 
-			this->AddShadersToCache2(pShaderCache, L"CubeMapCaptureVS", L"CubeMapCapturePS", L"irradiance_convolution.hlsl", layout, size);
+			this->AddShadersToCache2(pShaderCache, L"IrradianceConvolutionVS", L"IrradianceConvolutionPS", L"irradiance_convolution.hlsl", layout, size);
 
-			this->AddShadersToCache3(pShaderCache, L"CubeMapCaptureVS", L"CubeMapCapturePS", L"prefilter.hlsl", layout, size);
+			this->AddShadersToCache3(pShaderCache, L"CubeMapPrefilterVS", L"CubeMapPrefilterPS", L"prefilter.hlsl", layout, size);
 
 
 			m_bShaderInited = true;
@@ -155,9 +162,47 @@ namespace ForwardRender
 		V_RETURN(this->CreateCommonBuffers(pD3dDevice, m_MeshData, m_uSizeConstantBufferPerObject, m_uSizeConstantBufferPerFrame));
 		V_RETURN(this->CreateOtherRenderStateResources(pD3dDevice));
 
-		//stbi_set_flip_vertically_on_load(true);
-		//int width, height, nrComponents;
-		//float *data = stbi_loadf("hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+		{// HDR CubeMap
+
+		 //V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
+		 //V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+
+			stbi_set_flip_vertically_on_load(true);
+			int width, height, nrComponents;
+			float *data = stbi_loadf("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents,4);
+
+			D3D11_TEXTURE2D_DESC texDesc;
+
+			texDesc.Width = width;
+			texDesc.Height = height;
+			texDesc.MipLevels = 1;
+			texDesc.ArraySize = 1;
+			texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			texDesc.SampleDesc.Count = 1;
+			texDesc.SampleDesc.Quality = 0;
+			texDesc.Usage = D3D11_USAGE_DEFAULT;
+			texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			texDesc.CPUAccessFlags = 0;
+			texDesc.MiscFlags = 0;
+
+
+			D3D11_SUBRESOURCE_DATA InitData;
+			ZeroMemory(&InitData, sizeof(D3D11_SUBRESOURCE_DATA));
+			InitData.SysMemPitch = width * 16;
+			InitData.pSysMem = data;
+			InitData.SysMemSlicePitch = 0;
+
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &m_pHdrTexture));
+			D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
+			ZeroMemory(&SRVDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+			SRVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+			SRVDesc.Texture2D.MipLevels = 1;
+			SRVDesc.Texture2D.MostDetailedMip = 0;
+			V_RETURN(pD3dDevice->CreateShaderResourceView(m_pHdrTexture, &SRVDesc, &m_pHdrTextureSRV));
+
+
+		}
 
 		//CubeMap RTV
 		{
@@ -178,14 +223,14 @@ namespace ForwardRender
 
 			D3D11_TEXTURE2D_DESC IrradianceCubeTextureDesc;
 			memcpy(&IrradianceCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			IrradianceCubeTextureDesc.Width = 32;
 			IrradianceCubeTextureDesc.Height = 32;
 			V_RETURN(pD3dDevice->CreateTexture2D(&IrradianceCubeTextureDesc, nullptr, &g_pIrradianceCubeTexture));
 
 			D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
 			memcpy(&PrefilterCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PrefilterCubeTextureDesc.Width = 128;
 			PrefilterCubeTextureDesc.Height = 128;
 			PrefilterCubeTextureDesc.MipLevels = 4;
@@ -204,14 +249,14 @@ namespace ForwardRender
 
 			D3D11_RENDER_TARGET_VIEW_DESC IrradianceRTVDesc;
 			ZeroMemory(&IrradianceRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-			IrradianceRTVDesc.Format = IrradianceCubeTextureDesc.Format;
+			IrradianceRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			IrradianceRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
 			IrradianceRTVDesc.Texture2DArray.ArraySize = 1;
 			IrradianceRTVDesc.Texture2D.MipSlice = 0;
 
 			D3D11_RENDER_TARGET_VIEW_DESC PrefilterRTVDesc;
 			ZeroMemory(&PrefilterRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-			PrefilterRTVDesc.Format = IrradianceCubeTextureDesc.Format;
+			PrefilterRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
 			PrefilterRTVDesc.Texture2DArray.ArraySize = 1;
 			PrefilterRTVDesc.Texture2D.MipSlice = 0;
@@ -240,12 +285,33 @@ namespace ForwardRender
 			CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
 			CubeDesc.TextureCube.MostDetailedMip = 0;
 
-			V_RETURN(pD3dDevice->CreateShaderResourceView(g_pIrradianceCubeTexture, &CubeDesc, &g_pIrradianceSRV));
+			V_RETURN(pD3dDevice->CreateShaderResourceView(g_pCubeTexture, &CubeDesc, &g_pEnvCubeMapSRV));
 
-			V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
+			{
+				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
+				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+				CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
+				CubeDesc.TextureCube.MostDetailedMip = 0;
+
+				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pIrradianceCubeTexture, &CubeDesc, &g_pIrradianceSRV));
+			}
+
+
+			{
+				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
+				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+				CubeDesc.TextureCube.MipLevels = 4;
+				CubeDesc.TextureCube.MostDetailedMip = 0;
+				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
+			}
+
+
+
 		}
 
-		V_RETURN(CreateDDSTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceCubeMapDX.dds", &g_pIceCubemapTexture,&g_pEnvCubeMapSRV));
+		//V_RETURN(CreateDDSTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceCubeMap32.dds", &g_pIceCubemapTexture,&g_pEnvCubeMapSRV));
 
 		return hr;
 	}
@@ -335,8 +401,8 @@ namespace ForwardRender
 
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
-		pD3dImmediateContext->PSSetShaderResources(0, 1, &m_pSrcTextureSRV);
-		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, &m_pHdrTextureSRV);
+		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 
 
@@ -401,15 +467,14 @@ namespace ForwardRender
 			pD3dImmediateContext->OMSetRenderTargets(1, &g_pEnvCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(g_pEnvCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
-			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			pD3dImmediateContext->ClearRenderTargetView(g_pEnvCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Black));
+			//pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 		}
-		//Have harware generate lower mimap levels of cube map.
-		//m_pD3dImmediateContext->GenerateMips(m_pDynamicCubeMapSRV);
+		
 
 
 		//还原状态
@@ -417,6 +482,7 @@ namespace ForwardRender
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
+		pD3dImmediateContext->OMSetRenderTargets(1, &g_pTempTextureRenderTargetView, g_pTempDepthStencilView);
 
 		SAFE_RELEASE(pPreRasterizerState);
 		SAFE_RELEASE(pPreBlendStateStored11);
@@ -471,8 +537,9 @@ namespace ForwardRender
 
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS2, nullptr, 0);
+		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
 		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
-		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinear);
+		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 		XMMATRIX mWorld = XMMatrixIdentity();
 
@@ -508,7 +575,7 @@ namespace ForwardRender
 				CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
 				pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 				pPerObject->mWorld = XMMatrixTranspose(mWorld);
-
+				pPerObject->vUp = m_UpVector[i];
 				pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 			}
 
@@ -519,8 +586,8 @@ namespace ForwardRender
 			pD3dImmediateContext->OMSetRenderTargets(1, &g_pIrradianceCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(g_pIrradianceCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
-			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			pD3dImmediateContext->ClearRenderTargetView(g_pIrradianceCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Black));
+			//pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
@@ -536,6 +603,7 @@ namespace ForwardRender
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
+		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 		SAFE_RELEASE(pPreRasterizerState);
 		SAFE_RELEASE(pPreBlendStateStored11);
@@ -587,6 +655,7 @@ namespace ForwardRender
 
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS3, nullptr, 0);
+		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
 		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
 		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerPoint);
 
@@ -636,15 +705,15 @@ namespace ForwardRender
 			pD3dImmediateContext->OMSetRenderTargets(1, &g_pPrefilterCubeMapRTVs[i], nullptr);
 
 			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(g_pPrefilterCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Silver));
+			pD3dImmediateContext->ClearRenderTargetView(g_pPrefilterCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Black));
 			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 		}
-		//Have harware generate lower mimap levels of cube map.
-		//m_pD3dImmediateContext->GenerateMips(m_pDynamicCubeMapSRV);
+		//Have harware generate lower mimap levels of Prefilter cube map.
+		pD3dImmediateContext->GenerateMips(g_pPrefilterSRV);
 
 
 		//还原状态
@@ -653,6 +722,7 @@ namespace ForwardRender
 		pD3dImmediateContext->RSSetState(pPreRasterizerState);
 		pD3dImmediateContext->OMSetBlendState(pPreBlendStateStored11, BlendFactorStored11, uSampleMaskStored11);
 		pD3dImmediateContext->OMSetDepthStencilState(pPreDepthStencilStateStored11, uStencilRefStored11);
+		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
 
 		SAFE_RELEASE(pPreRasterizerState);
 		SAFE_RELEASE(pPreBlendStateStored11);
@@ -845,12 +915,26 @@ namespace ForwardRender
 		SamplerDesc.MaxAnisotropy = 16;
 		SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 		SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-		V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerLinear));
-		m_pSamplerLinear->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("LINEAR"), "LINEAR");
+		V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerLinearClamp));
+		m_pSamplerLinearClamp->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("LINEAR"), "LINEAR");
+
+
 
 		SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 		V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerPoint));
 		m_pSamplerPoint->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Point"), "Point");
+
+		{
+			D3D11_SAMPLER_DESC SamplerDesc;
+			ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
+			SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			SamplerDesc.AddressU = SamplerDesc.AddressV = SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+			SamplerDesc.MaxAnisotropy = 16;
+			SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+			SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+			V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerLinearWrap));
+			m_pSamplerLinearWrap->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("LINEAR WRAP"), "LINEAR WRAP");
+		}
 
 		// Create blend states
 		D3D11_BLEND_DESC BlendStateDesc;
@@ -901,12 +985,17 @@ namespace ForwardRender
 		SAFE_RELEASE(m_pDisableDepthStencilState);
 		SAFE_RELEASE(m_pRasterizerState);
 		SAFE_RELEASE(m_pBlendState);
-		SAFE_RELEASE(m_pSamplerLinear);
+		SAFE_RELEASE(m_pSamplerLinearClamp);
 		SAFE_RELEASE(m_pSamplerPoint);
+		SAFE_RELEASE(m_pSamplerLinearWrap);
 		
 
 		SAFE_RELEASE(m_pConstantBufferPerObject);
 		SAFE_RELEASE(m_pConstantBufferPerFrame);
+
+		SAFE_RELEASE(m_pHdrTexture);
+		SAFE_RELEASE(m_pHdrTextureSRV);
+		
 
 		SAFE_RELEASE(m_pSrcTextureSRV);
 
