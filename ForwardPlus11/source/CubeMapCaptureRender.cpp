@@ -311,7 +311,33 @@ namespace ForwardRender
 
 		}
 
-		//V_RETURN(CreateDDSTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceCubeMap32.dds", &g_pIceCubemapTexture,&g_pEnvCubeMapSRV));
+		{
+
+
+			CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceSkyCubeMap.dds",0,
+				D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,0, D3D11_RESOURCE_MISC_TEXTURECUBE,false,
+				&g_pIceCubemapTexture, &g_pIceEnvCubeMapSRV);
+
+			//V_RETURN();
+			
+			D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
+			g_pIceEnvCubeMapSRV->GetDesc(&CubeDesc);
+
+			D3D11_RENDER_TARGET_VIEW_DESC EnvRTVDesc;
+			EnvRTVDesc.Format = CubeDesc.Format;
+			EnvRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			EnvRTVDesc.Texture2DArray.ArraySize = 1;
+			EnvRTVDesc.Texture2D.MipSlice = 0;
+
+			for (int i = 0; i < 6; ++i)
+			{
+				EnvRTVDesc.Texture2DArray.FirstArraySlice = i;
+				V_RETURN(pD3dDevice->CreateRenderTargetView(g_pIceCubemapTexture, &EnvRTVDesc, &g_pIceCubemapRTVs[i]));
+				g_pIceCubemapRTVs[i]->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("IceCubeRT"), "IceCubeRT");
+			}
+		}
+		
+
 
 		return hr;
 	}
@@ -538,7 +564,7 @@ namespace ForwardRender
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS2, nullptr, 0);
 		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
-		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pIceEnvCubeMapSRV);
 		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 		XMMATRIX mWorld = XMMatrixIdentity();
@@ -656,8 +682,8 @@ namespace ForwardRender
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS3, nullptr, 0);
 		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
-		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
-		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerPoint);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pIceEnvCubeMapSRV);
+		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 		XMMATRIX mWorld = XMMatrixIdentity();
 
@@ -1012,6 +1038,12 @@ namespace ForwardRender
 
 
 		SAFE_RELEASE(g_pIceCubemapTexture);
+		SAFE_RELEASE(g_pIceEnvCubeMapSRV);
+		for (int i = 0; i < 6; ++i)
+		{
+			SAFE_RELEASE(g_pIceCubemapRTVs[i]);
+		}
+		
 		
 		SAFE_RELEASE(g_pIrradianceCubeTexture);
 		SAFE_RELEASE(g_pIrradianceSRV);

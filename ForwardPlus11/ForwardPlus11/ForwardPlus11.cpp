@@ -1167,7 +1167,7 @@ void InitApp()
 
 }
 
-
+void SaveCubeMap();
 //--------------------------------------------------------------------------------------
 // Handle key presses
 //--------------------------------------------------------------------------------------
@@ -1179,6 +1179,10 @@ void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserCo
 		{
 		case VK_F1:
 			g_bRenderHUD = !g_bRenderHUD;
+			break;
+
+		case  VK_F9:
+			SaveCubeMap();
 			break;
 		}
 	}
@@ -1236,4 +1240,22 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl * pControl, v
 	}
 	break;
 	}
+}
+
+
+
+void SaveCubeMap()
+{
+	ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+
+	ID3D11Resource* tempTexture2D = nullptr;
+	for (int i =0;i<6;++i)
+	{
+		wchar_t  strPath[128];
+		swprintf(strPath, 128, L"icecube_%d.jpg", 5);
+		s_CubeMapCaptureRender.GetIceCubeMapRTV(5)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, static_cast<ID3D11Texture2D*>(tempTexture2D), false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+	}
+	
 }

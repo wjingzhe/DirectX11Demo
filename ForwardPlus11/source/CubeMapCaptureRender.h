@@ -86,6 +86,11 @@ namespace ForwardRender
 			return g_pEnvCubeMapSRV;
 		}
 
+		ID3D11RenderTargetView* GetIceCubeMapRTV(int i)
+		{
+			return g_pIceCubemapRTVs[i];
+		}
+
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
 		void AddShadersToCache2(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
@@ -149,7 +154,7 @@ namespace ForwardRender
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
 		ID3D11RenderTargetView* g_pEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
-		
+		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
 
 		// Depth stencil data
 		ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
@@ -157,7 +162,8 @@ namespace ForwardRender
 		ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
 
 		ID3D11Resource* g_pIceCubemapTexture = nullptr;
-		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
+		ID3D11RenderTargetView* g_pIceCubemapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
+		ID3D11ShaderResourceView* g_pIceEnvCubeMapSRV = nullptr;
 
 
 		ID3D11Texture2D* g_pIrradianceCubeTexture = nullptr;
