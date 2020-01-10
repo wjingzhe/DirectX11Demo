@@ -68,15 +68,6 @@ namespace ForwardRender
 		m_UpVector[4] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 		m_UpVector[5] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-		//DirectX::XMVECTOR  m_UpVector[6] =
-		//{
-		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+x
-		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-x
-		//	XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//+Y
-		//	XMVectorSet(0.0f,0.0f,-1.0f, 1.0f),//-Y
-		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//+Z
-		//	XMVectorSet(0.0f,1.0f,0.0f, 1.0f),//-Z
-		//};
 
 		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f, 1.0f);
 
@@ -226,6 +217,7 @@ namespace ForwardRender
 			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			IrradianceCubeTextureDesc.Width = 32;
 			IrradianceCubeTextureDesc.Height = 32;
+			IrradianceCubeTextureDesc.MipLevels = 1;
 			V_RETURN(pD3dDevice->CreateTexture2D(&IrradianceCubeTextureDesc, nullptr, &g_pIrradianceCubeTexture));
 
 			D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
@@ -245,7 +237,7 @@ namespace ForwardRender
 			EnvRTVDesc.Format = texDesc.Format;
 			EnvRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
 			EnvRTVDesc.Texture2DArray.ArraySize = 1;
-			EnvRTVDesc.Texture2D.MipSlice = 0;
+			EnvRTVDesc.Texture2D.MipSlice = 0;// D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 			D3D11_RENDER_TARGET_VIEW_DESC IrradianceRTVDesc;
 			ZeroMemory(&IrradianceRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
@@ -259,7 +251,7 @@ namespace ForwardRender
 			PrefilterRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
 			PrefilterRTVDesc.Texture2DArray.ArraySize = 1;
-			PrefilterRTVDesc.Texture2D.MipSlice = 0;
+			PrefilterRTVDesc.Texture2D.MipSlice = 0;// D3D11_RESOURCE_MISC_GENERATE_MIPS;;
 
 
 			for (int i = 0; i < 6; ++i)
@@ -302,7 +294,7 @@ namespace ForwardRender
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
 				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-				CubeDesc.TextureCube.MipLevels = 4;
+				CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
 				CubeDesc.TextureCube.MostDetailedMip = 0;
 				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
 			}
@@ -564,7 +556,7 @@ namespace ForwardRender
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS2, nullptr, 0);
 		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
-		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pIceEnvCubeMapSRV);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
 		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 		XMMATRIX mWorld = XMMatrixIdentity();
@@ -682,7 +674,7 @@ namespace ForwardRender
 
 		pD3dImmediateContext->PSSetShader(m_pShaderPS3, nullptr, 0);
 		pD3dImmediateContext->OMSetRenderTargets(0, nullptr, nullptr);
-		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pIceEnvCubeMapSRV);
+		pD3dImmediateContext->PSSetShaderResources(0, 1, &g_pEnvCubeMapSRV);
 		pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerLinearClamp);
 
 		XMMATRIX mWorld = XMMatrixIdentity();
