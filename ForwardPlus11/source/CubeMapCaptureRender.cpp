@@ -34,9 +34,40 @@ namespace ForwardRender
 		m_pSrcTextureSRV(nullptr),
 		m_bShaderInited(false)
 	{
+		TextureArray16x16.resize(6);
+		TextureArray32x32.resize(6);
+		TextureArray64x64.resize(6);
+		TextureArray128x128.resize(6);
+
+		RenderTargetArray16x16.resize(6);
+		RenderTargetArray32x32.resize(6);
+		RenderTargetArray64x64.resize(6);
+		RenderTargetArray128x128.resize(6);
+
+		
+		for (int i = 0;i<6;++i)
+		{
+			TextureArray16x16[i] = nullptr;
+			TextureArray32x32[i] = nullptr;
+			TextureArray64x64[i] = nullptr;
+			TextureArray128x128[i] = nullptr;
+
+			RenderTargetArray16x16[i] = nullptr;
+			RenderTargetArray32x32[i] = nullptr;
+			RenderTargetArray64x64[i] = nullptr;
+			RenderTargetArray128x128[i] = nullptr;
+
+		}
+
 
 		g_TempCubeMapCamera.SetProjParams(XM_PI / 2, 1.0f, 0.1f, 10.0f);
 		
+		g_Viewport16.Width = 16;
+		g_Viewport16.Height = 16;
+		g_Viewport16.MinDepth = 0;
+		g_Viewport16.MaxDepth = 1;
+		g_Viewport16.TopLeftX = 0;
+		g_Viewport16.TopLeftY = 0;
 
 		g_Viewport32.Width = 32;
 		g_Viewport32.Height = 32;
@@ -45,6 +76,13 @@ namespace ForwardRender
 		g_Viewport32.TopLeftX = 0;
 		g_Viewport32.TopLeftY = 0;
 
+		g_Viewport64.Width = 64;
+		g_Viewport64.Height = 64;
+		g_Viewport64.MinDepth = 0;
+		g_Viewport64.MaxDepth = 1;
+		g_Viewport64.TopLeftX = 0;
+		g_Viewport64.TopLeftY = 0;
+
 		g_Viewport128.Width = 128;
 		g_Viewport128.Height = 128;
 		g_Viewport128.MinDepth = 0;
@@ -52,8 +90,8 @@ namespace ForwardRender
 		g_Viewport128.TopLeftX = 0;
 		g_Viewport128.TopLeftY = 0;
 
-		g_Viewport512.Width = CUBEMAP_SIZE;
-		g_Viewport512.Height = CUBEMAP_SIZE;
+		g_Viewport512.Width = 512;
+		g_Viewport512.Height = 512;
 		g_Viewport512.MinDepth = 0;
 		g_Viewport512.MaxDepth = 1;
 		g_Viewport512.TopLeftX = 0;
@@ -228,6 +266,65 @@ namespace ForwardRender
 			PrefilterCubeTextureDesc.MipLevels = 4;
 			V_RETURN(pD3dDevice->CreateTexture2D(&PrefilterCubeTextureDesc, nullptr, &g_pPrefilterCubeTexture));
 
+			{
+				D3D11_TEXTURE2D_DESC temp;
+				temp.Width = 16;
+				temp.Height = 16;
+				temp.MipLevels = 1;
+				temp.ArraySize = 1;
+				temp.SampleDesc.Count = 1;
+				temp.SampleDesc.Quality = 0;
+				temp.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				temp.Usage = D3D11_USAGE_DEFAULT;
+				temp.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+				temp.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+				temp.MiscFlags = 0;
+
+			
+				for (int i = 0;i<6;++i)
+				{
+					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray16x16[i]));
+					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray16x16[i], nullptr, &RenderTargetArray16x16[i]));
+				}
+				
+			
+				temp.Width = 32;
+				temp.Height = 32;
+				for (int i = 0; i < 6; ++i)
+				{
+					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray32x32[i]));
+					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray32x32[i], nullptr, &RenderTargetArray32x32[i]));
+				}
+
+			
+				temp.Width = 64;
+				temp.Height = 64;
+				for (int i = 0; i < 6; ++i)
+				{
+					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray64x64[i]));
+					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray64x64[i], nullptr, &RenderTargetArray64x64[i]));
+				}
+
+			
+				temp.Width = 128;
+				temp.Height = 128;
+				for (int i = 0; i < 6; ++i)
+				{
+					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray128x128[i]));
+					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray128x128[i], nullptr, &RenderTargetArray128x128[i]));
+				}
+
+				//D3D11_RENDER_TARGET_VIEW_DESC PrefilterRTVDesc;
+				//ZeroMemory(&PrefilterRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+				//PrefilterRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				//PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;// D3D11_RTV_DIMENSION_TEXTURE2D);
+				//PrefilterRTVDesc.Texture2D.MipSlice = 0;
+
+				
+
+			}
+			 
+
 			//create our own depth stencil surface that'bindable as a shader
 			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
 				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, PrefilterCubeTextureDesc.Width, PrefilterCubeTextureDesc.Height, pBackBufferSurfaceDesc->SampleDesc.Count));
@@ -283,7 +380,7 @@ namespace ForwardRender
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
 				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-				CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
+				CubeDesc.TextureCube.MipLevels = 1;
 				CubeDesc.TextureCube.MostDetailedMip = 0;
 
 				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pIrradianceCubeTexture, &CubeDesc, &g_pIrradianceSRV));
@@ -294,7 +391,7 @@ namespace ForwardRender
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
 				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-				CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
+				CubeDesc.TextureCube.MipLevels = 4;
 				CubeDesc.TextureCube.MostDetailedMip = 0;
 				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
 			}
@@ -719,19 +816,109 @@ namespace ForwardRender
 			pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 			pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 
-			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &g_pPrefilterCubeMapRTVs[i], nullptr);
+			//16x16
+			{
+				pD3dImmediateContext->RSSetViewports(1, &g_Viewport16);
+				//Bind cube map face as render target.
+				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray16x16[i], nullptr);
 
-			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(g_pPrefilterCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Black));
-			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+				//Clear cube map face and depth buffer.
+				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray16x16[i], reinterpret_cast<const float*>(&Colors::Black));
+				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-			//Draw the scene with the exception of the center sphere to this cube map face.
-			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+				//Draw the scene with the exception of the center sphere to this cube map face.
+				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+			}
+
+			//32x32
+			{
+				pD3dImmediateContext->RSSetViewports(1, &g_Viewport32);
+				//Bind cube map face as render target.
+				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray32x32[i], nullptr);
+
+				//Clear cube map face and depth buffer.
+				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray32x32[i], reinterpret_cast<const float*>(&Colors::Black));
+				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+				//Draw the scene with the exception of the center sphere to this cube map face.
+				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+			}
+
+			//64x64
+			{
+				pD3dImmediateContext->RSSetViewports(1, &g_Viewport64);
+				//Bind cube map face as render target.
+				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray64x64[i], nullptr);
+
+				//Clear cube map face and depth buffer.
+				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray64x64[i], reinterpret_cast<const float*>(&Colors::Black));
+				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+				//Draw the scene with the exception of the center sphere to this cube map face.
+				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+			}
+
+			//128x128
+			{
+				pD3dImmediateContext->RSSetViewports(1, &g_Viewport128);
+				//Bind cube map face as render target.
+				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray128x128[i], nullptr);
+
+				//Clear cube map face and depth buffer.
+				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray128x128[i], reinterpret_cast<const float*>(&Colors::Black));
+				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+				//Draw the scene with the exception of the center sphere to this cube map face.
+				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+			}
+			
+		
+		}
+
+
+		//Have harware generate lower mimap levels of Prefilter cube map.
+		//pD3dImmediateContext->GenerateMips(g_pPrefilterSRV);
+
+		//for each texture element
+		for (UINT texElementIndex = 0; texElementIndex < 6; ++texElementIndex)
+		{
+			D3D11_MAPPED_SUBRESOURCE mappedTex2D;
+
+			//128x128
+			pD3dImmediateContext->Map(g_pCubeTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedTex2D);
+			/*pD3dImmediateContext->UpdateSubresource(g_pPrefilterCubeTexture,
+				D3D11CalcSubresource(0, texElementIndex, 4),
+				0, mappedTex2D.pData, mappedTex2D.RowPitch, mappedTex2D.DepthPitch
+			);*/
+			pD3dImmediateContext->Unmap(TextureArray128x128[texElementIndex], 0);
+
+			//64x64
+			pD3dImmediateContext->Map(g_pCubeTexture, 0, D3D11_MAP_READ, 0, &mappedTex2D);
+			pD3dImmediateContext->UpdateSubresource(g_pPrefilterCubeTexture,
+				D3D11CalcSubresource(1, texElementIndex, 4),
+				0, mappedTex2D.pData, mappedTex2D.RowPitch, mappedTex2D.DepthPitch
+			);
+			pD3dImmediateContext->Unmap(TextureArray64x64[texElementIndex], 0);
+
+			//32x32
+			pD3dImmediateContext->Map(TextureArray32x32[texElementIndex], 0, D3D11_MAP_READ, 0, &mappedTex2D);
+			pD3dImmediateContext->UpdateSubresource(g_pPrefilterCubeTexture,
+				D3D11CalcSubresource(2, texElementIndex, 4),
+				0, mappedTex2D.pData, mappedTex2D.RowPitch, mappedTex2D.DepthPitch
+			);
+			pD3dImmediateContext->Unmap(TextureArray32x32[texElementIndex], 0);
+
+
+			//16x16
+			pD3dImmediateContext->Map(TextureArray16x16[texElementIndex], 0, D3D11_MAP_READ, 0, &mappedTex2D);
+			pD3dImmediateContext->UpdateSubresource(g_pPrefilterCubeTexture,
+				D3D11CalcSubresource(3, texElementIndex, 4),
+				0, mappedTex2D.pData, mappedTex2D.RowPitch, mappedTex2D.DepthPitch
+			);
+			pD3dImmediateContext->Unmap(TextureArray16x16[texElementIndex], 0);
+
 
 		}
-		//Have harware generate lower mimap levels of Prefilter cube map.
-		pD3dImmediateContext->GenerateMips(g_pPrefilterSRV);
 
 
 		//»¹Ô­×´Ì¬
@@ -1016,6 +1203,30 @@ namespace ForwardRender
 		
 
 		SAFE_RELEASE(m_pSrcTextureSRV);
+
+		for (int i=0;i<6;++i)
+		{
+			SAFE_RELEASE(TextureArray16x16[i]);
+			SAFE_RELEASE(TextureArray32x32[i]);
+			SAFE_RELEASE(TextureArray64x64[i]);
+			SAFE_RELEASE(TextureArray128x128[i]);
+
+			SAFE_RELEASE(RenderTargetArray16x16[i]);
+			SAFE_RELEASE(RenderTargetArray32x32[i]);
+			SAFE_RELEASE(RenderTargetArray64x64[i]);
+			SAFE_RELEASE(RenderTargetArray128x128[i]);
+		}
+		TextureArray16x16.clear();
+		TextureArray32x32.clear();
+		TextureArray64x64.clear();
+		TextureArray128x128.clear();
+
+		RenderTargetArray16x16.clear();
+		RenderTargetArray32x32.clear();
+		RenderTargetArray64x64.clear();
+		RenderTargetArray128x128.clear();
+
+
 
 		SAFE_RELEASE(g_pCubeTexture);
 		SAFE_RELEASE(g_pEnvCubeMapSRV);

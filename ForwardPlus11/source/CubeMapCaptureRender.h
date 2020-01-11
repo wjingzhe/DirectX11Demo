@@ -148,9 +148,23 @@ namespace ForwardRender
 		DirectX::XMMATRIX m_ViewMatrix[6];
 		CFirstPersonCamera g_TempCubeMapCamera;
 
+		D3D11_VIEWPORT g_Viewport16;
 		D3D11_VIEWPORT g_Viewport32;
+		D3D11_VIEWPORT g_Viewport64;
 		D3D11_VIEWPORT g_Viewport128;
 		D3D11_VIEWPORT g_Viewport512;
+
+
+		std::vector<ID3D11Texture2D*> TextureArray16x16;
+		std::vector<ID3D11Texture2D*> TextureArray32x32;
+		std::vector<ID3D11Texture2D*> TextureArray64x64;
+		std::vector<ID3D11Texture2D*> TextureArray128x128;
+
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray16x16;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray32x32;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray64x64;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray128x128;
+
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
 		ID3D11RenderTargetView* g_pEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
