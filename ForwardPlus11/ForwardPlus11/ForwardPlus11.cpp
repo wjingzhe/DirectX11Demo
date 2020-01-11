@@ -392,7 +392,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/1333380921_3046.png", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV,false));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../1333380921_3046.png", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV,false));
 	
 	//{// HDR CubeMap
 
@@ -432,9 +432,9 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 
 
-	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
+	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
+	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
 
 	XMVECTOR SceneMin, SceneMax;
 

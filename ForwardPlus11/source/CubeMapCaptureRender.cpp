@@ -306,7 +306,7 @@ namespace ForwardRender
 		{
 
 
-			CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/IceSkyCubeMap.dds",0,
+			CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/IceSkyCubeMap.dds",0,
 				D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,0, D3D11_RESOURCE_MISC_TEXTURECUBE,false,
 				&g_pIceCubemapTexture, &g_pIceEnvCubeMapSRV);
 

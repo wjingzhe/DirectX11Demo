@@ -353,15 +353,15 @@ HRESULT ForwardRender::PbrRender::CreateOtherRenderStateResources(ID3D11Device *
 
 
 
-	V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/brdfLUT.png", (ID3D11Resource**)&m_pBrdfLUT, &m_pBrdfSRV,false));
+	V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/brdfLUT.png", (ID3D11Resource**)&m_pBrdfLUT, &m_pBrdfSRV,false));
 
 
 	//stbi_set_flip_vertically_on_load(true);
 	//int width, height, nrComponents;
 	//
-	////unsigned char *data = stbi_load("D:/SelfWorkSpace/directx11demo/1333380921_3046.png", &width, &height, &nrComponents, 0);
-	////unsigned char *data = stbi_load("D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
-	//unsigned char *data = stbi_load("D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/albedo.png", &width, &height, &nrComponents, 0);
+	////unsigned char *data = stbi_load("../../1333380921_3046.png", &width, &height, &nrComponents, 0);
+	////unsigned char *data = stbi_load("../media/hdr/newport_loft.hdr", &width, &height, &nrComponents, 0);
+	//unsigned char *data = stbi_load("../media/hdr/albedo.png", &width, &height, &nrComponents, 0);
 
 	//D3D11_TEXTURE2D_DESC texDesc;
 	//texDesc.Width = width;
@@ -397,17 +397,17 @@ HRESULT ForwardRender::PbrRender::CreateOtherRenderStateResources(ID3D11Device *
 	//pImmediateContext->GenerateMips(m_pAlbedoSRV);
 	//SAFE_RELEASE(pImmediateContext);
 
-	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/albedo.png", (ID3D11Resource**)&m_pAlbedo, &m_pAlbedoSRV));
-	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/normal.png", (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
-	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/metallic.png", (ID3D11Resource**)&m_pMetallic, &m_pMetallicSRV));
-	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/roughness.png", (ID3D11Resource**)&m_pRoughness, &m_pRoughnessSRV));
-	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/ao.png", (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));
+	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/albedo.png", (ID3D11Resource**)&m_pAlbedo, &m_pAlbedoSRV));
+	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/normal.png", (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
+	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/metallic.png", (ID3D11Resource**)&m_pMetallic, &m_pMetallicSRV));
+	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/roughness.png", (ID3D11Resource**)&m_pRoughness, &m_pRoughnessSRV));
+	//V_RETURN(DirectX::CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/ao.png", (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));
 
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/albedo.dds",0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE,0,0,true,(ID3D11Resource**)&m_pAlbedo, &m_pAlbedoSRV));
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/normal.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/metallic.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pMetallic, &m_pMetallicSRV));
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/roughness.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pRoughness, &m_pRoughnessSRV));
-	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"D:/SelfWorkSpace/directx11demo/ForwardPlus11/media/hdr/ao.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/albedo.dds",0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE,0,0,true,(ID3D11Resource**)&m_pAlbedo, &m_pAlbedoSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/normal.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pNormal, &m_pNormalSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/metallic.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pMetallic, &m_pMetallicSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/roughness.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pRoughness, &m_pRoughnessSRV));
+	V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, L"../media/hdr/ao.dds", 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&m_pAmbientOverlap, &m_pAmbientOverlapSRV));
 
 	return hr;
 }
