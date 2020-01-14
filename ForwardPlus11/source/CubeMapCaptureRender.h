@@ -6,7 +6,7 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
-
+#define EXPORT_CUBEMAP
 
 namespace ForwardRender
 {
@@ -71,6 +71,12 @@ namespace ForwardRender
 			
 		}
 
+		ID3D11Texture2D* GetIrradianceTexture()
+		{
+			return g_pIrradianceCubeTexture;
+		}
+
+
 		ID3D11ShaderResourceView* GetIrradianceSRV()
 		{
 			return g_pIrradianceSRV;
@@ -90,6 +96,35 @@ namespace ForwardRender
 		{
 			return g_pIceCubemapRTVs[i];
 		}
+
+#ifdef EXPORT_CUBEMAP
+
+		ID3D11RenderTargetView* GetPrefilter8x8(int i)
+		{
+			return RenderTargetArray8x8[i];
+		}
+
+		ID3D11RenderTargetView* GetPrefilter16x16(int i)
+		{
+			return RenderTargetArray16x16[i];
+		}
+
+		ID3D11RenderTargetView* GetPrefilter32x32(int i)
+		{
+			return RenderTargetArray32x32[i];
+		}
+
+		ID3D11RenderTargetView* GetPrefilter64x64(int i)
+		{
+			return RenderTargetArray64x64[i];
+		}
+
+		ID3D11RenderTargetView* GetPrefilter128x128(int i)
+		{
+			return RenderTargetArray128x128[i];
+		}
+#endif
+
 
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
@@ -197,12 +232,27 @@ namespace ForwardRender
 		ID3D11ShaderResourceView* g_pIrradianceSRV = nullptr;
 
 		ID3D11Texture2D* g_pPrefilterCubeTexture = nullptr;
+		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget8x8;
+		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget16x16;
+		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget32x32;
+		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget64x64;
+		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget128x128;
+		ID3D11ShaderResourceView* g_pPrefilterSRV = nullptr;
+
+
+#ifdef EXPORT_CUBEMAP
+		std::vector<ID3D11Texture2D*> TextureArray8x8;
+		std::vector<ID3D11Texture2D*> TextureArray16x16;
+		std::vector<ID3D11Texture2D*> TextureArray32x32;
+		std::vector<ID3D11Texture2D*> TextureArray64x64;
+		std::vector<ID3D11Texture2D*> TextureArray128x128;
+
 		std::vector<ID3D11RenderTargetView*> RenderTargetArray8x8;
 		std::vector<ID3D11RenderTargetView*> RenderTargetArray16x16;
 		std::vector<ID3D11RenderTargetView*> RenderTargetArray32x32;
 		std::vector<ID3D11RenderTargetView*> RenderTargetArray64x64;
 		std::vector<ID3D11RenderTargetView*> RenderTargetArray128x128;
-		ID3D11ShaderResourceView* g_pPrefilterSRV = nullptr;
+#endif
 
 
 		bool m_bShaderInited;

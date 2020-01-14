@@ -1249,13 +1249,44 @@ void SaveCubeMap()
 	ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
 	ID3D11Resource* tempTexture2D = nullptr;
-	for (int i =0;i<6;++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		wchar_t  strPath[128];
-		swprintf(strPath, 128, L"icecube_%d.jpg", 5);
-		s_CubeMapCaptureRender.GetIceCubeMapRTV(5)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, static_cast<ID3D11Texture2D*>(tempTexture2D), false, strPath);
+		
+		swprintf(strPath, 128, L"icecube_%d_8x8.jpg", i);
+		s_CubeMapCaptureRender.GetPrefilter8x8(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+
+		swprintf(strPath, 128, L"icecube_%d_16x16.jpg", i);
+		s_CubeMapCaptureRender.GetPrefilter16x16(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+
+		swprintf(strPath, 128, L"icecube_%d_32x32.jpg", i);
+		s_CubeMapCaptureRender.GetPrefilter32x32(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+
+		swprintf(strPath, 128, L"icecube_%d_64x64.jpg", i);
+		s_CubeMapCaptureRender.GetPrefilter64x64(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+
+		swprintf(strPath, 128, L"icecube_%d_128x128.jpg", i);
+		s_CubeMapCaptureRender.GetPrefilter128x128(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
 		SAFE_RELEASE(tempTexture2D);
 	}
+
+	//ID3D11Resource* tempTexture2D = nullptr;
+	//s_CubeMapCaptureRender.GetIrradianceSRV()->GetResource(&tempTexture2D);
+	//DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, true, L"Irradiance.dds");
+	//SAFE_RELEASE(tempTexture2D);
+
+	//s_CubeMapCaptureRender.GetPrefilterSRV()->GetResource(&tempTexture2D);
+	//DXUTSaveTextureToFile(pD3dDeviceContext, static_cast<ID3D11Texture2D*>(tempTexture2D), true, L"Prefilter.dds");
+	//SAFE_RELEASE(tempTexture2D);
+
 	
 }
