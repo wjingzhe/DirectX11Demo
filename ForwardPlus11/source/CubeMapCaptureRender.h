@@ -148,6 +148,7 @@ namespace ForwardRender
 		DirectX::XMMATRIX m_ViewMatrix[6];
 		CFirstPersonCamera g_TempCubeMapCamera;
 
+		D3D11_VIEWPORT g_Viewport8;
 		D3D11_VIEWPORT g_Viewport16;
 		D3D11_VIEWPORT g_Viewport32;
 		D3D11_VIEWPORT g_Viewport64;
@@ -155,15 +156,6 @@ namespace ForwardRender
 		D3D11_VIEWPORT g_Viewport512;
 
 
-		std::vector<ID3D11Texture2D*> TextureArray16x16;
-		std::vector<ID3D11Texture2D*> TextureArray32x32;
-		std::vector<ID3D11Texture2D*> TextureArray64x64;
-		std::vector<ID3D11Texture2D*> TextureArray128x128;
-
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray16x16;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray32x32;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray64x64;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray128x128;
 
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
@@ -171,6 +163,26 @@ namespace ForwardRender
 		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
 
 		// Depth stencil data
+		ID3D11Texture2D* g_pDepthStencilTexture8x8 = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView8x8 = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV8x8 = nullptr;
+
+		ID3D11Texture2D* g_pDepthStencilTexture16x16 = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView16x16 = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV16x16 = nullptr;
+
+		ID3D11Texture2D* g_pDepthStencilTexture32x32 = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView32x32 = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV32x32 = nullptr;
+
+		ID3D11Texture2D* g_pDepthStencilTexture64x64 = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView64x64 = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV64x64 = nullptr;
+
+		ID3D11Texture2D* g_pDepthStencilTexture128x128 = nullptr;
+		ID3D11DepthStencilView* g_pDepthStencilView128x128 = nullptr;
+		ID3D11ShaderResourceView* g_pDepthStencilSRV128x128 = nullptr;
+
 		ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
 		ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
 		ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
@@ -185,7 +197,11 @@ namespace ForwardRender
 		ID3D11ShaderResourceView* g_pIrradianceSRV = nullptr;
 
 		ID3D11Texture2D* g_pPrefilterCubeTexture = nullptr;
-		ID3D11RenderTargetView* g_pPrefilterCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray8x8;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray16x16;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray32x32;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray64x64;
+		std::vector<ID3D11RenderTargetView*> RenderTargetArray128x128;
 		ID3D11ShaderResourceView* g_pPrefilterSRV = nullptr;
 
 

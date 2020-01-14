@@ -66,7 +66,7 @@ void ForwardRender::PbrRender::OnReleasingSwapChain(void)
 
 void ForwardRender::PbrRender::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 {
-
+	this->ReleaseSwapChainAssociatedCOM();
 }
 
 void ForwardRender::PbrRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView, 
