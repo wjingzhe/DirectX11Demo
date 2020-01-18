@@ -1249,6 +1249,8 @@ void SaveCubeMap()
 	ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
 	ID3D11Resource* tempTexture2D = nullptr;
+
+#ifdef EXPORT_CUBEMAP
 	for (int i = 0; i < 6; ++i)
 	{
 		wchar_t  strPath[128];
@@ -1278,6 +1280,7 @@ void SaveCubeMap()
 		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
 		SAFE_RELEASE(tempTexture2D);
 	}
+#endif
 
 	//ID3D11Resource* tempTexture2D = nullptr;
 	//s_CubeMapCaptureRender.GetIrradianceSRV()->GetResource(&tempTexture2D);

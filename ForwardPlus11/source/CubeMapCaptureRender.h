@@ -6,7 +6,7 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
-#define EXPORT_CUBEMAP
+//#define EXPORT_CUBEMAP
 
 namespace ForwardRender
 {

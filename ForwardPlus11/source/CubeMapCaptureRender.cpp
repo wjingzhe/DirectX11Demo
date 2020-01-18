@@ -1437,7 +1437,7 @@ namespace ForwardRender
 		}
 		SAFE_RELEASE(g_pPrefilterSRV);
 
-
+#ifdef EXPORT_CUBEMAP
 		for (int i = 0; i < 6; ++i)
 		{
 			SAFE_RELEASE(TextureArray8x8[i]);
@@ -1452,7 +1452,7 @@ namespace ForwardRender
 			SAFE_RELEASE(RenderTargetArray64x64[i]);
 			SAFE_RELEASE(RenderTargetArray128x128[i]);
 		}
-
+#endif
 	}
 
 	HRESULT CubeMapCaptureRender::CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
