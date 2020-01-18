@@ -14,6 +14,7 @@ ForwardRender::PbrRender::PbrRender()
 {
 	m_MeshData = GeometryHelper::CreateSphere(1.0, 500.0f, 500.0f);
 	//m_MeshData = GeometryHelper::CreateScreenQuad();
+	//m_MeshData = GeometryHelper::CreateBox(2,2,2);
 }
 
 ForwardRender::PbrRender::~PbrRender()
@@ -136,10 +137,10 @@ void ForwardRender::PbrRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceC
 			XMFLOAT3(10.0f, -10.0f, 10.0f),
 		};
 		XMFLOAT3 lightColors[] = {
-			XMFLOAT3(255.0f, 255.0f, 255.0f),
-			XMFLOAT3(255.0f, 255.0f, 255.0f),
-			XMFLOAT3(255.0f, 255.0f, 255.0f),
-			XMFLOAT3(255.0f, 255.0f, 255.0f),
+			XMFLOAT3(300.0f, 300.0f, 300.0f),
+			XMFLOAT3(300.0f, 300.0f, 300.0f),
+			XMFLOAT3(300.0f, 300.0f, 300.0f),
+			XMFLOAT3(300.0f, 300.0f, 300.0f),
 		};
 
 

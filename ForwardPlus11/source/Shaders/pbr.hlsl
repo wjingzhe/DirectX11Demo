@@ -39,7 +39,7 @@ VS_OUTPUT PbrVS(VS_INPUT vin)
 	VS_OUTPUT vout;
 	//vout.PositionH = float4(vin.PositionL, 1.0f);
 	vout.PositionH = mul(float4(vin.PositionL, 1.0f), g_mWolrdViewProjection);
-	vout.PositionW = mul(float4(vin.PositionL, 1.0f), g_mWolrd).xyz;
+	vout.PositionW = mul(vin.PositionL, (float3x3)g_mWolrd).xyz;
 	vout.TextureUV = vin.TextureUV.xy;
 	//vout.TextureUV = float2(vin.TextureUV.x, 1.0f - vin.TextureUV.y);
 	vout.Normal = mul(vin.NormalL, (float3x3)g_mWolrd);
@@ -157,7 +157,7 @@ float4 PbrPS(VS_OUTPUT pin) :SV_TARGET
 	// input lighting data
 	float3 N = GetNormalFromMap(pin);
 	float3 V = normalize(g_vCameraPos.xyz - pin.PositionW.xyz);
-	float3 R = reflect(-V, N);
+	float3 R = normalize(reflect(-V, N));
 
 	// calculate reflectance at normal incidence;if dia-electric(like plastic) use F0
 	// of 0.04 and if it's a metal,use the albedo color as F0(metallic workflow)
@@ -227,7 +227,7 @@ float4 PbrPS(VS_OUTPUT pin) :SV_TARGET
 	float3 color = ambient + Lo;
 
 	//HDR toneMapping
-	//color = color / (color + float3(1.0f, 1.0f, 1.0f));
+	color = color / (color + float3(1.0f, 1.0f, 1.0f));
 
 	//gamma correct
 	color = pow(color, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f));

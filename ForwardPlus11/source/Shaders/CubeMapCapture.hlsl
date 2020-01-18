@@ -63,5 +63,6 @@ float4 CubeMapCapturePS(VS_OUTPUT pin):SV_TARGET
 	float2 uv = SampleSphericalMap(normalize(pin.PositionW));
 	//float2 uv2 = float2(pin.PositionH.x / g_ScreenWidth, pin.PositionH.y / g_ScreenHeight);
 	float3 color = HdrMap.Sample(g_Sampler, uv).xyz;
+	//color = pow(color, float3(2.2f, 2.2f, 2.2f));
 	return float4(color,1.0f);
 }

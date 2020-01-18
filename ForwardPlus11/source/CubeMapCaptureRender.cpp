@@ -263,8 +263,8 @@ namespace ForwardRender
 			SRVDesc.Texture2D.MostDetailedMip = 0;
 			V_RETURN(pD3dDevice->CreateShaderResourceView(m_pHdrTexture, &SRVDesc, &m_pHdrTextureSRV));
 
-			//ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
-			//pD3dDeviceContext->GenerateMips(m_pHdrTextureSRV);
+			ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+			pD3dDeviceContext->GenerateMips(m_pHdrTextureSRV);
 
 		}
 
@@ -273,7 +273,7 @@ namespace ForwardRender
 			D3D11_TEXTURE2D_DESC texDesc;
 			texDesc.Width = CUBEMAP_SIZE;
 			texDesc.Height = CUBEMAP_SIZE;
-			texDesc.MipLevels = 1;
+			texDesc.MipLevels = 8;
 			texDesc.ArraySize = 6;//arraysize
 			texDesc.SampleDesc.Count = 1;
 			texDesc.SampleDesc.Quality = 0;
@@ -670,7 +670,7 @@ namespace ForwardRender
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 		}
-		
+		pD3dImmediateContext->GenerateMips(g_pEnvCubeMapSRV);
 
 
 		//»¹Ô­×´Ì¬
