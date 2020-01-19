@@ -277,7 +277,7 @@ namespace ForwardRender
 			texDesc.ArraySize = 6;//arraysize
 			texDesc.SampleDesc.Count = 1;
 			texDesc.SampleDesc.Quality = 0;
-			texDesc.Format = pBackBufferSurfaceDesc->Format;
+			texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			texDesc.Usage = D3D11_USAGE_DEFAULT;
 			texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 			texDesc.CPUAccessFlags = 0;
@@ -287,7 +287,7 @@ namespace ForwardRender
 
 			D3D11_TEXTURE2D_DESC IrradianceCubeTextureDesc;
 			memcpy(&IrradianceCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			IrradianceCubeTextureDesc.Width = 32;
 			IrradianceCubeTextureDesc.Height = 32;
 			IrradianceCubeTextureDesc.MipLevels = 1;
@@ -295,7 +295,7 @@ namespace ForwardRender
 
 			D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
 			memcpy(&PrefilterCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
-			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			PrefilterCubeTextureDesc.Width = 128;
 			PrefilterCubeTextureDesc.Height = 128;
 			PrefilterCubeTextureDesc.MipLevels = 8;
@@ -312,7 +312,7 @@ namespace ForwardRender
 				temp.ArraySize = 1;
 				temp.SampleDesc.Count = 1;
 				temp.SampleDesc.Quality = 0;
-				temp.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				temp.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 				temp.Usage = D3D11_USAGE_DEFAULT;
 				temp.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 				temp.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
@@ -394,14 +394,14 @@ namespace ForwardRender
 
 			D3D11_RENDER_TARGET_VIEW_DESC IrradianceRTVDesc;
 			ZeroMemory(&IrradianceRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-			IrradianceRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			IrradianceRTVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			IrradianceRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
 			IrradianceRTVDesc.Texture2DArray.ArraySize = 1;
 			IrradianceRTVDesc.Texture2D.MipSlice = 0;
 
 			D3D11_RENDER_TARGET_VIEW_DESC PrefilterRTVDesc;
 			ZeroMemory(&PrefilterRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-			PrefilterRTVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			PrefilterRTVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
 			PrefilterRTVDesc.Texture2DArray.ArraySize = 1;
 			PrefilterRTVDesc.Texture2D.MipSlice = 0;// D3D11_RESOURCE_MISC_GENERATE_MIPS;;
@@ -451,7 +451,7 @@ namespace ForwardRender
 
 
 			D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
-			CubeDesc.Format = pBackBufferSurfaceDesc->Format;;
+			CubeDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 			CubeDesc.TextureCube.MipLevels = texDesc.MipLevels;
 			CubeDesc.TextureCube.MostDetailedMip = 0;
@@ -460,7 +460,7 @@ namespace ForwardRender
 
 			{
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
-				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				CubeDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 				CubeDesc.TextureCube.MipLevels = 1;
 				CubeDesc.TextureCube.MostDetailedMip = 0;
@@ -471,7 +471,7 @@ namespace ForwardRender
 
 			{
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
-				CubeDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+				CubeDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 				CubeDesc.TextureCube.MipLevels = 8;
 				CubeDesc.TextureCube.MostDetailedMip = 0;

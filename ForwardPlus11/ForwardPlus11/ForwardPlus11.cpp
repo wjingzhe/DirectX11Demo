@@ -546,7 +546,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		//g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
-		g_Camera.SetScalers(0.005f, 0.001f*g_fMaxDistance);
+		g_Camera.SetScalers(0.01f, 0.0005f*g_fMaxDistance);
 
 	//	s_DeferredVoxelCutoutRender.SetVoxelPosition(vLookAtPos);
 

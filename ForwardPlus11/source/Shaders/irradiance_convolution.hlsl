@@ -56,8 +56,8 @@ float4 IrradianceConvolutionPS(VS_OUTPUT pin) :SV_TARGET
 
 	// tangent space calculation from origin point
 	float3 up = float3(0.0f, 1.0f, 0.0f);//float3(0.0f,1.0f,0.0f);// g_Up;
-	float3 right = -cross(up, N);
-	up = -cross(N, right);
+	float3 right = cross(up, N);
+	up = cross(N, right);
 
 	float sampleDelta = 0.025f;
 	float nrSamples = 0.0f;
