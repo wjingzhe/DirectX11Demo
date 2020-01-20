@@ -141,7 +141,8 @@ float4 CubeMapPrefilterPS(VS_OUTPUT pin) :SV_TARGET
 
 			float mipLevel = g_roughness <= 1E-5 ? 0.0f : 0.5*log2(saSample / saTexel);
 
-			prefilteredColor += gCubeMap.SampleLevel(g_Sampler, L, mipLevel).rgb*NdotL;
+			//prefilteredColor += pow(gCubeMap.SampleLevel(g_Sampler, L, mipLevel).rgb, float3(2.2f,2.2f,2.2f)).rgb*NdotL;
+			prefilteredColor += gCubeMap.SampleLevel(g_Sampler, L, mipLevel).rgb.rgb*NdotL;
 			totalWeight += NdotL;
 		}
 
@@ -151,6 +152,7 @@ float4 CubeMapPrefilterPS(VS_OUTPUT pin) :SV_TARGET
 
 	prefilteredColor = prefilteredColor / totalWeight;
 
+	//prefilteredColor = pow(prefilteredColor, float3(2.2f,2.2f,2.2f));
 
 	return float4(prefilteredColor,1.0f);
 }

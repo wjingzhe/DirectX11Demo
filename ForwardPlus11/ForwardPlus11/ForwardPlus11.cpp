@@ -1255,6 +1255,11 @@ void SaveCubeMap()
 	{
 		wchar_t  strPath[128];
 		
+		swprintf(strPath, 128, L"irradiane_%d_32x32.jpg", i);
+		s_CubeMapCaptureRender.GetIrradiance32x32(i)->GetResource(&tempTexture2D);
+		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
+		SAFE_RELEASE(tempTexture2D);
+
 		swprintf(strPath, 128, L"icecube_%d_8x8.jpg", i);
 		s_CubeMapCaptureRender.GetPrefilter8x8(i)->GetResource(&tempTexture2D);
 		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);

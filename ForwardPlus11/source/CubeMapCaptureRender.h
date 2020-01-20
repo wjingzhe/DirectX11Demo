@@ -99,6 +99,11 @@ namespace ForwardRender
 
 #ifdef EXPORT_CUBEMAP
 
+		ID3D11RenderTargetView* GetIrradiance32x32(int i)
+		{
+			return IrradianceRenderTarget32x32[i];
+		}
+
 		ID3D11RenderTargetView* GetPrefilter8x8(int i)
 		{
 			return RenderTargetArray8x8[i];
@@ -229,6 +234,10 @@ namespace ForwardRender
 
 		ID3D11Texture2D* g_pIrradianceCubeTexture = nullptr;
 		ID3D11RenderTargetView* g_pIrradianceCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
+#ifdef EXPORT_CUBEMAP
+		std::vector<ID3D11Texture2D*> IrradianceTextureArray32x32;
+		std::vector<ID3D11RenderTargetView*> IrradianceRenderTarget32x32;
+#endif
 		ID3D11ShaderResourceView* g_pIrradianceSRV = nullptr;
 
 		ID3D11Texture2D* g_pPrefilterCubeTexture = nullptr;

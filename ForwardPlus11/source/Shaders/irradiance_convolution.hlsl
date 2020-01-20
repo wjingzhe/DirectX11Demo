@@ -71,6 +71,7 @@ float4 IrradianceConvolutionPS(VS_OUTPUT pin) :SV_TARGET
 			float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N;
 			//return float4(sampleVec, 1.0f);
 			//float3 temp = gCubeMap.Sample(g_Sampler, sampleVec).rgb;
+			//irradiance += pow(gCubeMap.Sample(g_Sampler, sampleVec).rgb, float3(2.2f, 2.2f, 2.2f)).rgb * cos(theta) * sin(theta);
 			irradiance += gCubeMap.Sample(g_Sampler, sampleVec).rgb * cos(theta) * sin(theta);
 			nrSamples++;
 		}
