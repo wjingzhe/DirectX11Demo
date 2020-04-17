@@ -75,6 +75,15 @@ namespace PostProcess
 			m_pSrcTextureSRV->AddRef();
 		}
 
+		void SetSize_ConstantBufferPerObject(UINT size)
+		{
+			m_uSizeConstantBufferPerObject = size;
+		}
+
+		void SetSize_ConstantBufferPerFrame(UINT size)
+		{
+			m_uSizeConstantBufferPerFrame = size;
+		}
 
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);

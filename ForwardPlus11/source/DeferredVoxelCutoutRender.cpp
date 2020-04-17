@@ -2,17 +2,19 @@
 using namespace DirectX;
 
 PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
-	:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr),
-	m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNormalAndTexturePS(nullptr),
-	m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false),
-	m_pRasterizerState(nullptr), m_pDepthLessAndStencilOnlyOneTime(nullptr),
-	m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
+	:BasePostProcessRender(),
+	m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pShaderInputLayout(nullptr),
+	m_pShaderVS(nullptr), m_pShaderPS(nullptr),m_pDepthLessAndStencilOnlyOneTime(nullptr),
 	m_VoxelCenterAndRadius(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
-	m_pSamAnisotropic(nullptr),
 	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
 	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.0f)
 {
+
+	SetSize_ConstantBufferPerObject(sizeof(DeferredVoxelCutoutRender::CB_PER_OBJECT));
+	SetSize_ConstantBufferPerFrame(sizeof(DeferredVoxelCutoutRender::CB_PER_FRAME));
+
+
 	GenerateSphereMeshData(130.0f, 200.0f, 300.0f, 100.0f);
 }
 
@@ -40,9 +42,9 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 {
 	if (!m_bShaderInited)
 	{
-		SAFE_RELEASE(m_pPosAndNormalAndTextureInputLayout);
-		SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-		SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
+		SAFE_RELEASE(m_pShaderInputLayout);
+		SAFE_RELEASE(m_pShaderVS);
+		SAFE_RELEASE(m_pShaderPS);
 
 		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
@@ -53,12 +55,12 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 		};
 
 		//Add vertex shader
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTextureVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
-			L"vs_5_0", L"DeferVoxelCutoutVS", L"DeferredVoxelCutout.hlsl", 0, nullptr, &m_pPosAndNormalAndTextureInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
+			L"vs_5_0", L"DeferVoxelCutoutVS", L"DeferredVoxelCutout.hlsl", 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
 		//Add pixel shader
 
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 			L"ps_5_0", L"DeferVoxelCutoutPS", L"DeferredVoxelCutout.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
 		m_bShaderInited = true;
@@ -69,45 +71,9 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 
 }
 
-HRESULT PostProcess::DeferredVoxelCutoutRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
+HRESULT PostProcess::DeferredVoxelCutoutRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
 {
 	HRESULT hr;
-	D3D11_SUBRESOURCE_DATA InitData;
-
-	//Create index buffer
-	D3D11_BUFFER_DESC indexBufferDesc;
-	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
-	indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.ByteWidth = sizeof(GeometryHelper::uint32)*m_MeshData.Indices32.size();
-	InitData.pSysMem = &m_MeshData.Indices32[0];
-	V_RETURN(pD3dDevice->CreateBuffer(&indexBufferDesc, &InitData, &m_pMeshIB));
-
-
-	//Create vertex buffer
-	D3D11_BUFFER_DESC vertexBufferDesc;
-	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-	vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.ByteWidth = sizeof(GeometryHelper::Vertex)*m_MeshData.Vertices.size();
-	InitData.pSysMem = &m_MeshData.Vertices[0];
-	V_RETURN(pD3dDevice->CreateBuffer(&vertexBufferDesc, &InitData, &m_pMeshVB));
-
-
-	//  Create constant buffers
-	D3D11_BUFFER_DESC ConstantBufferDesc;
-	ZeroMemory(&ConstantBufferDesc, sizeof(ConstantBufferDesc));
-	ConstantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	ConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_OBJECT);
-	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerObject));
-
-	ConstantBufferDesc.ByteWidth = sizeof(CB_PER_FRAME);
-	V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerFrame));
-
-
 
 	//Create DepthStencilState
 	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
@@ -128,49 +94,15 @@ HRESULT PostProcess::DeferredVoxelCutoutRender::OnD3DDeviceCreated(ID3D11Device 
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthLessAndStencilOnlyOneTime));
 
 
-	D3D11_RASTERIZER_DESC RasterizerDesc;
-	RasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	RasterizerDesc.CullMode = D3D11_CULL_NONE;
-	RasterizerDesc.FrontCounterClockwise = FALSE;
-	RasterizerDesc.DepthBias = 0.0f;
-	RasterizerDesc.DepthBiasClamp = 0.0f;
-	RasterizerDesc.SlopeScaledDepthBias = 0.0f;
-	RasterizerDesc.DepthClipEnable = TRUE;
-	RasterizerDesc.ScissorEnable = FALSE;
-	RasterizerDesc.MultisampleEnable = TRUE;
-	RasterizerDesc.AntialiasedLineEnable = FALSE;
-	V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &m_pRasterizerState));
-
-	//Create state objects
-	D3D11_SAMPLER_DESC SamplerDesc;
-	ZeroMemory(&SamplerDesc, sizeof(SamplerDesc));
-	SamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	SamplerDesc.AddressU = SamplerDesc.AddressV = SamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	SamplerDesc.MaxAnisotropy = 16;
-	SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-	V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamAnisotropic));
-	m_pSamAnisotropic->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Anisotropic"), "Anisotropic");
-
-
 	return hr;
 }
 
-void PostProcess::DeferredVoxelCutoutRender::OnD3D11DestroyDevice(void * pUserContext)
-{
-	ReleaseAllD3D11COM();
-}
-
-void PostProcess::DeferredVoxelCutoutRender::OnReleasingSwapChain(void)
-{
-	ReleaseSwapChainAssociatedCOM();
-	return;
-}
 
 HRESULT PostProcess::DeferredVoxelCutoutRender::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 {
 	HRESULT hr;
-	ReleaseSwapChainAssociatedCOM();
+
+	BasePostProcessRender::OnResizedSwapChain(pD3dDevice, pBackBufferSurfaceDesc);
 
 	hr = CreateTempShaderRenderTarget(pD3dDevice, pBackBufferSurfaceDesc);
 
@@ -284,21 +216,21 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 
 	pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pD3dImmediateContext->IASetIndexBuffer(m_pMeshIB, DXGI_FORMAT_R32_UINT, 0);
-	pD3dImmediateContext->IASetInputLayout(m_pPosAndNormalAndTextureInputLayout);
+	pD3dImmediateContext->IASetInputLayout(m_pShaderInputLayout);
 	UINT uStride = sizeof(GeometryHelper::Vertex);
 	UINT uOffset = 0;
 	pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-	pD3dImmediateContext->VSSetShader(m_pScenePosAndNormalAndTextureVS, nullptr, 0);
+	pD3dImmediateContext->VSSetShader(m_pShaderVS, nullptr, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-	pD3dImmediateContext->PSSetShader(m_pScenePosAndNormalAndTexturePS, nullptr, 0);
+	pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 	pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);
 	//pD3dImmediateContext->PSSetShaderResources(1, 1, &m_pDecalTextureSRV);
-	pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamAnisotropic);
+	pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
 
 
 	pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
@@ -313,35 +245,11 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	SAFE_RELEASE(pPreDepthStencilStateStored11);
 }
 
-void PostProcess::DeferredVoxelCutoutRender::ReleaseAllD3D11COM(void)
-{
-	ReleaseSwapChainAssociatedCOM();
-	ReleaseOneTimeInitedCOM();
-}
-
-void PostProcess::DeferredVoxelCutoutRender::ReleaseSwapChainAssociatedCOM(void)
-{
-}
 
 void PostProcess::DeferredVoxelCutoutRender::ReleaseOneTimeInitedCOM(void)
 {
-	SAFE_RELEASE(m_pPosAndNormalAndTextureInputLayout);
-
-	SAFE_RELEASE(m_pMeshIB);
-	SAFE_RELEASE(m_pMeshVB);
-
-	SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-	SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
-
-	SAFE_RELEASE(m_pConstantBufferPerObject);
-	SAFE_RELEASE(m_pConstantBufferPerFrame);
-
+	BasePostProcessRender::ReleaseOneTimeInitedCOM();
 	SAFE_RELEASE(m_pDepthLessAndStencilOnlyOneTime);
-	SAFE_RELEASE(m_pRasterizerState);
-
-	//SAFE_RELEASE(m_pDecalTextureSRV);
-	//SamplerState
-	SAFE_RELEASE(m_pSamAnisotropic);
 }
 
 HRESULT PostProcess::DeferredVoxelCutoutRender::CreateTempShaderRenderTarget(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)

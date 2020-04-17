@@ -5,6 +5,8 @@
 #include "../../DXUT/Core/DXUT.h"
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
+#include "BasePostProcessRender.h"
+
 
 //
 // 将体素内的2D像素绘制为标记色（vMaskedColor4默认为黑色），其余像素绘制为光颜色vCommonColor4
@@ -17,7 +19,7 @@ namespace PostProcess
 	//--------------------------------
 
 
-	class DeferredVoxelCutoutRender
+	class DeferredVoxelCutoutRender :public BasePostProcessRender
 	{
 #pragma pack(push,1)
 		struct CB_PER_OBJECT
@@ -52,13 +54,9 @@ namespace PostProcess
 		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 
 		//Create MeshData and some other shader resouces
-		HRESULT OnD3DDeviceCreated(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc,
-			void* pUserContext);
-
-		void OnD3D11DestroyDevice(void* pUserContext);
+		virtual HRESULT CreateOtherRenderStateResources(ID3D11Device* pD3dDevice) override;
 		
-		//when some sln or window size changed
-		void OnReleasingSwapChain(void);
+
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
 
 
@@ -70,9 +68,9 @@ namespace PostProcess
 		ID3D11Buffer* m_pMeshIB;
 		ID3D11Buffer* m_pMeshVB;
 
-		ID3D11InputLayout* m_pPosAndNormalAndTextureInputLayout;
-		ID3D11VertexShader* m_pScenePosAndNormalAndTextureVS;
-		ID3D11PixelShader* m_pScenePosAndNormalAndTexturePS;
+		ID3D11InputLayout* m_pShaderInputLayout;
+		ID3D11VertexShader* m_pShaderVS;
+		ID3D11PixelShader* m_pShaderPS;
 
 		void SetVoxelPosition(const DirectX::XMVECTOR& position)
 		{
@@ -90,9 +88,7 @@ namespace PostProcess
 		}
 
 	protected:
-		void ReleaseAllD3D11COM(void);
-		void ReleaseSwapChainAssociatedCOM(void);
-		void ReleaseOneTimeInitedCOM(void);
+		virtual void ReleaseOneTimeInitedCOM(void) override;
 
 		HRESULT CreateTempShaderRenderTarget(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc);
 
@@ -102,22 +98,14 @@ namespace PostProcess
 		void GenerateSphereMeshData(float centerX = 1.0f, float centerY = 1.0f, float centerZ = 1.0f, float radius = 1.0f, unsigned int numSubdivision = 6);
 
 	private:
-		DirectX::XMFLOAT4 m_Position4;
 
 		DirectX::XMFLOAT4 m_VoxelCenterAndRadius;
 
 
 		ID3D11DepthStencilState* m_pDepthLessAndStencilOnlyOneTime;
-		ID3D11RasterizerState* m_pRasterizerState;
-		//SamplerState
-		ID3D11SamplerState* m_pSamAnisotropic;
 
-		ID3D11Buffer* m_pConstantBufferPerObject;
-		ID3D11Buffer* m_pConstantBufferPerFrame;
 
 		DirectX::XMFLOAT4 m_CommonColor;
 		DirectX::XMFLOAT4 m_OverlapMaskedColor;
-
-		bool m_bShaderInited;
 	};
 }
