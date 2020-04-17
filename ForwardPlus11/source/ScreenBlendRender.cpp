@@ -63,9 +63,9 @@ void PostProcess::ScreenBlendRender::OnRender(ID3D11Device * pD3dDevice, ID3D11D
 	UINT uOffset = 0;
 	pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-	pD3dImmediateContext->VSSetShader(m_pShaderVS, nullptr, 0);
+	pD3dImmediateContext->VSSetShader(m_pShaderVS_Pos_Normal_UV, nullptr, 0);
 
-	pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
+	pD3dImmediateContext->PSSetShader(m_pShaderPS_Pos_Normal_UV, nullptr, 0);
 	pD3dImmediateContext->PSSetShaderResources(0, 1, &m_pBlendTextureSRV);
 	pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
 

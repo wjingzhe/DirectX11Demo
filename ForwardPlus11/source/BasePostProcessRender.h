@@ -106,8 +106,8 @@ namespace PostProcess
 		ID3D11Buffer* m_pMeshVB;
 
 		ID3D11InputLayout* m_pShaderInputLayout;
-		ID3D11VertexShader* m_pShaderVS;
-		ID3D11PixelShader* m_pShaderPS;
+		ID3D11VertexShader* m_pShaderVS_Pos_Normal_UV;
+		ID3D11PixelShader* m_pShaderPS_Pos_Normal_UV;
 
 		ID3D11DepthStencilState* m_pDepthStencilState;
 		ID3D11RasterizerState* m_pRasterizerState;

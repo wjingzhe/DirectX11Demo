@@ -4,7 +4,7 @@ using namespace DirectX;
 PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	:BasePostProcessRender(),
 	m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pShaderInputLayout(nullptr),
-	m_pShaderVS(nullptr), m_pShaderPS(nullptr),m_pDepthLessAndStencilOnlyOneTime(nullptr),
+	m_pShaderVS_Pos_Normal_UV(nullptr), m_pShaderPS_Pos_Normal_UV(nullptr),m_pDepthLessAndStencilOnlyOneTime(nullptr),
 	m_VoxelCenterAndRadius(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
 	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
@@ -43,8 +43,8 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 	if (!m_bShaderInited)
 	{
 		SAFE_RELEASE(m_pShaderInputLayout);
-		SAFE_RELEASE(m_pShaderVS);
-		SAFE_RELEASE(m_pShaderPS);
+		SAFE_RELEASE(m_pShaderVS_Pos_Normal_UV);
+		SAFE_RELEASE(m_pShaderPS_Pos_Normal_UV);
 
 		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
@@ -55,12 +55,12 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 		};
 
 		//Add vertex shader
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
 			L"vs_5_0", L"DeferVoxelCutoutVS", L"DeferredVoxelCutout.hlsl", 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
 		//Add pixel shader
 
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 			L"ps_5_0", L"DeferVoxelCutoutPS", L"DeferredVoxelCutout.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
 		m_bShaderInited = true;
@@ -221,11 +221,11 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	UINT uOffset = 0;
 	pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-	pD3dImmediateContext->VSSetShader(m_pShaderVS, nullptr, 0);
+	pD3dImmediateContext->VSSetShader(m_pShaderVS_Pos_Normal_UV, nullptr, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-	pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
+	pD3dImmediateContext->PSSetShader(m_pShaderPS_Pos_Normal_UV, nullptr, 0);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 	pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);

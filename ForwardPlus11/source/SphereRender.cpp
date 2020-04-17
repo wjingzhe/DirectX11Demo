@@ -128,11 +128,11 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 	UINT uOffset = 0;
 	pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-	pD3dImmediateContext->VSSetShader(m_pShaderVS, nullptr, 0);
+	pD3dImmediateContext->VSSetShader(m_pShaderVS_Pos_Normal_UV, nullptr, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-	pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
+	pD3dImmediateContext->PSSetShader(m_pShaderPS_Pos_Normal_UV, nullptr, 0);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 	pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);

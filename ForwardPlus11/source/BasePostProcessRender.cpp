@@ -2,7 +2,7 @@
 
 PostProcess::BasePostProcessRender::BasePostProcessRender()
 	:m_Position4(0.0f, 0.0f, 0.0f, 0.0f),m_pMeshIB(nullptr),m_pMeshVB(nullptr),
-	m_pShaderInputLayout(nullptr),m_pShaderVS(nullptr),m_pShaderPS(nullptr),
+	m_pShaderInputLayout(nullptr),m_pShaderVS_Pos_Normal_UV(nullptr),m_pShaderPS_Pos_Normal_UV(nullptr),
 	m_pDepthStencilState(nullptr), m_pRasterizerState(nullptr), m_pBlendState(nullptr), m_pSamplerState(nullptr),
 	m_pConstantBufferPerObject(nullptr),m_pConstantBufferPerFrame(nullptr),
 	m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),
@@ -82,16 +82,16 @@ void PostProcess::BasePostProcessRender::AddShadersToCache(AMD::ShaderCache * pS
 	if (!m_bShaderInited)
 	{
 		SAFE_RELEASE(m_pShaderInputLayout);
-		SAFE_RELEASE(m_pShaderVS);
-		SAFE_RELEASE(m_pShaderPS);
+		SAFE_RELEASE(m_pShaderVS_Pos_Normal_UV);
+		SAFE_RELEASE(m_pShaderPS_Pos_Normal_UV);
 
 		//Add vertex shader
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
 			L"vs_5_0", pwsNameVS, pwsSourceFileName, 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, size);
 
 		//Add pixel shader
 
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 			L"ps_5_0", pwsNamePS, pwsSourceFileName, 0, nullptr, nullptr, nullptr, 0);
 
 		m_bShaderInited = true;
@@ -223,8 +223,8 @@ void PostProcess::BasePostProcessRender::ReleaseOneTimeInitedCOM(void)
 	SAFE_RELEASE(m_pMeshVB);
 
 	SAFE_RELEASE(m_pShaderInputLayout);
-	SAFE_RELEASE(m_pShaderVS);
-	SAFE_RELEASE(m_pShaderPS);
+	SAFE_RELEASE(m_pShaderVS_Pos_Normal_UV);
+	SAFE_RELEASE(m_pShaderPS_Pos_Normal_UV);
 
 	SAFE_RELEASE(m_pDepthStencilState);
 	SAFE_RELEASE(m_pRasterizerState);
