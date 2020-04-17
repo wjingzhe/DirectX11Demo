@@ -4,14 +4,10 @@ using namespace DirectX;
 namespace PostProcess
 {
 	DeferredDecalRender::DeferredDecalRender()
-		:m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pPosAndNormalAndTextureInputLayout(nullptr),
-		m_pScenePosAndNormalAndTextureVS(nullptr), m_pScenePosAndNormalAndTexturePS(nullptr),
-		m_pConstantBufferPerObject(nullptr), m_pConstantBufferPerFrame(nullptr), m_bShaderInited(false),
-		m_pRasterizerState(nullptr), m_pDecalTextureSRV(nullptr), m_pDepthAlwaysAndStencilOnlyOneTime(nullptr),
-		m_Position4(0.0f, 0.0f, 0.0f, 1.0f),
+		:BasePostProcessRender(),
+		m_pDecalTextureSRV(nullptr), m_pDepthAlwaysAndStencilOnlyOneTime(nullptr),
 		//SamplerState
-		m_pSamAnisotropic(nullptr),
-		m_BoxExtend(100.0f, 100.0f, 100.0f,1.0f)
+		m_pSamAnisotropic(nullptr)
 	{
 	}
 
@@ -29,28 +25,13 @@ namespace PostProcess
 		m_MeshData = GeometryHelper::CreateBox(width, height, depth, numSubdivision);
 	}
 
-	void DeferredDecalRender::CalculateSceneMinMax(GeometryHelper::MeshData &meshData, DirectX::XMVECTOR * pBBoxMinOut, DirectX::XMVECTOR * pBBoxMaxOut)
-	{
-		auto temp = meshData.Vertices[0].Position;
-		*pBBoxMinOut = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
-		*pBBoxMaxOut = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
-
-		for (int i = 1; i < meshData.Vertices.size(); ++i)
-		{
-			auto temp = meshData.Vertices[i].Position;
-			DirectX::XMVECTOR vNew = DirectX::XMVectorSet(temp.x, temp.y, temp.z, 1.0f);
-			*pBBoxMaxOut = XMVectorMax(*pBBoxMaxOut, vNew);
-			*pBBoxMinOut = XMVectorMin(*pBBoxMinOut, vNew);
-		}
-	}
-
 	void DeferredDecalRender::AddShadersToCache(AMD::ShaderCache* pShaderCache)
 	{
 		if (!m_bShaderInited)
 		{
-			SAFE_RELEASE(m_pPosAndNormalAndTextureInputLayout);
-			SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-			SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
+			SAFE_RELEASE(m_pShaderInputLayout);
+			SAFE_RELEASE(m_pShaderVS);
+			SAFE_RELEASE(m_pShaderPS);
 
 
 			const D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -62,12 +43,12 @@ namespace PostProcess
 			};
 
 			//Add vertex shader
-			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTextureVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
-				L"vs_5_0", L"DeferredDecalVS", L"DeferredDecal.hlsl", 0, nullptr, &m_pPosAndNormalAndTextureInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
+				L"vs_5_0", L"DeferredDecalVS", L"DeferredDecal.hlsl", 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
 
 			//Add pixel shader
 
-			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pScenePosAndNormalAndTexturePS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
+			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
 				L"ps_5_0", L"DeferredDecalPS", L"DeferredDecal.hlsl", 0, nullptr, nullptr, nullptr, 0);
 
 			m_bShaderInited = true;
@@ -76,45 +57,12 @@ namespace PostProcess
 
 	}
 
-	HRESULT  DeferredDecalRender::OnD3DDeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext)
+	HRESULT  DeferredDecalRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
 	{
 
 		HRESULT hr;
-		D3D11_SUBRESOURCE_DATA InitData;
-
-		//Create index buffer
-		D3D11_BUFFER_DESC indexBufferDesc;
-		ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
-		indexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		indexBufferDesc.ByteWidth = sizeof(GeometryHelper::uint32)*m_MeshData.Indices32.size();
-		InitData.pSysMem = &m_MeshData.Indices32[0];
-		V_RETURN(pD3dDevice->CreateBuffer(&indexBufferDesc, &InitData, &m_pMeshIB));
-
-
-		//Create vertex buffer
-		D3D11_BUFFER_DESC vertexBufferDesc;
-		ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
-		vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vertexBufferDesc.ByteWidth = sizeof(GeometryHelper::Vertex)*m_MeshData.Vertices.size();
-		InitData.pSysMem = &m_MeshData.Vertices[0];
-		V_RETURN(pD3dDevice->CreateBuffer(&vertexBufferDesc, &InitData, &m_pMeshVB));
-
-
-		//  Create constant buffers
-		D3D11_BUFFER_DESC ConstantBufferDesc;
-		ZeroMemory(&ConstantBufferDesc, sizeof(ConstantBufferDesc));
-		ConstantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-		ConstantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		ConstantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		ConstantBufferDesc.ByteWidth = sizeof(CB_PER_OBJECT);
-		V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerObject));
-
-		ConstantBufferDesc.ByteWidth = sizeof(CB_PER_FRAME);
-		V_RETURN(pD3dDevice->CreateBuffer(&ConstantBufferDesc, nullptr, &m_pConstantBufferPerFrame));
-
+		
+		hr = BasePostProcessRender::CreateOtherRenderStateResources(pD3dDevice);
 
 
 		//Create DepthStencilState
@@ -135,19 +83,6 @@ namespace PostProcess
 		DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 		V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthAlwaysAndStencilOnlyOneTime));
 
-
-		D3D11_RASTERIZER_DESC RasterizerDesc;
-		RasterizerDesc.FillMode = D3D11_FILL_SOLID;
-		RasterizerDesc.CullMode = D3D11_CULL_NONE;
-		RasterizerDesc.FrontCounterClockwise = FALSE;
-		RasterizerDesc.DepthBias = 0.0f;
-		RasterizerDesc.DepthBiasClamp = 0.0f;
-		RasterizerDesc.SlopeScaledDepthBias = 0.0f;
-		RasterizerDesc.DepthClipEnable = TRUE;
-		RasterizerDesc.ScissorEnable = FALSE;
-		RasterizerDesc.MultisampleEnable = TRUE;
-		RasterizerDesc.AntialiasedLineEnable = FALSE;
-		V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &m_pRasterizerState));
 		
 		//Create state objects
 		D3D11_SAMPLER_DESC SamplerDesc;
@@ -164,20 +99,6 @@ namespace PostProcess
 		return hr;
 	}
 
-	void DeferredDecalRender::OnD3D11DestroyDevice(void * pUserContext)
-	{
-		ReleaseAllD3D11COM();
-	}
-
-	void DeferredDecalRender::OnReleasingSwapChain()
-	{
-		return;
-	}
-
-	HRESULT DeferredDecalRender::OnResizedSwapChain(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
-	{
-		return S_OK;
-	}
 
 	void DeferredDecalRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
 		CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView,ID3D11ShaderResourceView* pDepthStencilCopySRV)
@@ -228,7 +149,7 @@ namespace PostProcess
 		pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 		pPerObject->mWorld = XMMatrixTranspose(mWorld);
 		pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
-		pPerObject->vBoxExtend = m_BoxExtend;
+		pPerObject->vBoxCenterAndRadius = m_BoxExtend;
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
@@ -278,16 +199,16 @@ namespace PostProcess
 
 		pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		pD3dImmediateContext->IASetIndexBuffer(m_pMeshIB, DXGI_FORMAT_R32_UINT, 0);
-		pD3dImmediateContext->IASetInputLayout(m_pPosAndNormalAndTextureInputLayout);
+		pD3dImmediateContext->IASetInputLayout(m_pShaderInputLayout);
 		UINT uStride = sizeof(GeometryHelper::Vertex);
 		UINT uOffset = 0;
 		pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-		pD3dImmediateContext->VSSetShader(m_pScenePosAndNormalAndTextureVS, nullptr, 0);
+		pD3dImmediateContext->VSSetShader(m_pShaderVS, nullptr, 0);
 		pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-		pD3dImmediateContext->PSSetShader(m_pScenePosAndNormalAndTexturePS, nullptr, 0);
+		pD3dImmediateContext->PSSetShader(m_pShaderPS, nullptr, 0);
 		pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 		pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 		pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);
@@ -308,21 +229,13 @@ namespace PostProcess
 
 	}
 
-	void DeferredDecalRender::ReleaseAllD3D11COM(void)
+
+	void DeferredDecalRender::ReleaseOneTimeInitedCOM(void)
 	{
-		SAFE_RELEASE(m_pPosAndNormalAndTextureInputLayout);
 
-		SAFE_RELEASE(m_pMeshIB);
-		SAFE_RELEASE(m_pMeshVB);
-
-		SAFE_RELEASE(m_pScenePosAndNormalAndTextureVS);
-		SAFE_RELEASE(m_pScenePosAndNormalAndTexturePS);
-
-		SAFE_RELEASE(m_pConstantBufferPerObject);
-		SAFE_RELEASE(m_pConstantBufferPerFrame);
+		BasePostProcessRender::ReleaseOneTimeInitedCOM();
 
 		SAFE_RELEASE(m_pDepthAlwaysAndStencilOnlyOneTime);
-		SAFE_RELEASE(m_pRasterizerState);
 
 		SAFE_RELEASE(m_pDecalTextureSRV);
 		//SamplerState

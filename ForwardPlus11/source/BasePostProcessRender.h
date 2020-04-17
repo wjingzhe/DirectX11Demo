@@ -114,5 +114,7 @@ namespace PostProcess
 		ID3D11ShaderResourceView* m_pSrcTextureSRV;
 
 		bool m_bShaderInited;
+
+		DirectX::XMFLOAT4 m_BoxExtend;
 	};
 }

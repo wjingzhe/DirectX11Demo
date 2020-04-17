@@ -8,7 +8,8 @@ PostProcess::BasePostProcessRender::BasePostProcessRender()
 	m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),
 	m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
 	m_pSrcTextureSRV(nullptr),
-	m_bShaderInited(false)
+	m_bShaderInited(false),
+	m_BoxExtend(100.0f, 100.0f, 100.0f, 1.0f)
 {
 }
 
