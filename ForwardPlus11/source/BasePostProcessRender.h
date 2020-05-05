@@ -70,9 +70,13 @@ namespace PostProcess
 
 		void SetSrcTextureSRV(ID3D11ShaderResourceView* pNewSRV)
 		{
-			SAFE_RELEASE(m_pSrcTextureSRV);
-			m_pSrcTextureSRV = pNewSRV;
-			m_pSrcTextureSRV->AddRef();
+			if (m_pSrcTextureSRV!= pNewSRV)
+			{
+				SAFE_RELEASE(m_pSrcTextureSRV);
+				m_pSrcTextureSRV = pNewSRV;
+				m_pSrcTextureSRV->AddRef();
+			}
+			
 		}
 
 		void SetSize_ConstantBufferPerObject(UINT size)

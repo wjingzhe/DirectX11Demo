@@ -172,7 +172,7 @@ HRESULT PostProcess::BasePostProcessRender::CreateOtherRenderStateResources(ID3D
 	RasterizerDesc.SlopeScaledDepthBias = 0.0f;
 	RasterizerDesc.DepthClipEnable = TRUE;
 	RasterizerDesc.ScissorEnable = FALSE;
-	RasterizerDesc.MultisampleEnable = TRUE;
+	RasterizerDesc.MultisampleEnable = FALSE;
 	RasterizerDesc.AntialiasedLineEnable = FALSE;
 	V_RETURN(pD3dDevice->CreateRasterizerState(&RasterizerDesc, &m_pRasterizerState));
 
@@ -189,7 +189,7 @@ HRESULT PostProcess::BasePostProcessRender::CreateOtherRenderStateResources(ID3D
 
 	// Create blend states
 	D3D11_BLEND_DESC BlendStateDesc;
-	BlendStateDesc.AlphaToCoverageEnable = TRUE;
+	BlendStateDesc.AlphaToCoverageEnable = FALSE;
 	BlendStateDesc.IndependentBlendEnable = FALSE;
 	BlendStateDesc.RenderTarget[0].BlendEnable = TRUE;
 	BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
