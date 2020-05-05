@@ -63,6 +63,10 @@ float4 RadialBlurPS(VS_OUTPUT pin):SV_TARGET
 	//Color *= (1 - length(LeaveCenter));
 	//Color *= (1 - length(LeaveCenter));
 	//Color *= (1 - length(LeaveCenter));
+	if (Color.w < 0.15f&&length(Color.xyz)<0.15f)
+	{
+		discard;
+	}
 
 	return Color;
 
