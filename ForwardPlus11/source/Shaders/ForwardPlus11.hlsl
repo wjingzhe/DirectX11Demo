@@ -297,5 +297,6 @@ float4 RenderScenePS(VS_OUTPUT_SCENE pin):SV_TARGET
 
 	//Modulate mesh texture with lighting
 	float3 DiffuseAndAmbient = AccumDiffuse + Ambient;
-	return float4(DiffuseTex.xyz* (DiffuseAndAmbient + AccumSpecular*fSpecMask), 1);
+	float3 tempColor = DiffuseTex.xyz* (DiffuseAndAmbient + AccumSpecular*fSpecMask);
+	return float4(pow(tempColor, float3(1.0f / 2.2f, 1.0f / 2.2f, 1.0f / 2.2f)), 1);//从SRGB转化为线性空间
 }
