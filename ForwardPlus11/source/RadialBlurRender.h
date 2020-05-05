@@ -46,9 +46,10 @@ namespace PostProcess
 
 	protected:
 		HRESULT CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)override;
+		virtual void ReleaseOneTimeInitedCOM(void) override;
 
 	private:
-		ID3D11ShaderResourceView* &m_pRadialBlurTextureSRV;
+		ID3D11BlendState* m_pOpaqueBlendState;
 
 		DirectX::XMFLOAT2 m_RadialBlurCenterUV;
 		float m_fRadialBlurLength;

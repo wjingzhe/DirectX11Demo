@@ -12,6 +12,8 @@
 //--------------------------------------------------------------------------------------
 #include "DXUT.h"
 
+D3D11_VIEWPORT g_Viewport = D3D11_VIEWPORT();
+
 #ifndef NDEBUG
 #include <dxgidebug.h>
 #endif
@@ -1082,8 +1084,8 @@ HRESULT WINAPI DXUTCreateWindow( const WCHAR* strWindowTitle, HINSTANCE hInstanc
             GetDXUTState().SetWindowCreatedWithDefaultPositions( true );
 
         // Find the window's initial size, but it might be changed later
-        int nDefaultWidth = 800;
-        int nDefaultHeight = 600;
+        int nDefaultWidth = int(g_Viewport.Width);
+        int nDefaultHeight = int(g_Viewport.Height);
         if( GetDXUTState().GetOverrideWidth() != 0 )
             nDefaultWidth = GetDXUTState().GetOverrideWidth();
         if( GetDXUTState().GetOverrideHeight() != 0 )
@@ -1839,7 +1841,7 @@ HRESULT DXUTChangeDevice( DXUTDeviceSettings* pNewDeviceSettings,
         return E_OUTOFMEMORY;
     memcpy( pNewDeviceSettingsOnHeap, pNewDeviceSettings, sizeof( DXUTDeviceSettings ) );
     pNewDeviceSettings = pNewDeviceSettingsOnHeap;
-	//pNewDeviceSettingsOnHeap->d3d11.sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
     GetDXUTState().SetCurrentDeviceSettings(pNewDeviceSettingsOnHeap);
     hr = DXUTSnapDeviceSettingsToEnumDevice(pNewDeviceSettingsOnHeap, false);
 
@@ -3538,7 +3540,7 @@ HRESULT WINAPI DXUTToggleFullScreen()
         {
             static const DXGI_MODE_DESC s_adapterDesktopDisplayMode =
             {
-                800, 600, { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM
+				UINT(g_Viewport.Width), UINT(g_Viewport.Height), { 0, 0 }, DXGI_FORMAT_R8G8B8A8_UNORM
             };
             memcpy(&adapterDesktopDisplayMode, &s_adapterDesktopDisplayMode, sizeof(DXGI_MODE_DESC));
         }
@@ -4413,12 +4415,12 @@ void DXUTApplyDefaultDeviceSettings(DXUTDeviceSettings *modifySettings)
     modifySettings->d3d11.PresentFlags = 0;
     modifySettings->d3d11.sd.BufferCount = 2;
     modifySettings->d3d11.sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    modifySettings->d3d11.sd.BufferDesc.Height = 600;
+    modifySettings->d3d11.sd.BufferDesc.Height = UINT(g_Viewport.Height);
     modifySettings->d3d11.sd.BufferDesc.RefreshRate.Numerator = 0;
     modifySettings->d3d11.sd.BufferDesc.RefreshRate.Denominator = 0;
     modifySettings->d3d11.sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
     modifySettings->d3d11.sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-    modifySettings->d3d11.sd.BufferDesc.Width = 800;
+    modifySettings->d3d11.sd.BufferDesc.Width = UINT(g_Viewport.Width);
     modifySettings->d3d11.sd.BufferUsage = 32;
     modifySettings->d3d11.sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ;
     modifySettings->d3d11.sd.OutputWindow = DXUTGetHWND();

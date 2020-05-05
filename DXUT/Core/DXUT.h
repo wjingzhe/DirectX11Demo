@@ -359,3 +359,5 @@ void      WINAPI DXUTDestroyState(); // Optional method to destroy DXUT's memory
 //--------------------------------------------------------------------------------------
 #include "DXUTmisc.h"
 #include "DXUTDevice11.h"
+
+extern D3D11_VIEWPORT g_Viewport;

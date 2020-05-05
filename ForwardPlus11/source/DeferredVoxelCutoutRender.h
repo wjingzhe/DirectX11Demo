@@ -47,14 +47,9 @@ namespace PostProcess
 		DeferredVoxelCutoutRender();
 		~DeferredVoxelCutoutRender();
 
-		GeometryHelper::MeshData m_MeshData;
 
 
-
-		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
-
-		//Create MeshData and some other shader resouces
-		virtual HRESULT CreateOtherRenderStateResources(ID3D11Device* pD3dDevice) override;
+		void AddShadersToCache(AMD::ShaderCache* pShaderCache)override;
 		
 
 		HRESULT OnResizedSwapChain(ID3D11Device* pD3dDevice, const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc);
@@ -64,13 +59,6 @@ namespace PostProcess
 		void OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
 				CBaseCamera* pCamera,ID3D11RenderTargetView* pRTV,ID3D11DepthStencilView* pDepthStencilView,ID3D11ShaderResourceView* pDepthStencilCopySRV);
 
-
-		ID3D11Buffer* m_pMeshIB;
-		ID3D11Buffer* m_pMeshVB;
-
-		ID3D11InputLayout* m_pShaderInputLayout;
-		ID3D11VertexShader* m_pShaderVS_Pos_Normal_UV;
-		ID3D11PixelShader* m_pShaderPS_Pos_Normal_UV;
 
 		void SetVoxelPosition(const DirectX::XMVECTOR& position)
 		{
@@ -92,10 +80,9 @@ namespace PostProcess
 
 		HRESULT CreateTempShaderRenderTarget(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc);
 
-
-		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f, unsigned int numSubdivision = 6);
-
 		void GenerateSphereMeshData(float centerX = 1.0f, float centerY = 1.0f, float centerZ = 1.0f, float radius = 1.0f, unsigned int numSubdivision = 6);
+
+		HRESULT CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)override;
 
 	private:
 
@@ -103,7 +90,7 @@ namespace PostProcess
 
 
 		ID3D11DepthStencilState* m_pDepthLessAndStencilOnlyOneTime;
-
+		ID3D11BlendState* m_pOpaqueBlendState;
 
 		DirectX::XMFLOAT4 m_CommonColor;
 		DirectX::XMFLOAT4 m_OverlapMaskedColor;

@@ -48,7 +48,7 @@ void PostProcess::ScreenBlendRender::OnRender(ID3D11Device * pD3dDevice, ID3D11D
 
 	pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
-	//pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	pD3dImmediateContext->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };

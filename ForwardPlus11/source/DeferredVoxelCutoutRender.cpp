@@ -3,11 +3,10 @@ using namespace DirectX;
 
 PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 	:BasePostProcessRender(),
-	m_pMeshIB(nullptr), m_pMeshVB(nullptr), m_pShaderInputLayout(nullptr),
-	m_pShaderVS_Pos_Normal_UV(nullptr), m_pShaderPS_Pos_Normal_UV(nullptr),m_pDepthLessAndStencilOnlyOneTime(nullptr),
+	m_pDepthLessAndStencilOnlyOneTime(nullptr),
 	m_VoxelCenterAndRadius(0.0f, 0.0f, 0.0f, 1.0f),
 	//SamplerState
-	m_CommonColor(0.52f,0.5f,0.5f,0.5f),
+	m_CommonColor(0.52f,0.5f,0.5f,1.0f),
 	m_OverlapMaskedColor(0.0f,0.0f,0.0f,0.0f)
 {
 
@@ -20,13 +19,8 @@ PostProcess::DeferredVoxelCutoutRender::DeferredVoxelCutoutRender()
 
 PostProcess::DeferredVoxelCutoutRender::~DeferredVoxelCutoutRender()
 {
-	ReleaseAllD3D11COM();
 }
 
-void PostProcess::DeferredVoxelCutoutRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
-{
-//jingz todo,暂时没时间去处理立体包围引发的hlsl编码变化，先忽略
-}
 
 void PostProcess::DeferredVoxelCutoutRender::GenerateSphereMeshData(float centerX, float centerY, float centerZ, float radius, unsigned int numSubdivision)
 {
@@ -40,11 +34,6 @@ void PostProcess::DeferredVoxelCutoutRender::GenerateSphereMeshData(float center
 
 void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
 {
-	if (!m_bShaderInited)
-	{
-		SAFE_RELEASE(m_pShaderInputLayout);
-		SAFE_RELEASE(m_pShaderVS_Pos_Normal_UV);
-		SAFE_RELEASE(m_pShaderPS_Pos_Normal_UV);
 
 		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
@@ -54,19 +43,9 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 			{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		};
 
-		//Add vertex shader
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
-			L"vs_5_0", L"DeferVoxelCutoutVS", L"DeferredVoxelCutout.hlsl", 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
+		INT32 size = ARRAYSIZE(layout);
 
-		//Add pixel shader
-
-		pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
-			L"ps_5_0", L"DeferVoxelCutoutPS", L"DeferredVoxelCutout.hlsl", 0, nullptr, nullptr, nullptr, 0);
-
-		m_bShaderInited = true;
-
-	}
-
+		BasePostProcessRender::AddShadersToCache(pShaderCache, L"DeferVoxelCutoutVS", L"DeferVoxelCutoutPS", L"DeferredVoxelSphereCutout.hlsl", layout, size);
 
 
 }
@@ -74,6 +53,9 @@ void PostProcess::DeferredVoxelCutoutRender::AddShadersToCache(AMD::ShaderCache 
 HRESULT PostProcess::DeferredVoxelCutoutRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
 {
 	HRESULT hr;
+
+
+	hr = BasePostProcessRender::CreateOtherRenderStateResources(pD3dDevice);
 
 	//Create DepthStencilState
 	D3D11_DEPTH_STENCIL_DESC DepthStencilDesc;
@@ -93,6 +75,20 @@ HRESULT PostProcess::DeferredVoxelCutoutRender::CreateOtherRenderStateResources(
 	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &m_pDepthLessAndStencilOnlyOneTime));
 
+	// Create blend states
+	D3D11_BLEND_DESC BlendStateDesc;
+	BlendStateDesc.AlphaToCoverageEnable = FALSE;
+	BlendStateDesc.IndependentBlendEnable = FALSE;
+	BlendStateDesc.RenderTarget[0].BlendEnable = FALSE;
+	BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	BlendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+
+	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &m_pOpaqueBlendState));
 
 	return hr;
 }
@@ -211,7 +207,7 @@ void PostProcess::DeferredVoxelCutoutRender::OnRender(ID3D11Device * pD3dDevice,
 	pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthLessAndStencilOnlyOneTime, 1);
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
-	pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
+	pD3dImmediateContext->OMSetBlendState(m_pOpaqueBlendState, BlendFactor, 0xFFFFFFFF);
 	pD3dImmediateContext->RSSetState(m_pRasterizerState);
 
 	pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -250,6 +246,8 @@ void PostProcess::DeferredVoxelCutoutRender::ReleaseOneTimeInitedCOM(void)
 {
 	BasePostProcessRender::ReleaseOneTimeInitedCOM();
 	SAFE_RELEASE(m_pDepthLessAndStencilOnlyOneTime);
+	SAFE_RELEASE(m_pOpaqueBlendState);
+	
 }
 
 HRESULT PostProcess::DeferredVoxelCutoutRender::CreateTempShaderRenderTarget(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)

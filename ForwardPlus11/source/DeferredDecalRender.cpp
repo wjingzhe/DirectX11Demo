@@ -13,47 +13,31 @@ namespace PostProcess
 
 	DeferredDecalRender::~DeferredDecalRender()
 	{
-		ReleaseAllD3D11COM();
 	}
 
-	void DeferredDecalRender::GenerateMeshData(float width, float height, float depth, unsigned int numSubdivision)
+	void DeferredDecalRender::GenerateMeshData(float width, float height, float depth)
 	{
 		m_BoxExtend.x = width;
 		m_BoxExtend.y = height;
 		m_BoxExtend.z = depth;
 
-		m_MeshData = GeometryHelper::CreateBox(width, height, depth, numSubdivision);
+		m_MeshData = GeometryHelper::CreateBox(width, height, depth);
 	}
 
 	void DeferredDecalRender::AddShadersToCache(AMD::ShaderCache* pShaderCache)
 	{
-		if (!m_bShaderInited)
+
+		const D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
-			SAFE_RELEASE(m_pShaderInputLayout);
-			SAFE_RELEASE(m_pShaderVS_Pos_Normal_UV);
-			SAFE_RELEASE(m_pShaderPS_Pos_Normal_UV);
+			{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+			{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
+			{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,24,D3D11_INPUT_PER_VERTEX_DATA,0 },
+			{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		};
 
+		INT32 size = ARRAYSIZE(layout);
 
-			const D3D11_INPUT_ELEMENT_DESC layout[] =
-			{
-				{ "POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-				{ "NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
-				{ "TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,24,D3D11_INPUT_PER_VERTEX_DATA,0 },
-				{ "TANGENT",0,DXGI_FORMAT_R32G32B32_FLOAT,0,32,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			};
-
-			//Add vertex shader
-			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderVS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_VERTEX,
-				L"vs_5_0", L"DeferredDecalVS", L"DeferredDecal.hlsl", 0, nullptr, &m_pShaderInputLayout, (D3D11_INPUT_ELEMENT_DESC*)layout, ARRAYSIZE(layout));
-
-			//Add pixel shader
-
-			pShaderCache->AddShader((ID3D11DeviceChild**)&m_pShaderPS_Pos_Normal_UV, AMD::ShaderCache::SHADER_TYPE::SHADER_TYPE_PIXEL,
-				L"ps_5_0", L"DeferredDecalPS", L"DeferredDecal.hlsl", 0, nullptr, nullptr, nullptr, 0);
-
-			m_bShaderInited = true;
-		}
-
+		BasePostProcessRender::AddShadersToCache(pShaderCache, L"DeferredDecalVS", L"DeferredDecalPS", L"DeferredDecal.hlsl", layout, size);
 
 	}
 

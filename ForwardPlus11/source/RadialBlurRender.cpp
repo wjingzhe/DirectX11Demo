@@ -1,6 +1,6 @@
 #include "RadialBlurRender.h"
 
-PostProcess::RadialBlurRender::RadialBlurRender():BasePostProcessRender(), m_pRadialBlurTextureSRV(m_pSrcTextureSRV)
+PostProcess::RadialBlurRender::RadialBlurRender():BasePostProcessRender()
 {
 	m_RadialBlurCenterUV = DirectX::XMFLOAT2(0.5f, 0.5f);
 
@@ -56,7 +56,7 @@ void PostProcess::RadialBlurRender::OnRender(ID3D11Device * pD3dDevice, ID3D11De
 	pD3dImmediateContext->OMSetRenderTargets(1, &pRTV, pDepthStencilView);
 	pD3dImmediateContext->OMSetDepthStencilState(m_pDepthStencilState, 1);
 	float BlendFactor[4] = { 0.0f,0.0f,0.0f,0.0f };
-	pD3dImmediateContext->OMSetBlendState(nullptr, BlendFactor, 0xFFFFFFFF);
+	pD3dImmediateContext->OMSetBlendState(m_pOpaqueBlendState, BlendFactor, 0xFFFFFFFF);
 	pD3dImmediateContext->RSSetState(m_pRasterizerState);
 
 
@@ -94,7 +94,7 @@ void PostProcess::RadialBlurRender::OnRender(ID3D11Device * pD3dDevice, ID3D11De
 	pD3dImmediateContext->VSSetShader(m_pShaderVS_Pos_Normal_UV, nullptr, 0);
 
 	pD3dImmediateContext->PSSetShader(m_pShaderPS_Pos_Normal_UV, nullptr, 0);
-	pD3dImmediateContext->PSSetShaderResources(0, 1, &m_pRadialBlurTextureSRV);
+	pD3dImmediateContext->PSSetShaderResources(0, 1, &m_pSrcTextureSRV);
 	pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
 
 
@@ -156,23 +156,29 @@ HRESULT PostProcess::RadialBlurRender::CreateOtherRenderStateResources(ID3D11Dev
 	V_RETURN(pD3dDevice->CreateSamplerState(&SamplerDesc, &m_pSamplerState));
 	m_pSamplerState->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen("Anisotropic"), "Anisotropic");
 
-	//// Create blend states
-	//D3D11_BLEND_DESC BlendStateDesc;
-	//BlendStateDesc.AlphaToCoverageEnable = TRUE;
-	//BlendStateDesc.IndependentBlendEnable = FALSE;
-	//BlendStateDesc.RenderTarget[0].BlendEnable = FALSE;
-	//BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-	//BlendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	//BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	// Create blend states
+	D3D11_BLEND_DESC BlendStateDesc;
+	BlendStateDesc.AlphaToCoverageEnable = FALSE;
+	BlendStateDesc.IndependentBlendEnable = FALSE;
+	BlendStateDesc.RenderTarget[0].BlendEnable = FALSE;
+	BlendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	BlendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	BlendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 
-	//BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	//BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-	//BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-	//BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-	//V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &m_pBlendState));
+	BlendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	BlendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	BlendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	BlendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	V_RETURN(pD3dDevice->CreateBlendState(&BlendStateDesc, &m_pOpaqueBlendState));
 
 
 
 
 	return hr;
+}
+
+void PostProcess::RadialBlurRender::ReleaseOneTimeInitedCOM(void)
+{
+	BasePostProcessRender::ReleaseOneTimeInitedCOM();
+	SAFE_RELEASE(m_pOpaqueBlendState);
 }

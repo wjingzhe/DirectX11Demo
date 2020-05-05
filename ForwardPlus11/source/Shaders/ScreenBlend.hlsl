@@ -28,5 +28,10 @@ VS_OUTPUT ScreenBlendVS(VS_INPUT vin)
 
 float4 ScreenBlendPS(VS_OUTPUT pin):SV_TARGET
 {
-	return g_TextureBlendSrc.Sample(g_Sampler, pin.TextureUV);
+	float4 temp4 = g_TextureBlendSrc.Sample(g_Sampler, pin.TextureUV);
+	if (temp4.w <= 0.005f)
+	{
+		discard;
+	}
+	return temp4;
 }

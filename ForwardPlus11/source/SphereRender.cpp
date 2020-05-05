@@ -1,16 +1,16 @@
 #include "SphereRender.h"
 using namespace DirectX;
 
-PostProcess::SphereRender::SphereRender():BasePostProcessRender()
+ForwardRender::SphereRender::SphereRender():BaseForwardRender()
 {
 	m_MeshData = GeometryHelper::CreateSphere(160,20,20, DirectX::XMFLOAT3(130.0f, 200.0f, 300.0f));
 }
 
-PostProcess::SphereRender::~SphereRender()
+ForwardRender::SphereRender::~SphereRender()
 {
 }
 
-void PostProcess::SphereRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
+void ForwardRender::SphereRender::AddShadersToCache(AMD::ShaderCache * pShaderCache)
 {
 	const D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
@@ -22,11 +22,12 @@ void PostProcess::SphereRender::AddShadersToCache(AMD::ShaderCache * pShaderCach
 
 	UINT size = ARRAYSIZE(layout);
 
-	BasePostProcessRender::AddShadersToCache(pShaderCache, L"BaseGeometryVS", L"BaseGeometryPS", L"DrawBasicGeometry.hlsl", layout, size);
+	BaseForwardRender::AddShadersToCache(pShaderCache, L"BaseGeometryVS", L"BaseGeometryPS", L"DrawBasicGeometry.hlsl", layout, size);
 
 }
 
-void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc, CBaseCamera * pCamera, ID3D11RenderTargetView * pRTV, ID3D11DepthStencilView * pDepthStencilView, ID3D11ShaderResourceView * pDepthStencilCopySRV)
+void ForwardRender::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera,
+	ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView)
 {
 	// save Rasterizer State (for later restore)
 	ID3D11RasterizerState* pPreRasterizerState = nullptr;
@@ -72,7 +73,6 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 	CB_PER_OBJECT* pPerObject = (CB_PER_OBJECT*)MappedResource.pData;
 	pPerObject->mWorldViewProjection = XMMatrixTranspose(mWorldViewPrjection);
 	pPerObject->mWorld = XMMatrixTranspose(mWorld);
-	pPerObject->mWorldViewInv = XMMatrixTranspose(mWorldViewInv);
 
 	pD3dImmediateContext->Unmap(m_pConstantBufferPerObject, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
@@ -94,17 +94,17 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 
 		V(pD3dImmediateContext->Map(m_pConstantBufferPerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource));
 		CB_PER_FRAME* pPerFrame = (CB_PER_FRAME*)MappedResource.pData;
-		pPerFrame->vCameraPos3AndAlphaTest = XMLoadFloat4(&CameraPosAndAlphaTest);
-		pPerFrame->m_mProjection = XMMatrixTranspose(mProj);
-		pPerFrame->m_mProjectionInv = XMMatrixTranspose(mInvProj);
+		//pPerFrame->vCameraPos3AndAlphaTest = XMLoadFloat4(&CameraPosAndAlphaTest);
+		//pPerFrame->m_mProjection = XMMatrixTranspose(mProj);
+		//pPerFrame->m_mProjectionInv = XMMatrixTranspose(mInvProj);
 
-		pPerFrame->ProjParams.x = tanHalfFovY;
-		pPerFrame->ProjParams.y = pCamera->GetAspect();
-		pPerFrame->ProjParams.z = nearZ;
-		pPerFrame->ProjParams.w = fRange;
-		pPerFrame->RenderTargetHalfSizeAndFarZ.x = pBackBufferDesc->Width / 2.0f;
-		pPerFrame->RenderTargetHalfSizeAndFarZ.y = pBackBufferDesc->Height / 2.0f;
-		pPerFrame->RenderTargetHalfSizeAndFarZ.z = farZ;
+		//pPerFrame->ProjParams.x = tanHalfFovY;
+		//pPerFrame->ProjParams.y = pCamera->GetAspect();
+		//pPerFrame->ProjParams.z = nearZ;
+		//pPerFrame->ProjParams.w = fRange;
+		//pPerFrame->RenderTargetHalfSizeAndFarZ.x = pBackBufferDesc->Width / 2.0f;
+		//pPerFrame->RenderTargetHalfSizeAndFarZ.y = pBackBufferDesc->Height / 2.0f;
+		//pPerFrame->RenderTargetHalfSizeAndFarZ.z = farZ;
 
 
 		pD3dImmediateContext->Unmap(m_pConstantBufferPerFrame, 0);
@@ -123,19 +123,19 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 
 	pD3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	pD3dImmediateContext->IASetIndexBuffer(m_pMeshIB, DXGI_FORMAT_R32_UINT, 0);
-	pD3dImmediateContext->IASetInputLayout(m_pShaderInputLayout);
+	pD3dImmediateContext->IASetInputLayout(m_pDefaultShaderInputLayout);
 	UINT uStride = sizeof(GeometryHelper::Vertex);
 	UINT uOffset = 0;
 	pD3dImmediateContext->IASetVertexBuffers(0, 1, &m_pMeshVB, &uStride, &uOffset);
 
-	pD3dImmediateContext->VSSetShader(m_pShaderVS_Pos_Normal_UV, nullptr, 0);
+	pD3dImmediateContext->VSSetShader(m_pDefaultShaderVS, nullptr, 0);
 	pD3dImmediateContext->VSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->VSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
 
-	pD3dImmediateContext->PSSetShader(m_pShaderPS_Pos_Normal_UV, nullptr, 0);
+	pD3dImmediateContext->PSSetShader(m_pDefaultShaderPS, nullptr, 0);
 	pD3dImmediateContext->PSSetConstantBuffers(0, 1, &m_pConstantBufferPerObject);
 	pD3dImmediateContext->PSSetConstantBuffers(1, 1, &m_pConstantBufferPerFrame);
-	pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);
+	//pD3dImmediateContext->PSSetShaderResources(0, 1, &pDepthStencilCopySRV);
 	//pD3dImmediateContext->PSSetShaderResources(1, 1, &m_pDecalTextureSRV);
 	pD3dImmediateContext->PSSetSamplers(0, 1, &m_pSamplerState);
 
@@ -152,7 +152,7 @@ void PostProcess::SphereRender::OnRender(ID3D11Device * pD3dDevice, ID3D11Device
 	SAFE_RELEASE(pPreDepthStencilStateStored11);
 }
 
-HRESULT PostProcess::SphereRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
+HRESULT ForwardRender::SphereRender::CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)
 {
 		HRESULT hr;
 

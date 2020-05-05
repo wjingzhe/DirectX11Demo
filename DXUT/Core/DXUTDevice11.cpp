@@ -1256,11 +1256,11 @@ HRESULT WINAPI DXUTGetD3D11AdapterDisplayMode( UINT AdapterOrdinal, UINT nOutput
     auto pOutputInfo = pD3DEnum->GetOutputInfo( AdapterOrdinal, nOutput );
     if( pOutputInfo )
     {
-        pModeDesc->Width = 800;
-        pModeDesc->Height = 600;
+        pModeDesc->Width = UINT(g_Viewport.Width);
+        pModeDesc->Height = UINT(g_Viewport.Height);
         pModeDesc->RefreshRate.Numerator = 0;
         pModeDesc->RefreshRate.Denominator = 0;
-        pModeDesc->Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+        pModeDesc->Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         pModeDesc->Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
         pModeDesc->ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 

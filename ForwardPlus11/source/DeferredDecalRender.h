@@ -16,7 +16,7 @@ namespace PostProcess
 		DeferredDecalRender();
 		~DeferredDecalRender();
 
-		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f,unsigned int numSubdivision = 6);
+		void GenerateMeshData(float width = 1.0f, float height = 1.0f, float depth = 1.0f);
 
 		void AddShadersToCache(AMD::ShaderCache* pShaderCache);
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BasePostProcessRender.h"
+#include "BaseForwardRender.h"
 
-namespace PostProcess
+namespace ForwardRender
 {
-	class SphereRender:public BasePostProcessRender
+	class SphereRender:public BaseForwardRender
 	{
 		//--------------------------------
 		// Constant buffers
@@ -15,8 +15,7 @@ namespace PostProcess
 
 		void AddShadersToCache(AMD::ShaderCache* pShaderCache)override;
 
-		virtual void OnRender(ID3D11Device* pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC* pBackBufferDesc,
-			CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV, ID3D11DepthStencilView* pDepthStencilView, ID3D11ShaderResourceView* pDepthStencilCopySRV)override;
+		void OnRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, CBaseCamera* pCamera, ID3D11RenderTargetView* pRTV = nullptr, ID3D11DepthStencilView* pDepthStencilView = nullptr)override;
 
 	protected:
 		virtual HRESULT CreateOtherRenderStateResources(ID3D11Device * pD3dDevice)override;

@@ -5,7 +5,7 @@ using namespace DirectX;
 
 
 
-GeometryHelper::MeshData GeometryHelper::CreateBox(float width, float height, float depth, uint32 numSubdivision,float centerX, float centerY, float centerZ)
+GeometryHelper::MeshData GeometryHelper::CreateBox(float width, float height, float depth, float centerX, float centerY, float centerZ)
 {
 	MeshData meshData;
 
@@ -89,9 +89,6 @@ GeometryHelper::MeshData GeometryHelper::CreateBox(float width, float height, fl
 	i[33] = 20; i[34] = 22; i[35] = 23;
 
 	meshData.Indices32.assign(&i[0], &i[36]);
-
-	//Put a cap on the number of subdivisions
-	numSubdivision = std::min<uint32>(numSubdivision, 6u);
 
 	return meshData;
 }

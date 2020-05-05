@@ -22,15 +22,21 @@
 #include "../source/PbrRender.h"
 
 #define FORWARDPLUS
-//#define TRIANGLE
-//#define DECAL
-//#define GodRay
-#define PBR
+#define TRIANGLE
+#define DECAL
+#define GodRay
+//#define PBR
+
+#ifdef PBR
+	#define EXPORT_CUBEMAP
+#else
+#undef EXPORT_CUBEMAP
+#endif
 
 #define MAX_TEMP_SCENE_TEXTURE 2
 
 using namespace DirectX;
-using namespace Triangle;
+using namespace ForwardRender;
 
 #pragma warning( disable : 4100 ) // disable unreference formal parameter warnings for /W4 builds
 //-----------------------------------------------------------------------------------------
@@ -43,7 +49,7 @@ static ForwardPlus11::ForwardPlusRender s_ForwardPlusRender;
 #endif // FORWARDPLUS
 
 #ifdef TRIANGLE
-static Triangle::TriangleRender s_TriangleRender;
+static ForwardRender::TriangleRender s_TriangleRender;
 #endif
 
 #ifdef DECAL
@@ -53,7 +59,7 @@ static PostProcess::DeferredDecalRender s_DeferredDecalRender;
 #ifdef GodRay
 
 static PostProcess::DeferredVoxelCutoutRender s_DeferredVoxelCutoutRender;
-static PostProcess::SphereRender s_SphereRender;
+static ForwardRender::SphereRender s_SphereRender;
 static PostProcess::RadialBlurRender s_RadialBlurRender;
 static PostProcess::ScreenBlendRender s_ScreenBlendRender;
 
@@ -141,7 +147,7 @@ static int g_iNumActiveSpotLights = 0;
 static float g_fMaxDistance = 1000.0f;
 
 CFirstPersonCamera g_Camera;
-D3D11_VIEWPORT g_Viewport;
+
 static AMD::HUD             g_HUD;
 static CDXUTDialogResourceManager  g_DialogResourceManager; // manager for shared resources of dialogs
 static CDXUTTextHelper*			g_pTextHelper = nullptr;
@@ -221,8 +227,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-	g_Viewport.Width = 1920;
-	g_Viewport.Height = 1080;
+
 
 	DXUTCreateDevice(D3D_FEATURE_LEVEL_11_0, true, g_Viewport.Width, g_Viewport.Height);//jingz 在此窗口为出现全屏化之前，其分辨率一直有个错误bug，偶然消除了
 
@@ -246,15 +251,6 @@ LRESULT  CALLBACK MsgProc(HWND hWnd, UINT uMsg,WPARAM wParam, LPARAM lParam, boo
 		((MINMAXINFO*)lParam)->ptMinTrackSize.x = 512;
 		((MINMAXINFO*)lParam)->ptMinTrackSize.y = 512;
 		*pbNoFurtherProcessing = true;
-		break;
-
-	case WM_WINDOWPOSCHANGED:
-		
-		g_Viewport.TopLeftX = ((tagWINDOWPOS *)lParam)->x;   // horizontal position 
-		g_Viewport.TopLeftY = ((tagWINDOWPOS *)lParam)->y;   // vertical position
-		g_Viewport.Width = ((tagWINDOWPOS *)lParam)->cx;
-		g_Viewport.Height = ((tagWINDOWPOS *)lParam)->cy;
-
 		break;
 
 	}
@@ -312,7 +308,7 @@ bool ModifyDeviceSettings(DXUTDeviceSettings * pDeviceSettings, void * pUserCont
 		// and that Forward+ uses the hardware MSAA as intended,then default to 4x MSAA
 		else
 		{
-			pDeviceSettings->d3d11.sd.SampleDesc.Count = 4;
+			pDeviceSettings->d3d11.sd.SampleDesc.Count = 1;//MSAA会影响后处理效果
 		}
 
 		//Start with sync disabled
@@ -392,7 +388,7 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 	V_RETURN(pD3dDevice->CreateDepthStencilState(&DepthStencilDesc, &g_pDepthStencilDefaultDS));
 
-	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../1333380921_3046.png", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV,false));
+	V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../len_full.jpg", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
 	
 	//{// HDR CubeMap
 
@@ -454,24 +450,18 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 #ifdef TRIANGLE
 
-#ifdef FORWARDPLUS
-	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, 200.0f, 300.0f);
-#else
-	s_TriangleRender.GenerateMeshData(100, 100, 100, 6, 0.0f, -100.0f, 500.0f);
-#endif // FORWARDPLUS
+	s_TriangleRender.GenerateMeshData(100, 100, 100, 300.0f, 200.0f, 300.0f);
 
-
-	
 	if (!bIsSceneMinMaxInited)
 	{
-		Triangle::TriangleRender::CalculateSceneMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
+		ForwardRender::TriangleRender::CalculateBoundingBoxMinMax(s_TriangleRender.m_MeshData, &SceneMin, &SceneMax);
 		bIsSceneMinMaxInited = true;
 	}
 	V_RETURN(s_TriangleRender.OnD3DDeviceCreated(pD3dDevice, pBackBufferSurfaceDesc, pUserContext));
 #endif
 
 #ifdef DECAL
-	s_DeferredDecalRender.GenerateMeshData(101, 101, 101, 6);
+	s_DeferredDecalRender.GenerateMeshData(101, 101, 101);
 	if (!bIsSceneMinMaxInited)
 	{
 		PostProcess::DeferredDecalRender::CalculateSceneMinMax(s_DeferredDecalRender.m_MeshData, &SceneMin, &SceneMax);
@@ -540,13 +530,13 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
 
 		g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
-		XMVECTOR vEye = XMVectorSet(0, 0.0f, 5.0f, 1.0f);
-		XMVECTOR vLookAtPos = XMVectorSet(0, 0, -1.0f, 1.0f);
+		XMVECTOR vEye = XMVectorSet(150.0f, 200.0f, 0.0f, 1.0f);
+		XMVECTOR vLookAtPos = XMVectorSet(150.0f, 200.0f, 100.0f, 0.0f);
 		g_Camera.SetRotateButtons(true, false, false);
 		//g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
-		g_Camera.SetScalers(0.01f, 0.0005f*g_fMaxDistance);
+		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
 
 	//	s_DeferredVoxelCutoutRender.SetVoxelPosition(vLookAtPos);
 
@@ -937,10 +927,11 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 
 
 	DXUTSetupD3D11Views(pD3dImmediateContext);//设置viewport和rt/ds
-	UINT count = 1;
-	pD3dImmediateContext->RSGetViewports(&count, &g_Viewport);
 
-	const DXGI_SURFACE_DESC* pBackBufferDesc = DXUTGetDXGIBackBufferSurfaceDesc();
+	const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc = DXUTGetDXGIBackBufferSurfaceDesc();
+
+	pD3dImmediateContext->RSSetViewports(1, &g_Viewport);
+
 
 
 	//Clear the backBuffer and depth stencil
@@ -967,12 +958,10 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		std::vector< CDXUTSDKMesh*>AlphaMeshArray;
 		AlphaMeshArray.push_back(&g_SceneAlphaMesh);
 
-		const DXGI_SURFACE_DESC* pBackBufferSurfaceDes = DXUTGetDXGIBackBufferSurfaceDesc();
-
 #ifdef FORWARDPLUS
-		/*s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDes,
+		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDesc,
 			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
-			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);*/
+			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
 #endif // FORWARDPLUS
 
 
@@ -987,17 +976,18 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		ID3D11RenderTargetView* pNullRTV = nullptr;
 		pD3dImmediateContext->OMSetRenderTargets(1, &pNullRTV, nullptr);
 		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
-		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+		s_DeferredDecalRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 
 
 #endif
 
 #ifdef GodRay
-		s_DeferredVoxelCutoutRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
+		pD3dImmediateContext->CopyResource(g_pTempDepthStencilTexture, g_pDepthStencilTexture);
+		s_DeferredVoxelCutoutRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, g_pTempTextureRenderTargetView[0], g_pTempDepthStencilView, g_pDepthStencilSRV);
 
 		//只绘制DepthStencil信息
 		pD3dImmediateContext->ClearDepthStencilView(g_pTempDepthStencilView, D3D11_CLEAR_STENCIL, 1.0f, 0);
-		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, nullptr, g_pTempDepthStencilView, g_pDepthStencilSRV);
+		s_SphereRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, g_pTempDepthStencilView);
 
 		auto p = s_DeferredVoxelCutoutRender.GetVoxelPosition();
 		XMMATRIX mWorld = DirectX::XMMatrixIdentity();
@@ -1015,24 +1005,32 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		s_RadialBlurRender.SetRadialBlurCenter(uv.x/ uv.w*0.5f+0.5f,0.5f-uv.y / uv.w*0.5f);
 		
 		s_RadialBlurRender.SetRadialBlurTextureSRV(g_pTempTextureSRV[0]);
-		s_RadialBlurRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, g_pTempTextureRenderTargetView[1], g_pTempDepthStencilView, g_pDepthStencilSRV);
+		s_RadialBlurRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, g_pTempTextureRenderTargetView[1], g_pTempDepthStencilView, g_pDepthStencilSRV);
 		s_ScreenBlendRender.SetBlendTextureSRV(g_pTempTextureSRV[1]);
-		s_ScreenBlendRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
+		s_ScreenBlendRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, pRTV, g_pTempDepthStencilView, g_pDepthStencilSRV);
 #endif
 
 #ifdef PBR
 
 		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
-		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, nullptr, nullptr);
+		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
 
-		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes,&g_Camera);
-		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pTempDepthStencilView);
+		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc,&g_Camera);
+		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, pRTV, g_pTempDepthStencilView);
 
 
 
 		////s_PbrRender
-		pD3dImmediateContext->RSSetViewports(count, &g_Viewport);
-		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDes, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetIrradianceSRV(), s_CubeMapCaptureRender.GetPrefilterSRV());
+		D3D11_VIEWPORT vp;
+		vp.Width = (FLOAT)pBackBufferSurfaceDesc->Width;
+		vp.Height = (FLOAT)pBackBufferSurfaceDesc->Height;
+		vp.MinDepth = 0;
+		vp.MaxDepth = 1;
+		vp.TopLeftX = 0;
+		vp.TopLeftY = 0;
+		int Count = 1;
+		pD3dImmediateContext->RSSetViewports(Count, &vp);
+		s_PbrRender.OnRender(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, pRTV, g_pDepthStencilView, s_CubeMapCaptureRender.GetIrradianceSRV(), s_CubeMapCaptureRender.GetPrefilterSRV());
 
 #endif // PBR
 
@@ -1122,6 +1120,8 @@ void InitApp()
 	g_Viewport.MaxDepth = 1;
 	g_Viewport.TopLeftX = 0;
 	g_Viewport.TopLeftY = 0;
+	g_Viewport.Width = 1920;
+	g_Viewport.Height = 1080;
 
 	g_D3dSettingsGUI.Init(&g_DialogResourceManager);
 

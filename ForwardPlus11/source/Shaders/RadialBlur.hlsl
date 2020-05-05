@@ -40,7 +40,7 @@ VS_OUTPUT RadialBlurVS(VS_INPUT vin)
 float4 RadialBlurPS(VS_OUTPUT pin):SV_TARGET
 {
 	float2 LeaveCenter = pin.TextureUV - RadialBlurCenterUV;
-	float2 Step = LeaveCenter / iSampleCount*fRadialBlurLength;
+	float2 Step = LeaveCenter / iSampleCount;
 
 	float4 Color = 0.0f;
 
@@ -54,10 +54,10 @@ float4 RadialBlurPS(VS_OUTPUT pin):SV_TARGET
 		//Color.z = max(Color.z, temp.z);
 		//Color.w = max(Color.w, temp.w);
 	}
-
+	
 	//float4 temp = Color / iSampleCount;
-
-	Color = Color / iSampleCount;
+	Color = Color/ iSampleCount*1.5f;
+	//Color.w = g_SrcTexture.Sample(g_Sampler, pin.TextureUV).w;
 	Color *= (1 - length(LeaveCenter));
 	//Color *= (1 - length(LeaveCenter));
 	//Color *= (1 - length(LeaveCenter));
