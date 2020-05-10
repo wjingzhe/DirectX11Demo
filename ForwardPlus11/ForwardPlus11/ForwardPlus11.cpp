@@ -21,7 +21,7 @@
 #include "../source/CubeMapCaptureRender.h"
 #include "../source/PbrRender.h"
 
-//#define FORWARDPLUS
+#define FORWARDPLUS
 //#define TRIANGLE
 //#define DECAL
 //#define GodRay

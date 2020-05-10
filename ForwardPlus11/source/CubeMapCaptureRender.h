@@ -6,7 +6,7 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
-//#define EXPORT_CUBEMAP
+#define EXPORT_CUBEMAP
 
 namespace ForwardRender
 {
@@ -148,6 +148,8 @@ namespace ForwardRender
 		virtual HRESULT CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc);
 
 		void SaveEnvCubeMap();
+		void SaveIrradianceCubeMap();
+		void SavePrefilterCubeMap();
 
 	private:
 

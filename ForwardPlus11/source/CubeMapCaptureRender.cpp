@@ -318,7 +318,7 @@ namespace ForwardRender
 				IrradianceCubeTextureDesc.Height = 32;
 				IrradianceCubeTextureDesc.MipLevels = 1;
 				IrradianceCubeTextureDesc.ArraySize = 1;
-				IrradianceCubeTextureDesc.SampleDesc.Count = 4;
+				IrradianceCubeTextureDesc.SampleDesc.Count = 1;
 				IrradianceCubeTextureDesc.SampleDesc.Quality = 0;
 				IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 				IrradianceCubeTextureDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -369,7 +369,6 @@ namespace ForwardRender
 				temp.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 				temp.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 				temp.MiscFlags = 0;
-
 				
 				temp.Width = 8;
 				temp.Height = 8;
@@ -865,18 +864,43 @@ namespace ForwardRender
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 #ifdef EXPORT_CUBEMAP
-			//Bind cube map face as render target.
-			pD3dImmediateContext->OMSetRenderTargets(1, &IrradianceRenderTarget32x32[i], nullptr);
 
-			//Clear cube map face and depth buffer.
-			pD3dImmediateContext->ClearRenderTargetView(IrradianceRenderTarget32x32[i], reinterpret_cast<const float*>(&Colors::Black));
-			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+			////Bind cube map face as render target.
+			//pD3dImmediateContext->OMSetRenderTargets(1, &IrradianceRenderTarget32x32[i], nullptr);
 
-			//Draw the scene with the exception of the center sphere to this cube map face.
-			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+			////Clear cube map face and depth buffer.
+			//pD3dImmediateContext->ClearRenderTargetView(IrradianceRenderTarget32x32[i], reinterpret_cast<const float*>(&Colors::Black));
+			//pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+			////Draw the scene with the exception of the center sphere to this cube map face.
+			//pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+
+
+			{
+				D3D11_TEXTURE2D_DESC TempDesc;
+				IrradianceTextureArray32x32[0]->GetDesc(&TempDesc);
+				D3D11_BOX box;
+				box.front = 0;
+				box.back = 1;
+				box.left = 0;
+				box.top = 0;
+				box.right = TempDesc.Width;
+				box.bottom = TempDesc.Height;
+
+				//pD3dImmediateContext->CopySubresourceRegion(g_pIrradianceCubeTexture, 0 + i * 1, 0, 0, 0, IrradianceTextureArray32x32[i], 0, &box);
+
+				pD3dImmediateContext->CopySubresourceRegion(IrradianceTextureArray32x32[i], 0, 0, 0, 0, g_pIrradianceCubeTexture, i, &box);
+			}
 #endif
-
 		}
+
+		static bool flag = true;
+		if (flag)
+		{
+			flag = false;
+			SaveIrradianceCubeMap();
+		}
+
 		//Have harware generate lower mimap levels of cube map.
 		pD3dImmediateContext->GenerateMips(g_pIrradianceSRV);
 
@@ -993,15 +1017,21 @@ namespace ForwardRender
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 #ifdef EXPORT_CUBEMAP
-				//Bind cube map face as render target.
-				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray128x128[i], nullptr);
 
-				//Clear cube map face and depth buffer.
-				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray128x128[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView128x128, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+				{
+					D3D11_TEXTURE2D_DESC TempDesc;
+					TextureArray128x128[i]->GetDesc(&TempDesc);
+					D3D11_BOX box;
+					box.front = 0;
+					box.back = 1;
+					box.left = 0;
+					box.top = 0;
+					box.right = TempDesc.Width;
+					box.bottom = TempDesc.Height;
 
-				//Draw the scene with the exception of the center sphere to this cube map face.
-				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray128x128[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 0 + i * TempDesc.MipLevels, &box);
+				}
 #endif
 			}
 
@@ -1031,15 +1061,20 @@ namespace ForwardRender
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 #ifdef EXPORT_CUBEMAP
-				//Bind cube map face as render target.
-				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray64x64[i], nullptr);
+				{
+					D3D11_TEXTURE2D_DESC TempDesc;
+					TextureArray64x64[i]->GetDesc(&TempDesc);
+					D3D11_BOX box;
+					box.front = 0;
+					box.back = 1;
+					box.left = 0;
+					box.top = 0;
+					box.right = TempDesc.Width;
+					box.bottom = TempDesc.Height;
 
-				//Clear cube map face and depth buffer.
-				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray64x64[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView64x64, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-				//Draw the scene with the exception of the center sphere to this cube map face.
-				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray64x64[i], 0, 0, 0, 0, g_pPrefilterCubeTexture,1 + i * TempDesc.MipLevels, &box);
+				}
 #endif
 			}
 
@@ -1070,15 +1105,20 @@ namespace ForwardRender
 
 
 #ifdef EXPORT_CUBEMAP
-				//Bind cube map face as render target.
-				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray32x32[i], nullptr);
+				{
+					D3D11_TEXTURE2D_DESC TempDesc;
+					TextureArray32x32[i]->GetDesc(&TempDesc);
+					D3D11_BOX box;
+					box.front = 0;
+					box.back = 1;
+					box.left = 0;
+					box.top = 0;
+					box.right = TempDesc.Width;
+					box.bottom = TempDesc.Height;
 
-				//Clear cube map face and depth buffer.
-				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray32x32[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-				//Draw the scene with the exception of the center sphere to this cube map face.
-				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray32x32[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 2 + i * TempDesc.MipLevels, &box);
+				}
 #endif
 
 
@@ -1116,15 +1156,20 @@ namespace ForwardRender
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 #ifdef EXPORT_CUBEMAP
-				//Bind cube map face as render target.
-				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray16x16[i], nullptr);
+				{
+					D3D11_TEXTURE2D_DESC TempDesc;
+					TextureArray16x16[i]->GetDesc(&TempDesc);
+					D3D11_BOX box;
+					box.front = 0;
+					box.back = 1;
+					box.left = 0;
+					box.top = 0;
+					box.right = TempDesc.Width;
+					box.bottom = TempDesc.Height;
 
-				//Clear cube map face and depth buffer.
-				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray16x16[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView16x16, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-				//Draw the scene with the exception of the center sphere to this cube map face.
-				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray16x16[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 3 + i * TempDesc.MipLevels, &box);
+				}
 #endif
 
 			}
@@ -1161,15 +1206,20 @@ namespace ForwardRender
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 #ifdef EXPORT_CUBEMAP
-				//Bind cube map face as render target.
-				pD3dImmediateContext->OMSetRenderTargets(1, &RenderTargetArray8x8[i], nullptr);
+				{
+					D3D11_TEXTURE2D_DESC TempDesc;
+					TextureArray8x8[i]->GetDesc(&TempDesc);
+					D3D11_BOX box;
+					box.front = 0;
+					box.back = 1;
+					box.left = 0;
+					box.top = 0;
+					box.right = TempDesc.Width;
+					box.bottom = TempDesc.Height;
 
-				//Clear cube map face and depth buffer.
-				pD3dImmediateContext->ClearRenderTargetView(RenderTargetArray8x8[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView8x8, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-				//Draw the scene with the exception of the center sphere to this cube map face.
-				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
+					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray8x8[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 4 + i * TempDesc.MipLevels, &box);
+				}
 #endif
 			}
 
@@ -1192,6 +1242,13 @@ namespace ForwardRender
 		SAFE_RELEASE(pPreRasterizerState);
 		SAFE_RELEASE(pPreBlendStateStored11);
 		SAFE_RELEASE(pPreDepthStencilStateStored11);
+
+		static bool flag = true;
+		if (flag)
+		{
+			flag = false;
+			SavePrefilterCubeMap();
+		}
 	}
 
 
@@ -1575,7 +1632,76 @@ namespace ForwardRender
 		swprintf(strPath, 128, L"EnvCube_-z.jpg");
 		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[5], false, strPath);
 
+	}
 
+	void CubeMapCaptureRender::SaveIrradianceCubeMap()
+	{
+		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+
+		wchar_t  strPath[128];
+		swprintf(strPath, 128, L"Irradiance_+x.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[0], false, strPath);
+
+		swprintf(strPath, 128, L"Irradiance_-x.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[1], false, strPath);
+
+		swprintf(strPath, 128, L"Irradiance_+y.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[2], false, strPath);
+
+		swprintf(strPath, 128, L"Irradiance_-y.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[3], false, strPath);
+
+		swprintf(strPath, 128, L"Irradiance_+z.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[4], false, strPath);
+
+		swprintf(strPath, 128, L"Irradiance_-z.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[5], false, strPath);
+	}
+
+	void CubeMapCaptureRender::SavePrefilterCubeMap()
+	{
+		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+
+		wchar_t  strPath[128];	
+		D3D11_TEXTURE2D_DESC TempDesc;
+
+		TextureArray128x128[0]->GetDesc(&TempDesc);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray128x128[i], false, strPath);
+		}
+
+
+
+		TextureArray64x64[0]->GetDesc(&TempDesc);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray64x64[i], false, strPath);
+		}
+
+	
+		TextureArray32x32[0]->GetDesc(&TempDesc);
+		for (int i = 0;i<6;++i)
+		{
+			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray32x32[i], false, strPath);
+		}
+
+		TextureArray16x16[0]->GetDesc(&TempDesc);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray16x16[i], false, strPath);
+		}
+
+		TextureArray8x8[0]->GetDesc(&TempDesc);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray8x8[i], false, strPath);
+		}
 
 	}
 }
