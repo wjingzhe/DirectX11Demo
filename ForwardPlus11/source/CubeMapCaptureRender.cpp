@@ -291,9 +291,19 @@ namespace ForwardRender
 			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;//Texture Cube 
 
 			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pCubeTexture));
+			texDesc.ArraySize = 1;
+			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[0]));
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[1]));
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[2]));
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[3]));
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[4]));
+			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[5]));
 
 			D3D11_TEXTURE2D_DESC IrradianceCubeTextureDesc;
 			memcpy(&IrradianceCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+			IrradianceCubeTextureDesc.ArraySize = 6;
+			IrradianceCubeTextureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;//Texture Cube 
 			IrradianceCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			IrradianceCubeTextureDesc.Width = 32;
 			IrradianceCubeTextureDesc.Height = 32;
@@ -336,6 +346,7 @@ namespace ForwardRender
 #endif
 			D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
 			memcpy(&PrefilterCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
+			PrefilterCubeTextureDesc.ArraySize = 6;
 			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			PrefilterCubeTextureDesc.Width = 128;
 			PrefilterCubeTextureDesc.Height = 128;
@@ -710,7 +721,23 @@ namespace ForwardRender
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
+
+			{
+				D3D11_BOX box;
+				box.front = 0;
+				box.back = 1;
+				box.left = 0;
+				box.top = 0;
+				box.right = CUBEMAP_SIZE;
+				box.bottom = CUBEMAP_SIZE;
+
+				pD3dImmediateContext->CopySubresourceRegion(g_pEnvTextureFaces[i], 0, 0, 0, 0, g_pCubeTexture, 0 + i * 8, &box);
+			}
 		}
+
+
+
+
 		pD3dImmediateContext->GenerateMips(g_pEnvCubeMapSRV);
 
 
@@ -724,6 +751,14 @@ namespace ForwardRender
 		SAFE_RELEASE(pPreRasterizerState);
 		SAFE_RELEASE(pPreBlendStateStored11);
 		SAFE_RELEASE(pPreDepthStencilStateStored11);
+
+		static bool flag = true;
+		if (flag)
+		{
+			flag = false;
+			SaveEnvCubeMap();
+		}
+
 	}
 
 	void CubeMapCaptureRender::RenderIrradiance(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediateContext, const DXGI_SURFACE_DESC * pBackBufferDesc,
@@ -1436,6 +1471,7 @@ namespace ForwardRender
 		SAFE_RELEASE(g_pEnvCubeMapSRV);
 		for (int i = 0; i < 6; ++i)
 		{
+			SAFE_RELEASE(g_pEnvTextureFaces[i]);
 			SAFE_RELEASE(g_pEnvCubeMapRTVs[i]);
 		}
 
@@ -1515,6 +1551,32 @@ namespace ForwardRender
 	HRESULT CubeMapCaptureRender::CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
 	{
 		return E_NOTIMPL;
+	}
+
+	void CubeMapCaptureRender::SaveEnvCubeMap()
+	{
+		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+
+		wchar_t  strPath[128];
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[0], false, strPath);
+
+		swprintf(strPath, 128, L"EnvCube_-x.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[1], false, strPath);
+
+		swprintf(strPath, 128, L"EnvCube_+y.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[2], false, strPath);
+
+		swprintf(strPath, 128, L"EnvCube_-y.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[3], false, strPath);
+
+		swprintf(strPath, 128, L"EnvCube_+z.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[4], false, strPath);
+
+		swprintf(strPath, 128, L"EnvCube_-z.jpg");
+		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[5], false, strPath);
+
+
+
 	}
 }
 

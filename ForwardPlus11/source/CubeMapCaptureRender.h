@@ -146,6 +146,9 @@ namespace ForwardRender
 		virtual void ReleaseOneTimeInitedCOM(void);
 
 		virtual HRESULT CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc);
+
+		void SaveEnvCubeMap();
+
 	private:
 
 		ID3D11Buffer* m_pMeshIB;
@@ -199,6 +202,7 @@ namespace ForwardRender
 
 
 		ID3D11Texture2D* g_pCubeTexture = nullptr;
+		ID3D11Texture2D* g_pEnvTextureFaces[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11RenderTargetView* g_pEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
 

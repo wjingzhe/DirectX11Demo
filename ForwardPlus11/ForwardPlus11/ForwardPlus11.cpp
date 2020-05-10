@@ -21,14 +21,14 @@
 #include "../source/CubeMapCaptureRender.h"
 #include "../source/PbrRender.h"
 
-#define FORWARDPLUS
-#define TRIANGLE
-#define DECAL
-#define GodRay
-//#define PBR
+//#define FORWARDPLUS
+//#define TRIANGLE
+//#define DECAL
+//#define GodRay
+#define PBR
 
 #ifdef PBR
-	#define EXPORT_CUBEMAP
+	//#define EXPORT_CUBEMAP
 #else
 #undef EXPORT_CUBEMAP
 #endif
@@ -432,7 +432,8 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
 
-	XMVECTOR SceneMin, SceneMax;
+	XMVECTOR SceneMin = XMVectorSet(-1921.0f, -126.0f, -1105.0f, 0.0f);
+	XMVECTOR SceneMax = XMVectorSet(1799.0f, 1430.0f, 1183.0f, 0.0f);
 
 	bool bIsSceneMinMaxInited = false;
 
@@ -530,13 +531,13 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		XMVECTOR BoundaryDiff = 4.0f*SceneExtents;
 
 		g_fMaxDistance = XMVectorGetX(XMVector3Length(BoundaryDiff));
-		XMVECTOR vEye = XMVectorSet(150.0f, 200.0f, 0.0f, 1.0f);
-		XMVECTOR vLookAtPos = XMVectorSet(150.0f, 200.0f, 100.0f, 0.0f);
+		XMVECTOR vEye = XMVectorSet(0, 0.0f, 5.0f, 1.0f);
+		XMVECTOR vLookAtPos = XMVectorSet(0, 0, -1.0f, 1.0f);
 		g_Camera.SetRotateButtons(true, false, false);
 		//g_Camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);//left_button can rotate camera
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
-		g_Camera.SetScalers(0.005f, 0.1f*g_fMaxDistance);
+		g_Camera.SetScalers(0.01f, 0.0005f*g_fMaxDistance);
 
 	//	s_DeferredVoxelCutoutRender.SetVoxelPosition(vLookAtPos);
 
@@ -544,13 +545,13 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 		// Setup the camera's view parameters
 		XMVECTOR SceneCenter = 0.5f*(SceneMax + SceneMin);
 		XMVECTOR SceneExtends = 0.5f*(SceneMax - SceneMin);
-		XMVECTOR BoundaryMin = SceneCenter - 20.0f*SceneExtends;
-		XMVECTOR BoundaryMax = SceneCenter + 20.0f*SceneExtends;
-		XMVECTOR BoundaryDiff = 40.0f*SceneExtends;
+		XMVECTOR BoundaryMin = SceneCenter - 2.0f*SceneExtends;
+		XMVECTOR BoundaryMax = SceneCenter + 2.0f*SceneExtends;
+		XMVECTOR BoundaryDiff = 4.0f*SceneExtends;
 
 
-		XMVECTOR vEye = XMVectorSet(0.0, 0.0f, 0.0f,0.0f);
-		XMVECTOR vLookAtPos = SceneCenter + XMVectorSet(0.0f,0.0f, 10.0f, 0.0f);//要看到前面的剑法
+		XMVECTOR vEye = XMVectorSet(0, 0.0f, 5.0f, 1.0f);
+		XMVECTOR vLookAtPos = XMVectorSet(0, 0, -1.0f, 1.0f);
 		g_Camera.SetRotateButtons(true, false, false);
 		g_Camera.SetEnablePositionMovement(true);
 		g_Camera.SetViewParams(vEye, vLookAtPos);
@@ -1016,11 +1017,11 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
 
 		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc,&g_Camera);
-		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, pRTV, g_pTempDepthStencilView);
+		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
 
 
 
-		////s_PbrRender
+		//s_PbrRender
 		D3D11_VIEWPORT vp;
 		vp.Width = (FLOAT)pBackBufferSurfaceDesc->Width;
 		vp.Height = (FLOAT)pBackBufferSurfaceDesc->Height;
