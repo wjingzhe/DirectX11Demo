@@ -430,7 +430,6 @@ HRESULT CALLBACK OnD3D11DeviceCreated(ID3D11Device * pD3dDevice, const DXGI_SURF
 
 	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/newport_loft.hdr", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-	//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../media/hdr/sky_0.png", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV,false));
 
 	XMVECTOR SceneMin = XMVectorSet(-1921.0f, -126.0f, -1105.0f, 0.0f);
 	XMVECTOR SceneMax = XMVectorSet(1799.0f, 1430.0f, 1183.0f, 0.0f);
@@ -962,7 +961,7 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 #ifdef FORWARDPLUS
 		s_ForwardPlusRender.OnRender(pD3dDevice, pD3dImmediateContext, &g_Camera, pRTV, pBackBufferSurfaceDesc,
 			g_pDepthStencilTexture, g_pDepthStencilView, g_pDepthStencilSRV,
-			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);*/
+			fElapsedTime, MeshArray.data(), 1, AlphaMeshArray.data(), 1, g_iNumActivePointLights, g_iNumActiveSpotLights);
 #endif // FORWARDPLUS
 
 
@@ -1012,12 +1011,34 @@ void OnFrameRender(ID3D11Device * pD3dDevice, ID3D11DeviceContext * pD3dImmediat
 #endif
 
 #ifdef PBR
+		if (s_CubeMapCaptureRender.m_bUseLoadedEnvMap)
+		{
 
-		s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
-		s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
+		}
+		else
+		{
+			s_CubeMapCaptureRender.SetSrcTextureSRV(g_pHdrTextureSRV);
+			s_CubeMapCaptureRender.RenderHDRtoCubeMap(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
+		}
+		
+		if (s_CubeMapCaptureRender.m_bUseLoadedIrradianceMap)
+		{
+		}
+		else
+		{
+			s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera);
+		}
 
-		s_CubeMapCaptureRender.RenderIrradiance(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc,&g_Camera);
-		s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
+		if (s_CubeMapCaptureRender.m_bUseLoadedPrefilterMap)
+		{
+
+		}
+		else
+		{
+			s_CubeMapCaptureRender.RenderPrefilter(pD3dDevice, pD3dImmediateContext, pBackBufferSurfaceDesc, &g_Camera, nullptr, nullptr);
+		}
+		
+		
 
 
 
@@ -1247,46 +1268,7 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl * pControl, v
 
 void SaveCubeMap()
 {
-	ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
-	ID3D11Resource* tempTexture2D = nullptr;
-
-#ifdef EXPORT_CUBEMAP
-	for (int i = 0; i < 6; ++i)
-	{
-		wchar_t  strPath[128];
-		
-		swprintf(strPath, 128, L"irradiane_%d_32x32.jpg", i);
-		s_CubeMapCaptureRender.GetIrradiance32x32(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-
-		swprintf(strPath, 128, L"icecube_%d_8x8.jpg", i);
-		s_CubeMapCaptureRender.GetPrefilter8x8(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-
-		swprintf(strPath, 128, L"icecube_%d_16x16.jpg", i);
-		s_CubeMapCaptureRender.GetPrefilter16x16(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-
-		swprintf(strPath, 128, L"icecube_%d_32x32.jpg", i);
-		s_CubeMapCaptureRender.GetPrefilter32x32(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-
-		swprintf(strPath, 128, L"icecube_%d_64x64.jpg", i);
-		s_CubeMapCaptureRender.GetPrefilter64x64(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-
-		swprintf(strPath, 128, L"icecube_%d_128x128.jpg", i);
-		s_CubeMapCaptureRender.GetPrefilter128x128(i)->GetResource(&tempTexture2D);
-		DXUTSaveTextureToFile(pD3dDeviceContext, tempTexture2D, false, strPath);
-		SAFE_RELEASE(tempTexture2D);
-	}
-#endif
 
 	//ID3D11Resource* tempTexture2D = nullptr;
 	//s_CubeMapCaptureRender.GetIrradianceSRV()->GetResource(&tempTexture2D);

@@ -3,6 +3,7 @@
 #include "../../DXUT/Core/WICTextureLoader.h"
 #include "../../DXUT/Core/DDSTextureLoader.h"
 
+//#include "C:/WorkSpace/DirectX11Demo/DirectXTex/DirectXTex.h"
 
 
 //// Does not work with compressed formats.
@@ -18,6 +19,20 @@
 using namespace DirectX;
 
 #define CUBEMAP_SIZE 512
+#define PREFILTER_MIP_LEVELS 5
+#define PREFILTER_SIZE 128
+#define IRRADIANCE_SIZE 32
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+//0_128x128,0_64x64,0x32x32,0_16x16,0_8x8
+//1_128x128,1_64x64,0x32x32,1_16x16,0_8x8
+//2_128x128,2_64x64,0x32x32,2_16x16,0_8x8
+//3_128x128,3_64x64,0x32x32,3_16x16,0_8x8
+//4_128x128,4_64x64,0x32x32,4_16x16,0_8x8
+//5_128x128,5_64x64,0x32x32,5_16x16,0_8x8
+//
+//////////////////////////////////////////////////////////////////////////
 
 namespace ForwardRender
 {
@@ -32,47 +47,12 @@ namespace ForwardRender
 		m_uSizeConstantBufferPerObject(sizeof(CB_PER_OBJECT)),m_uSizeConstantBufferPerFrame(sizeof(CB_PER_FRAME)),
 		m_pHdrTexture(nullptr),m_pHdrTextureSRV(nullptr),
 		m_pSrcTextureSRV(nullptr),
-		m_bShaderInited(false)
+		m_bShaderInited(false),
+		m_bUseLoadedEnvMap(false),m_bUseLoadedIrradianceMap(false),m_bUseLoadedPrefilterMap(false),
+		m_bIsForceReGenerateEnvSkyMap(true), m_bIsForceReGenerateIrradianceMap(true), m_bIsForceReGeneratePrefilterMap(true)
 	{
 
-#ifdef EXPORT_CUBEMAP
-
-		IrradianceTextureArray32x32.resize(6);
-		IrradianceRenderTarget32x32.resize(6);
-
-		TextureArray8x8.resize(6);
-		TextureArray16x16.resize(6);
-		TextureArray32x32.resize(6);
-		TextureArray64x64.resize(6);
-		TextureArray128x128.resize(6);
-
-		RenderTargetArray8x8.resize(6);
-		RenderTargetArray16x16.resize(6);
-		RenderTargetArray32x32.resize(6);
-		RenderTargetArray64x64.resize(6);
-		RenderTargetArray128x128.resize(6);
-
-
-		for (int i = 0; i < 6; ++i)
-		{
-			IrradianceTextureArray32x32[i] = nullptr;
-			IrradianceRenderTarget32x32[i] = nullptr;
-
-			TextureArray8x8[i] = nullptr;
-			TextureArray16x16[i] = nullptr;
-			TextureArray32x32[i] = nullptr;
-			TextureArray64x64[i] = nullptr;
-			TextureArray128x128[i] = nullptr;
-
-			RenderTargetArray8x8[i] = nullptr;
-			RenderTargetArray16x16[i] = nullptr;
-			RenderTargetArray32x32[i] = nullptr;
-			RenderTargetArray64x64[i] = nullptr;
-			RenderTargetArray128x128[i] = nullptr;
-
-		}
-#endif
-
+		TextureArray.resize(6*8);
 
 		PrefilterRenderTarget8x8.resize(6);
 		PrefilterRenderTarget16x16.resize(6);
@@ -80,9 +60,14 @@ namespace ForwardRender
 		PrefilterRenderTarget64x64.resize(6);
 		PrefilterRenderTarget128x128.resize(6);
 
-		
-		for (int i = 0;i<6;++i)
+
+		for (int i = 0; i < 6; ++i)
 		{
+			for (int j = 0;j<8;++j)
+			{
+				TextureArray[i * 8 + j ] = nullptr;
+			}
+
 			PrefilterRenderTarget8x8[i] = nullptr;
 			PrefilterRenderTarget16x16[i] = nullptr;
 			PrefilterRenderTarget32x32[i] = nullptr;
@@ -228,6 +213,8 @@ namespace ForwardRender
 	{
 		HRESULT hr;
 
+		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
+		
 		V_RETURN(this->CreateCommonBuffers(pD3dDevice, m_MeshData, m_uSizeConstantBufferPerObject, m_uSizeConstantBufferPerFrame));
 		V_RETURN(this->CreateOtherRenderStateResources(pD3dDevice));
 
@@ -236,7 +223,7 @@ namespace ForwardRender
 		 //V_RETURN(D3DX11CreateShaderResourceViewFromFile(pD3dDevice, L"../../newport_loft.dds", nullptr, nullptr, &g_pHdrTextureSRV, nullptr));
 		 //V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../newport_loft.dds", (ID3D11Resource**)&g_pHdrTexture, &g_pHdrTextureSRV));
 
-			stbi_set_flip_vertically_on_load(true);
+		
 			int width, height, nrComponents;
 			float *data = stbi_loadf("../../ForwardPlus11/media/hdr/newport_loft.hdr", &width, &height, &nrComponents,4);
 
@@ -259,7 +246,7 @@ namespace ForwardRender
 			ZeroMemory(&InitData, sizeof(D3D11_SUBRESOURCE_DATA));
 			InitData.SysMemPitch = width * 16;
 			InitData.pSysMem = data;
-			InitData.SysMemSlicePitch = 0;
+			InitData.SysMemSlicePitch = height*width * 16;
 
 			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, &InitData, &m_pHdrTexture));
 			D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
@@ -270,9 +257,9 @@ namespace ForwardRender
 			SRVDesc.Texture2D.MostDetailedMip = 0;
 			V_RETURN(pD3dDevice->CreateShaderResourceView(m_pHdrTexture, &SRVDesc, &m_pHdrTextureSRV));
 
-			ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 			pD3dDeviceContext->GenerateMips(m_pHdrTextureSRV);
 
+			stbi_image_free(data);
 		}
 
 		//CubeMap RTV
@@ -281,25 +268,60 @@ namespace ForwardRender
 			texDesc.Width = CUBEMAP_SIZE;
 			texDesc.Height = CUBEMAP_SIZE;
 			texDesc.MipLevels = 8;
-			texDesc.ArraySize = 6;//arraysize
+			texDesc.ArraySize = 6;
 			texDesc.SampleDesc.Count = 1;
 			texDesc.SampleDesc.Quality = 0;
 			texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			texDesc.Usage = D3D11_USAGE_DEFAULT;
 			texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 			texDesc.CPUAccessFlags = 0;
-			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;//Texture Cube 
+			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS| D3D11_RESOURCE_MISC_TEXTURECUBE;//Texture Cube  
 
 			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pCubeTexture));
-			texDesc.ArraySize = 1;
-			texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[0]));
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[1]));
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[2]));
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[3]));
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[4]));
-			V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[5]));
 
+
+			if (m_bUseLoadedEnvMap)
+			{
+				wchar_t  strPath[128];
+				for (int i= 0;i<6;++i)
+				{
+					swprintf(strPath, 128, L"../media/EnvSky/EnvCube_%ux%u_%d.dds", texDesc.Width, texDesc.Height, i);
+					V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, strPath, 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&g_pEnvTextureFaces[i], nullptr));
+
+					{
+						D3D11_BOX box;
+						box.front = 0;
+						box.back = 1;
+						box.left = 0;
+						box.top = 0;
+						box.right = texDesc.Width;
+						box.bottom = texDesc.Height;
+
+						pD3dDeviceContext->CopySubresourceRegion(g_pCubeTexture, 0 + i * texDesc.MipLevels, 0, 0, 0, g_pEnvTextureFaces[i], 0, &box);
+
+							
+					}
+				}//for
+				
+				//V_RETURN(CreateWICTextureFromFile(pD3dDevice, L"../../len_full.jpg", (ID3D11Resource**)&g_pDecalTexture, &g_pDecalTextureSRV));
+			}
+			else
+			{
+				texDesc.ArraySize = 1;
+				texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[0]));
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[1]));
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[2]));
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[3]));
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[4]));
+				V_RETURN(pD3dDevice->CreateTexture2D(&texDesc, nullptr, &g_pEnvTextureFaces[5]));
+			}
+
+
+
+
+			//IrradianceCubeTexture
 			D3D11_TEXTURE2D_DESC IrradianceCubeTextureDesc;
 			memcpy(&IrradianceCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 			IrradianceCubeTextureDesc.ArraySize = 6;
@@ -310,7 +332,31 @@ namespace ForwardRender
 			IrradianceCubeTextureDesc.MipLevels = 1;
 			V_RETURN(pD3dDevice->CreateTexture2D(&IrradianceCubeTextureDesc, nullptr, &g_pIrradianceCubeTexture));
 
-#ifdef EXPORT_CUBEMAP
+
+			if (m_bUseLoadedIrradianceMap)
+			{
+				wchar_t  strPath[128];
+				for (int i = 0; i < 6; ++i)
+				{
+					swprintf(strPath, 128, L"../media/Irradiance/Irradiance_%ux%u_%d.dds", IrradianceCubeTextureDesc.Width, IrradianceCubeTextureDesc.Height, i);
+					V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, strPath, 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false, (ID3D11Resource**)&IrradianceTextureArray32x32[i], nullptr));
+
+					{
+						D3D11_BOX box;
+						box.front = 0;
+						box.back = 1;
+						box.left = 0;
+						box.top = 0;
+						box.right = texDesc.Width;
+						box.bottom = texDesc.Height;
+
+						pD3dDeviceContext->CopySubresourceRegion(g_pIrradianceCubeTexture, 0 + i * IrradianceCubeTextureDesc.MipLevels, 0, 0, 0, IrradianceTextureArray32x32[i], 0, &box);
+
+
+					}
+				}//for
+			}
+			else
 			{
 				D3D11_TEXTURE2D_DESC IrradianceCubeTextureDesc;
 				ZeroMemory(&IrradianceCubeTextureDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -333,29 +379,52 @@ namespace ForwardRender
 				V_RETURN(pD3dDevice->CreateTexture2D(&IrradianceCubeTextureDesc, nullptr, &IrradianceTextureArray32x32[4]));
 				V_RETURN(pD3dDevice->CreateTexture2D(&IrradianceCubeTextureDesc, nullptr, &IrradianceTextureArray32x32[5]));
 
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[0], nullptr, &IrradianceRenderTarget32x32[0]));
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[1], nullptr, &IrradianceRenderTarget32x32[1]));
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[2], nullptr, &IrradianceRenderTarget32x32[2]));
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[3], nullptr, &IrradianceRenderTarget32x32[3]));
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[4], nullptr, &IrradianceRenderTarget32x32[4]));
-				V_RETURN(pD3dDevice->CreateRenderTargetView(IrradianceTextureArray32x32[5], nullptr, &IrradianceRenderTarget32x32[5]));
-
 			}
 			
 
-#endif
+			//////////////////////////////////////////////////////////////////////////
+			//Prefilter
+
 			D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
 			memcpy(&PrefilterCubeTextureDesc, &texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 			PrefilterCubeTextureDesc.ArraySize = 6;
 			PrefilterCubeTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			PrefilterCubeTextureDesc.Width = 128;
 			PrefilterCubeTextureDesc.Height = 128;
-			PrefilterCubeTextureDesc.MipLevels = 8;
+			PrefilterCubeTextureDesc.MipLevels = PREFILTER_MIP_LEVELS;
 			PrefilterCubeTextureDesc.Usage = D3D11_USAGE_DEFAULT;
 			PrefilterCubeTextureDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 			V_RETURN(pD3dDevice->CreateTexture2D(&PrefilterCubeTextureDesc, nullptr, &g_pPrefilterCubeTexture));
 
-#ifdef EXPORT_CUBEMAP
+			if(m_bUseLoadedPrefilterMap)
+			{
+				wchar_t  strPath[128];
+
+				for (unsigned int i = 0; i < 6; ++i)
+				{
+					for (unsigned int j = 0;j<PrefilterCubeTextureDesc.MipLevels;++j)
+					{
+						int size = int(PrefilterCubeTextureDesc.Width / std::pow(2, j));
+
+						swprintf(strPath, 128, L"../media/Prefilter/Prefilter_%ux%u_%d.dds", size, size, i);
+						V_RETURN(DirectX::CreateDDSTextureFromFileEx(pD3dDevice, strPath, 0, D3D11_USAGE_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0, 0, false,
+							(ID3D11Resource**)&TextureArray[i*PrefilterCubeTextureDesc.MipLevels +j], nullptr));
+						{
+							D3D11_BOX box;
+							box.front = 0;
+							box.back = 1;
+							box.left = 0;
+							box.top = 0;
+							box.right = size;
+							box.bottom = size;
+							pD3dDeviceContext->CopySubresourceRegion(g_pPrefilterCubeTexture, j + i * PrefilterCubeTextureDesc.MipLevels, 0, 0, 0, TextureArray[i*PrefilterCubeTextureDesc.MipLevels + j], 0, &box);
+						}
+					}
+					
+
+				}//for
+			}
+			else
 			{
 				D3D11_TEXTURE2D_DESC temp;
 				temp.Width = 16;
@@ -370,78 +439,28 @@ namespace ForwardRender
 				temp.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 				temp.MiscFlags = 0;
 				
-				temp.Width = 8;
-				temp.Height = 8;
-				for (int i = 0; i < 6; ++i)
-				{
-					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray8x8[i]));
-					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray8x8[i], nullptr, &RenderTargetArray8x8[i]));
-				}
-
-
-				temp.Width = 16;
-				temp.Height = 16;
-				for (int i = 0; i < 6; ++i)
-				{
-					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray16x16[i]));
-					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray16x16[i], nullptr, &RenderTargetArray16x16[i]));
-				}
-
-
-				temp.Width = 32;
-				temp.Height = 32;
-				for (int i = 0; i < 6; ++i)
-				{
-					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray32x32[i]));
-					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray32x32[i], nullptr, &RenderTargetArray32x32[i]));
-				}
-
-
-				temp.Width = 64;
-				temp.Height = 64;
-				for (int i = 0; i < 6; ++i)
-				{
-					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray64x64[i]));
-					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray64x64[i], nullptr, &RenderTargetArray64x64[i]));
-				}
-
-
 				temp.Width = 128;
 				temp.Height = 128;
 				for (int i = 0; i < 6; ++i)
 				{
-					V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray128x128[i]));
-					V_RETURN(pD3dDevice->CreateRenderTargetView(TextureArray128x128[i], nullptr, &RenderTargetArray128x128[i]));
+					for (int j = 0;j<PREFILTER_MIP_LEVELS;++j)
+					{
+						int size = int(128 / std::pow(2, j));
+
+						temp.Width = size;
+						temp.Height = size;
+						V_RETURN(pD3dDevice->CreateTexture2D(&temp, nullptr, &TextureArray[i*PREFILTER_MIP_LEVELS +j]));
+					}
+	
 				}
-
 			}		 
-#endif
-			//8x8
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture8x8, &g_pDepthStencilSRV8x8, &g_pDepthStencilView8x8,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 8, 8, pBackBufferSurfaceDesc->SampleDesc.Count));
-			//16x16
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture16x16, &g_pDepthStencilSRV16x16, &g_pDepthStencilView16x16,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 16, 16, pBackBufferSurfaceDesc->SampleDesc.Count));
-			//32x32
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture32x32, &g_pDepthStencilSRV32x32, &g_pDepthStencilView32x32,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 32, 32, pBackBufferSurfaceDesc->SampleDesc.Count));
-			//64x64
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture64x64, &g_pDepthStencilSRV64x64, &g_pDepthStencilView64x64,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 64, 64, pBackBufferSurfaceDesc->SampleDesc.Count));
-			//128x128
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture128x128, &g_pDepthStencilSRV128x128, &g_pDepthStencilView128x128,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, 128, 128, pBackBufferSurfaceDesc->SampleDesc.Count));
-
-			//create our own depth stencil surface that'bindable as a shader
-			V_RETURN(AMD::CreateDepthStencilSurface(&g_pDepthStencilTexture, &g_pDepthStencilSRV, &g_pDepthStencilView,
-				DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R24_UNORM_X8_TYPELESS, PrefilterCubeTextureDesc.Width, PrefilterCubeTextureDesc.Height, pBackBufferSurfaceDesc->SampleDesc.Count));
-
 
 			D3D11_RENDER_TARGET_VIEW_DESC EnvRTVDesc;
 			EnvRTVDesc.Format = texDesc.Format;
-			EnvRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			EnvRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;//专门用来绘制图像到CubeMap或Texture2DArray对象中
 			EnvRTVDesc.Texture2DArray.ArraySize = 1;
-			EnvRTVDesc.Texture2D.MipSlice = 0;// D3D11_RESOURCE_MISC_GENERATE_MIPS;
+			EnvRTVDesc.Texture2DArray.MipSlice = 0;
+	
 
 			D3D11_RENDER_TARGET_VIEW_DESC IrradianceRTVDesc;
 			ZeroMemory(&IrradianceRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
@@ -453,7 +472,7 @@ namespace ForwardRender
 			D3D11_RENDER_TARGET_VIEW_DESC PrefilterRTVDesc;
 			ZeroMemory(&PrefilterRTVDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
 			PrefilterRTVDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D);
+			PrefilterRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;// D3D11_RTV_DIMENSION_TEXTURE2D;
 			PrefilterRTVDesc.Texture2DArray.ArraySize = 1;
 			PrefilterRTVDesc.Texture2D.MipSlice = 0;// D3D11_RESOURCE_MISC_GENERATE_MIPS;;
 
@@ -508,6 +527,9 @@ namespace ForwardRender
 			CubeDesc.TextureCube.MostDetailedMip = 0;
 
 			V_RETURN(pD3dDevice->CreateShaderResourceView(g_pCubeTexture, &CubeDesc, &g_pEnvCubeMapSRV));
+			{
+				pD3dDeviceContext->GenerateMips(g_pEnvCubeMapSRV);
+			}
 
 			{
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
@@ -524,7 +546,7 @@ namespace ForwardRender
 				D3D11_SHADER_RESOURCE_VIEW_DESC CubeDesc;
 				CubeDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 				CubeDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-				CubeDesc.TextureCube.MipLevels = 8;
+				CubeDesc.TextureCube.MipLevels = PREFILTER_MIP_LEVELS;
 				CubeDesc.TextureCube.MostDetailedMip = 0;
 				V_RETURN(pD3dDevice->CreateShaderResourceView(g_pPrefilterCubeTexture, &CubeDesc, &g_pPrefilterSRV));
 			}
@@ -721,6 +743,7 @@ namespace ForwardRender
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 
+			if (m_bIsForceReGenerateEnvSkyMap)
 			{
 				D3D11_BOX box;
 				box.front = 0;
@@ -751,10 +774,9 @@ namespace ForwardRender
 		SAFE_RELEASE(pPreBlendStateStored11);
 		SAFE_RELEASE(pPreDepthStencilStateStored11);
 
-		static bool flag = true;
-		if (flag)
+		if (m_bIsForceReGenerateEnvSkyMap)
 		{
-			flag = false;
+			m_bUseLoadedEnvMap = true;
 			SaveEnvCubeMap();
 		}
 
@@ -858,27 +880,15 @@ namespace ForwardRender
 
 			//Clear cube map face and depth buffer.
 			pD3dImmediateContext->ClearRenderTargetView(g_pIrradianceCubeMapRTVs[i], reinterpret_cast<const float*>(&Colors::Black));
-			pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 			//Draw the scene with the exception of the center sphere to this cube map face.
 			pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
-#ifdef EXPORT_CUBEMAP
 
-			////Bind cube map face as render target.
-			//pD3dImmediateContext->OMSetRenderTargets(1, &IrradianceRenderTarget32x32[i], nullptr);
-
-			////Clear cube map face and depth buffer.
-			//pD3dImmediateContext->ClearRenderTargetView(IrradianceRenderTarget32x32[i], reinterpret_cast<const float*>(&Colors::Black));
-			//pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-			////Draw the scene with the exception of the center sphere to this cube map face.
-			//pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
-
-
+			if (m_bIsForceReGenerateIrradianceMap)
 			{
 				D3D11_TEXTURE2D_DESC TempDesc;
-				IrradianceTextureArray32x32[0]->GetDesc(&TempDesc);
+				g_pIrradianceCubeTexture->GetDesc(&TempDesc);
 				D3D11_BOX box;
 				box.front = 0;
 				box.back = 1;
@@ -887,17 +897,14 @@ namespace ForwardRender
 				box.right = TempDesc.Width;
 				box.bottom = TempDesc.Height;
 
-				//pD3dImmediateContext->CopySubresourceRegion(g_pIrradianceCubeTexture, 0 + i * 1, 0, 0, 0, IrradianceTextureArray32x32[i], 0, &box);
-
-				pD3dImmediateContext->CopySubresourceRegion(IrradianceTextureArray32x32[i], 0, 0, 0, 0, g_pIrradianceCubeTexture, i, &box);
+				pD3dImmediateContext->CopySubresourceRegion(IrradianceTextureArray32x32[i], 0, 0, 0, 0, g_pIrradianceCubeTexture, 0 + i * TempDesc.MipLevels, &box);
 			}
-#endif
+
 		}
 
-		static bool flag = true;
-		if (flag)
+		if (m_bIsForceReGenerateIrradianceMap)
 		{
-			flag = false;
+			m_bUseLoadedIrradianceMap = true;
 			SaveIrradianceCubeMap();
 		}
 
@@ -1011,16 +1018,15 @@ namespace ForwardRender
 
 				//Clear cube map face and depth buffer.
 				pD3dImmediateContext->ClearRenderTargetView(PrefilterRenderTarget128x128[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView128x128, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 				//Draw the scene with the exception of the center sphere to this cube map face.
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
-#ifdef EXPORT_CUBEMAP
 
+				if (m_bIsForceReGeneratePrefilterMap)
 				{
 					D3D11_TEXTURE2D_DESC TempDesc;
-					TextureArray128x128[i]->GetDesc(&TempDesc);
+					TextureArray[i*PREFILTER_MIP_LEVELS +0]->GetDesc(&TempDesc);
 					D3D11_BOX box;
 					box.front = 0;
 					box.back = 1;
@@ -1030,9 +1036,9 @@ namespace ForwardRender
 					box.bottom = TempDesc.Height;
 
 					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
-					pD3dImmediateContext->CopySubresourceRegion(TextureArray128x128[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 0 + i * TempDesc.MipLevels, &box);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray[i*PREFILTER_MIP_LEVELS + 0], 0, 0, 0, 0, g_pPrefilterCubeTexture, 0 + i * PREFILTER_MIP_LEVELS, &box);
 				}
-#endif
+
 			}
 
 			//64x64
@@ -1055,15 +1061,14 @@ namespace ForwardRender
 
 				//Clear cube map face and depth buffer.
 				pD3dImmediateContext->ClearRenderTargetView(PrefilterRenderTarget64x64[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView64x64, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 				//Draw the scene with the exception of the center sphere to this cube map face.
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
-#ifdef EXPORT_CUBEMAP
+				if (m_bIsForceReGeneratePrefilterMap)
 				{
 					D3D11_TEXTURE2D_DESC TempDesc;
-					TextureArray64x64[i]->GetDesc(&TempDesc);
+					TextureArray[i*PREFILTER_MIP_LEVELS + 1]->GetDesc(&TempDesc);
 					D3D11_BOX box;
 					box.front = 0;
 					box.back = 1;
@@ -1073,9 +1078,9 @@ namespace ForwardRender
 					box.bottom = TempDesc.Height;
 
 					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
-					pD3dImmediateContext->CopySubresourceRegion(TextureArray64x64[i], 0, 0, 0, 0, g_pPrefilterCubeTexture,1 + i * TempDesc.MipLevels, &box);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray[i*PREFILTER_MIP_LEVELS + 1], 0, 0, 0, 0, g_pPrefilterCubeTexture, 1 + i * PREFILTER_MIP_LEVELS, &box);
 				}
-#endif
+
 			}
 
 			//32x32
@@ -1098,16 +1103,15 @@ namespace ForwardRender
 
 				//Clear cube map face and depth buffer.
 				pD3dImmediateContext->ClearRenderTargetView(PrefilterRenderTarget32x32[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView32x32, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 				//Draw the scene with the exception of the center sphere to this cube map face.
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
 
-#ifdef EXPORT_CUBEMAP
+				if (m_bIsForceReGeneratePrefilterMap)
 				{
 					D3D11_TEXTURE2D_DESC TempDesc;
-					TextureArray32x32[i]->GetDesc(&TempDesc);
+					TextureArray[i*PREFILTER_MIP_LEVELS + 2]->GetDesc(&TempDesc);
 					D3D11_BOX box;
 					box.front = 0;
 					box.back = 1;
@@ -1117,9 +1121,8 @@ namespace ForwardRender
 					box.bottom = TempDesc.Height;
 
 					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
-					pD3dImmediateContext->CopySubresourceRegion(TextureArray32x32[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 2 + i * TempDesc.MipLevels, &box);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray[i*PREFILTER_MIP_LEVELS + 2], 0, 0, 0, 0, g_pPrefilterCubeTexture, 2 + i * PREFILTER_MIP_LEVELS, &box);
 				}
-#endif
 
 
 			}
@@ -1150,15 +1153,14 @@ namespace ForwardRender
 
 				//Clear cube map face and depth buffer.
 				pD3dImmediateContext->ClearRenderTargetView(PrefilterRenderTarget16x16[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView16x16, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 				//Draw the scene with the exception of the center sphere to this cube map face.
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
-#ifdef EXPORT_CUBEMAP
+				if (m_bIsForceReGeneratePrefilterMap)
 				{
 					D3D11_TEXTURE2D_DESC TempDesc;
-					TextureArray16x16[i]->GetDesc(&TempDesc);
+					TextureArray[i*PREFILTER_MIP_LEVELS + 3]->GetDesc(&TempDesc);
 					D3D11_BOX box;
 					box.front = 0;
 					box.back = 1;
@@ -1168,9 +1170,8 @@ namespace ForwardRender
 					box.bottom = TempDesc.Height;
 
 					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
-					pD3dImmediateContext->CopySubresourceRegion(TextureArray16x16[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 3 + i * TempDesc.MipLevels, &box);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray[i*PREFILTER_MIP_LEVELS + 3], 0, 0, 0, 0, g_pPrefilterCubeTexture, 3 + i * PREFILTER_MIP_LEVELS, &box);
 				}
-#endif
 
 			}
 
@@ -1200,15 +1201,14 @@ namespace ForwardRender
 
 				//Clear cube map face and depth buffer.
 				pD3dImmediateContext->ClearRenderTargetView(PrefilterRenderTarget8x8[i], reinterpret_cast<const float*>(&Colors::Black));
-				pD3dImmediateContext->ClearDepthStencilView(g_pDepthStencilView8x8, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 				//Draw the scene with the exception of the center sphere to this cube map face.
 				pD3dImmediateContext->DrawIndexed(m_MeshData.Indices32.size(), 0, 0);
 
-#ifdef EXPORT_CUBEMAP
+				if (m_bIsForceReGeneratePrefilterMap)
 				{
 					D3D11_TEXTURE2D_DESC TempDesc;
-					TextureArray8x8[i]->GetDesc(&TempDesc);
+					TextureArray[i*PREFILTER_MIP_LEVELS + 4]->GetDesc(&TempDesc);
 					D3D11_BOX box;
 					box.front = 0;
 					box.back = 1;
@@ -1218,18 +1218,14 @@ namespace ForwardRender
 					box.bottom = TempDesc.Height;
 
 					g_pPrefilterCubeTexture->GetDesc(&TempDesc);
-					pD3dImmediateContext->CopySubresourceRegion(TextureArray8x8[i], 0, 0, 0, 0, g_pPrefilterCubeTexture, 4 + i * TempDesc.MipLevels, &box);
+					pD3dImmediateContext->CopySubresourceRegion(TextureArray[i*PREFILTER_MIP_LEVELS + 4], 0, 0, 0, 0, g_pPrefilterCubeTexture, 4 + i * PREFILTER_MIP_LEVELS, &box);
 				}
-#endif
 			}
 
 
 		}
 
 		//pD3dImmediateContext->Flush();
-
-		
-
 
 		//还原状态
 
@@ -1243,10 +1239,9 @@ namespace ForwardRender
 		SAFE_RELEASE(pPreBlendStateStored11);
 		SAFE_RELEASE(pPreDepthStencilStateStored11);
 
-		static bool flag = true;
-		if (flag)
+		if (m_bIsForceReGeneratePrefilterMap)
 		{
-			flag = false;
+			m_bUseLoadedPrefilterMap = true;
 			SavePrefilterCubeMap();
 		}
 	}
@@ -1528,33 +1523,9 @@ namespace ForwardRender
 		SAFE_RELEASE(g_pEnvCubeMapSRV);
 		for (int i = 0; i < 6; ++i)
 		{
-			SAFE_RELEASE(g_pEnvTextureFaces[i]);
 			SAFE_RELEASE(g_pEnvCubeMapRTVs[i]);
+			SAFE_RELEASE(g_pEnvTextureFaces[i]);
 		}
-
-		SAFE_RELEASE(g_pDepthStencilView8x8);
-		SAFE_RELEASE(g_pDepthStencilSRV8x8);
-		SAFE_RELEASE(g_pDepthStencilTexture8x8);
-
-		SAFE_RELEASE(g_pDepthStencilView16x16);
-		SAFE_RELEASE(g_pDepthStencilSRV16x16);
-		SAFE_RELEASE(g_pDepthStencilTexture16x16);
-
-		SAFE_RELEASE(g_pDepthStencilView32x32);
-		SAFE_RELEASE(g_pDepthStencilSRV32x32);
-		SAFE_RELEASE(g_pDepthStencilTexture32x32);
-
-		SAFE_RELEASE(g_pDepthStencilView64x64);
-		SAFE_RELEASE(g_pDepthStencilSRV64x64);
-		SAFE_RELEASE(g_pDepthStencilTexture64x64);
-
-		SAFE_RELEASE(g_pDepthStencilView128x128);
-		SAFE_RELEASE(g_pDepthStencilSRV128x128);
-		SAFE_RELEASE(g_pDepthStencilTexture128x128);
-
-		SAFE_RELEASE(g_pDepthStencilView);
-		SAFE_RELEASE(g_pDepthStencilSRV);
-		SAFE_RELEASE(g_pDepthStencilTexture);
 
 
 		SAFE_RELEASE(g_pIceCubemapTexture);
@@ -1570,6 +1541,7 @@ namespace ForwardRender
 		for (int i = 0; i < 6; ++i)
 		{
 			SAFE_RELEASE(g_pIrradianceCubeMapRTVs[i]);
+			SAFE_RELEASE(IrradianceTextureArray32x32[i]);
 		}
 
 		SAFE_RELEASE(g_pPrefilterCubeTexture);
@@ -1583,26 +1555,12 @@ namespace ForwardRender
 		}
 		SAFE_RELEASE(g_pPrefilterSRV);
 
-#ifdef EXPORT_CUBEMAP
-		for (int i = 0; i < 6; ++i)
+		for (auto it = TextureArray.begin();it!=TextureArray.end();++it)
 		{
-			SAFE_RELEASE(IrradianceTextureArray32x32[i]);
-			SAFE_RELEASE(IrradianceRenderTarget32x32[i]);
-			
-
-			SAFE_RELEASE(TextureArray8x8[i]);
-			SAFE_RELEASE(TextureArray16x16[i]);
-			SAFE_RELEASE(TextureArray32x32[i]);
-			SAFE_RELEASE(TextureArray64x64[i]);
-			SAFE_RELEASE(TextureArray128x128[i]);
-
-			SAFE_RELEASE(RenderTargetArray8x8[i]);
-			SAFE_RELEASE(RenderTargetArray16x16[i]);
-			SAFE_RELEASE(RenderTargetArray32x32[i]);
-			SAFE_RELEASE(RenderTargetArray64x64[i]);
-			SAFE_RELEASE(RenderTargetArray128x128[i]);
+			SAFE_RELEASE(*it);
 		}
-#endif
+		TextureArray.empty();
+
 	}
 
 	HRESULT CubeMapCaptureRender::CreateSwapChainAssociatedResource(ID3D11Device * pD3dDevice, const DXGI_SURFACE_DESC * pBackBufferSurfaceDesc)
@@ -1614,23 +1572,62 @@ namespace ForwardRender
 	{
 		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
+		//D3D11_TEXTURE2D_DESC TEXTURE2D_Desc;
+		//g_pCubeTexture->GetDesc(&TEXTURE2D_Desc);
+
+
+
+		//size_t RowPitch,SilcePitch;
+		//DirectX::ComputePitch(TEXTURE2D_Desc.Format, TEXTURE2D_Desc.Width, TEXTURE2D_Desc.Height, RowPitch, SilcePitch, CP_FLAGS_NONE);
+
+		//Image TempImage[6];
+
+		//for (int i = 0;i<6;++i)
+		//{
+		//	D3D11_MAPPED_SUBRESOURCE subData;
+		//	ZeroMemory(&subData, sizeof(subData));
+		//	pD3dDeviceContext->Map(g_pEnvTextureFaces[i], 0, D3D11_MAP_READ, 0, &subData);
+
+
+		//	TempImage[i].width = TEXTURE2D_Desc.Width;
+		//	TempImage[i].height = TEXTURE2D_Desc.Height;
+		//	TempImage[i].format = TEXTURE2D_Desc.Format;
+		//	TempImage[i].rowPitch = RowPitch;
+		//	TempImage[i].rowPitch = SilcePitch;
+		//	TempImage[i].pixels = (uint8_t*)subData.pData;
+		//}
+
+		//TexMetadata mdata = {};
+		//mdata.width = TEXTURE2D_Desc.Width;
+		//mdata.height = TEXTURE2D_Desc.Height;
+		//mdata.depth = 1;
+		//mdata.arraySize = 6;
+		//mdata.mipLevels = 1;
+		//mdata.format = TEXTURE2D_Desc.Format;
+		//mdata.dimension = TEX_DIMENSION_TEXTURE2D;
+
+		//DirectX::SaveToDDSFile(TempImage, 6, mdata, DDS_FLAGS_NONE, L"EnvCube_wjz.dds");
+		//
+		//for (int i = 0; i < 6; ++i)
+		//{
+		//	pD3dDeviceContext->Unmap(g_pEnvTextureFaces[i], 0);
+		//}
+
+		//ID3D11Resource* Temp;
+		//g_pEnvCubeMapSRV->GetResource(&Temp);
+		//D3DX11SaveTextureToFile(pD3dDeviceContext, Temp, D3DX11_IFF_DDS, L"EnvCube.dds");
+
+		
+		D3D11_TEXTURE2D_DESC TempDesc;
+		g_pCubeTexture->GetDesc(&TempDesc);
+		
 		wchar_t  strPath[128];
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[0], false, strPath);
 
-		swprintf(strPath, 128, L"EnvCube_-x.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[1], false, strPath);
-
-		swprintf(strPath, 128, L"EnvCube_+y.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[2], false, strPath);
-
-		swprintf(strPath, 128, L"EnvCube_-y.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[3], false, strPath);
-
-		swprintf(strPath, 128, L"EnvCube_+z.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[4], false, strPath);
-
-		swprintf(strPath, 128, L"EnvCube_-z.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[5], false, strPath);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"../media/EnvSky/EnvCube_%ux%u_%d.dds", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, g_pEnvTextureFaces[i], true, strPath);
+		}
 
 	}
 
@@ -1638,70 +1635,41 @@ namespace ForwardRender
 	{
 		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
+
+		D3D11_TEXTURE2D_DESC TempDesc;
+		g_pIrradianceCubeTexture->GetDesc(&TempDesc);
+
 		wchar_t  strPath[128];
-		swprintf(strPath, 128, L"Irradiance_+x.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[0], false, strPath);
+		for (int i = 0; i < 6; ++i)
+		{
+			swprintf(strPath, 128, L"../media/Irradiance/Irradiance_%ux%u_%d.dds", TempDesc.Width, TempDesc.Height, i);
+			DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[i], true, strPath);
 
-		swprintf(strPath, 128, L"Irradiance_-x.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[1], false, strPath);
-
-		swprintf(strPath, 128, L"Irradiance_+y.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[2], false, strPath);
-
-		swprintf(strPath, 128, L"Irradiance_-y.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[3], false, strPath);
-
-		swprintf(strPath, 128, L"Irradiance_+z.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[4], false, strPath);
-
-		swprintf(strPath, 128, L"Irradiance_-z.jpg");
-		DXUTSaveTextureToFile(pD3dDeviceContext, IrradianceTextureArray32x32[5], false, strPath);
+		}
+		
 	}
 
 	void CubeMapCaptureRender::SavePrefilterCubeMap()
 	{
 		ID3D11DeviceContext* pD3dDeviceContext = DXUTGetD3D11DeviceContext();
 
-		wchar_t  strPath[128];	
-		D3D11_TEXTURE2D_DESC TempDesc;
+		D3D11_TEXTURE2D_DESC PrefilterCubeTextureDesc;
+		g_pPrefilterCubeTexture->GetDesc(&PrefilterCubeTextureDesc);
+		wchar_t  strPath[128];
 
-		TextureArray128x128[0]->GetDesc(&TempDesc);
 		for (int i = 0; i < 6; ++i)
 		{
-			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
-			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray128x128[i], false, strPath);
-		}
+			for (int j = 0; j < PREFILTER_MIP_LEVELS; ++j)
+			{
+				int size = int(PrefilterCubeTextureDesc.Width / std::pow(2, j));
 
+				swprintf(strPath, 128, L"../media/Prefilter/Prefilter_%ux%u_%d.dds", size, size, i);
+				DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray[i*PrefilterCubeTextureDesc.MipLevels + j], true, strPath);
 
+			}//for_j
 
-		TextureArray64x64[0]->GetDesc(&TempDesc);
-		for (int i = 0; i < 6; ++i)
-		{
-			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
-			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray64x64[i], false, strPath);
-		}
+		}//for_i
 
-	
-		TextureArray32x32[0]->GetDesc(&TempDesc);
-		for (int i = 0;i<6;++i)
-		{
-			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
-			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray32x32[i], false, strPath);
-		}
-
-		TextureArray16x16[0]->GetDesc(&TempDesc);
-		for (int i = 0; i < 6; ++i)
-		{
-			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
-			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray16x16[i], false, strPath);
-		}
-
-		TextureArray8x8[0]->GetDesc(&TempDesc);
-		for (int i = 0; i < 6; ++i)
-		{
-			swprintf(strPath, 128, L"Prefilter_%ux%u_%d.jpg", TempDesc.Width, TempDesc.Height, i);
-			DXUTSaveTextureToFile(pD3dDeviceContext, TextureArray8x8[i], false, strPath);
-		}
 
 	}
 }

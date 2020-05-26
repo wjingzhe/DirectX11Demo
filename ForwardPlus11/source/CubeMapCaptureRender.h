@@ -6,7 +6,6 @@
 #include "../../amd_sdk/inc/AMD_SDK.h"
 #include "../../DXUT/Optional/DXUTCamera.h"
 
-#define EXPORT_CUBEMAP
 
 namespace ForwardRender
 {
@@ -97,40 +96,6 @@ namespace ForwardRender
 			return g_pIceCubemapRTVs[i];
 		}
 
-#ifdef EXPORT_CUBEMAP
-
-		ID3D11RenderTargetView* GetIrradiance32x32(int i)
-		{
-			return IrradianceRenderTarget32x32[i];
-		}
-
-		ID3D11RenderTargetView* GetPrefilter8x8(int i)
-		{
-			return RenderTargetArray8x8[i];
-		}
-
-		ID3D11RenderTargetView* GetPrefilter16x16(int i)
-		{
-			return RenderTargetArray16x16[i];
-		}
-
-		ID3D11RenderTargetView* GetPrefilter32x32(int i)
-		{
-			return RenderTargetArray32x32[i];
-		}
-
-		ID3D11RenderTargetView* GetPrefilter64x64(int i)
-		{
-			return RenderTargetArray64x64[i];
-		}
-
-		ID3D11RenderTargetView* GetPrefilter128x128(int i)
-		{
-			return RenderTargetArray128x128[i];
-		}
-#endif
-
-
 	protected:
 		void AddShadersToCache(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
 		void AddShadersToCache2(AMD::ShaderCache * pShaderCache, const wchar_t * pwsNameVS, const wchar_t * pwsNamePS, const wchar_t * pwsSourceFileName, const D3D11_INPUT_ELEMENT_DESC layout[], UINT size);
@@ -208,45 +173,19 @@ namespace ForwardRender
 		ID3D11RenderTargetView* g_pEnvCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11ShaderResourceView* g_pEnvCubeMapSRV = nullptr;
 
-		// Depth stencil data
-		ID3D11Texture2D* g_pDepthStencilTexture8x8 = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView8x8 = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV8x8 = nullptr;
-
-		ID3D11Texture2D* g_pDepthStencilTexture16x16 = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView16x16 = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV16x16 = nullptr;
-
-		ID3D11Texture2D* g_pDepthStencilTexture32x32 = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView32x32 = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV32x32 = nullptr;
-
-		ID3D11Texture2D* g_pDepthStencilTexture64x64 = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView64x64 = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV64x64 = nullptr;
-
-		ID3D11Texture2D* g_pDepthStencilTexture128x128 = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView128x128 = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV128x128 = nullptr;
-
-		ID3D11Texture2D* g_pDepthStencilTexture = nullptr;
-		ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
-		ID3D11ShaderResourceView* g_pDepthStencilSRV = nullptr;
-
 		ID3D11Resource* g_pIceCubemapTexture = nullptr;
 		ID3D11RenderTargetView* g_pIceCubemapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11ShaderResourceView* g_pIceEnvCubeMapSRV = nullptr;
 
 
 		ID3D11Texture2D* g_pIrradianceCubeTexture = nullptr;
+		ID3D11Texture2D* IrradianceTextureArray32x32[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
 		ID3D11RenderTargetView* g_pIrradianceCubeMapRTVs[6] = { nullptr,nullptr,nullptr,nullptr ,nullptr,nullptr };
-#ifdef EXPORT_CUBEMAP
-		std::vector<ID3D11Texture2D*> IrradianceTextureArray32x32;
-		std::vector<ID3D11RenderTargetView*> IrradianceRenderTarget32x32;
-#endif
 		ID3D11ShaderResourceView* g_pIrradianceSRV = nullptr;
 
 		ID3D11Texture2D* g_pPrefilterCubeTexture = nullptr;
+		std::vector<ID3D11Texture2D*> TextureArray;
+
 		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget8x8;
 		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget16x16;
 		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget32x32;
@@ -254,23 +193,18 @@ namespace ForwardRender
 		std::vector<ID3D11RenderTargetView*> PrefilterRenderTarget128x128;
 		ID3D11ShaderResourceView* g_pPrefilterSRV = nullptr;
 
-
-#ifdef EXPORT_CUBEMAP
-		std::vector<ID3D11Texture2D*> TextureArray8x8;
-		std::vector<ID3D11Texture2D*> TextureArray16x16;
-		std::vector<ID3D11Texture2D*> TextureArray32x32;
-		std::vector<ID3D11Texture2D*> TextureArray64x64;
-		std::vector<ID3D11Texture2D*> TextureArray128x128;
-
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray8x8;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray16x16;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray32x32;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray64x64;
-		std::vector<ID3D11RenderTargetView*> RenderTargetArray128x128;
-#endif
-
-
 		bool m_bShaderInited;
+
+public:
+
+	//第一帧默认全生成，并导出中间数据，之后才置这三个控制量为true，使用已绘制好的纹理数据
+		bool m_bUseLoadedEnvMap;
+		bool m_bUseLoadedIrradianceMap;
+		bool m_bUseLoadedPrefilterMap;
+
+		bool m_bIsForceReGenerateEnvSkyMap;
+		bool m_bIsForceReGenerateIrradianceMap;
+		bool m_bIsForceReGeneratePrefilterMap;
 
 	};
 

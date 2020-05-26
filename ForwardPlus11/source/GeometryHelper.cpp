@@ -195,7 +195,7 @@ GeometryHelper::MeshData GeometryHelper::CreateSphere(float radius, uint32 slice
 	uint32 ringVertexCount = sliceCount + 1;
 	for (uint32 i = 0; i < stackCount - 2; ++i)
 	{
-		for (int j = 0; j < sliceCount; ++j)
+		for (uint32 j = 0; j < sliceCount; ++j)
 		{
 			meshData.Indices32.push_back(baseIndex + i*ringVertexCount + j);
 			meshData.Indices32.push_back(baseIndex + i*ringVertexCount + j + 1);
