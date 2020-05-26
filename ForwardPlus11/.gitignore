@@ -1,3 +1,6 @@
 /.vs/
 /ipch/
 *.VC.VC.opendb
+/media/EnvSky/
+/media/Irradiance/
+/media/Prefilter/
