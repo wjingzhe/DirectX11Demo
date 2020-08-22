@@ -1,4 +1,3 @@
-
 cbuffer cbPerObject:register(b0)
 {
 	matrix g_mWolrdViewProjection:packoffset(c0);

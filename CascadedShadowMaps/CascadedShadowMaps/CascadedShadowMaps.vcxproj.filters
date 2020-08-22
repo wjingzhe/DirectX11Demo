@@ -71,13 +71,11 @@
     <None Include="..\src\Shaders\DrawBasicGeometry.hlsl">
       <Filter>Shaders</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="..\src\Shaders\DrawDepthOnly.hlsl">
+    <None Include="..\src\Shaders\DrawDepthOnly.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="..\src\Shaders\RenderCascadeScene.hlsl">
+    </None>
+    <None Include="..\src\Shaders\RenderCascadeScene.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
 </Project>
