@@ -1,3 +1,5 @@
+已移动库至gitlab，何况DX11还有维护的必要吗？留着练手及时用
+
 # DirectX11Demo
 Use AMD/MS's codes to pratise dx11 
 
